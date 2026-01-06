@@ -628,7 +628,17 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// Export plan
+// Check if device is mobile
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+// Check if Web Share API is available
+function isWebShareAvailable() {
+    return navigator.share && navigator.canShare;
+}
+
+// Export plan with mobile support
 function exportPlan(format) {
     saveData();
     
@@ -639,30 +649,327 @@ function exportPlan(format) {
     }
     
     var filename = 'Strategic_Plan_' + new Date().toISOString().split('T')[0];
-    var blob, mimeType, extension;
+    var blob, mimeType, extension, content;
     
     if (format === 'docx') {
-        var content = generateWordDocument();
+        content = generateWordDocument();
         // Create HTML that Word can open
         blob = new Blob([content], { type: 'application/msword' });
         mimeType = 'application/msword';
         extension = '.doc';
         filename += extension;
     } else if (format === 'xlsx') {
-        var content = generateExcelDocument();
+        content = generateExcelDocument();
         // Create HTML that Excel can open
         blob = new Blob([content], { type: 'application/vnd.ms-excel' });
         mimeType = 'application/vnd.ms-excel';
         extension = '.xls';
         filename += extension;
     } else {
-        var content = generatePlanDocument();
+        content = generatePlanDocument();
         blob = new Blob([content], { type: 'text/plain' });
         mimeType = 'text/plain';
         extension = '.txt';
         filename += extension;
     }
     
+    // Use Web Share API for mobile devices if available
+    if (isMobileDevice() && isWebShareAvailable()) {
+        shareFileMobile(blob, filename, mimeType);
+    } else if (isMobileDevice()) {
+        // Fallback for mobile devices without Web Share API
+        shareFileMobileFallback(blob, filename, mimeType, content);
+    } else {
+        // Standard download for desktop
+        downloadFile(blob, filename);
+    }
+}
+
+// Share file on mobile using Web Share API
+function shareFileMobile(blob, filename, mimeType) {
+    var file = new File([blob], filename, { type: mimeType });
+    
+    // Try to share file if supported
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({
+            files: [file],
+            title: 'Strategic Plan',
+            text: 'My Strategic Plan - ' + filename
+        }).catch(function(error) {
+            console.log('Error sharing file:', error);
+            // Fallback to alternative method
+            shareFileMobileFallback(blob, filename, mimeType, null);
+        });
+    } else {
+        // File sharing not supported, try text sharing for text files
+        if (mimeType === 'text/plain') {
+            blob.text().then(function(text) {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Strategic Plan',
+                        text: text
+                    }).catch(function(error) {
+                        console.log('Error sharing text:', error);
+                        shareFileMobileFallback(blob, filename, mimeType, text);
+                    });
+                } else {
+                    shareFileMobileFallback(blob, filename, mimeType, text);
+                }
+            }).catch(function(error) {
+                console.log('Error reading blob:', error);
+                shareFileMobileFallback(blob, filename, mimeType, null);
+            });
+        } else {
+            // For non-text files, use fallback
+            shareFileMobileFallback(blob, filename, mimeType, null);
+        }
+    }
+}
+
+// Fallback method for mobile devices
+function shareFileMobileFallback(blob, filename, mimeType, content) {
+    // Try to create a download link that works on mobile
+    var url = window.URL.createObjectURL(blob);
+    
+    // For text files, show export options modal
+    if (mimeType === 'text/plain' && content) {
+        showMobileExportOptions(url, filename, content);
+        return;
+    }
+    
+    // For other file types, try to download or show options
+    var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    
+    if (isIOS) {
+        // iOS: Try download first, then show options
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        
+        // Show options after a brief delay
+        setTimeout(function() {
+            showMobileFileOptions(url, filename, mimeType);
+            document.body.removeChild(a);
+        }, 300);
+    } else {
+        // Android: Try download
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        // Show options modal for additional methods
+        setTimeout(function() {
+            showMobileFileOptions(url, filename, mimeType);
+        }, 300);
+    }
+}
+
+// Show file export options for non-text files
+function showMobileFileOptions(url, filename, mimeType) {
+    var modal = document.createElement('div');
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+    
+    var modalContent = document.createElement('div');
+    modalContent.style.cssText = 'background: white; padding: 20px; border-radius: 8px; max-width: 90%; max-height: 80%; overflow-y: auto;';
+    
+    var title = document.createElement('h3');
+    title.style.cssText = 'margin-top: 0;';
+    title.textContent = 'Export Options';
+    modalContent.appendChild(title);
+    
+    var description = document.createElement('p');
+    description.textContent = 'If the download didn\'t work, try these options:';
+    modalContent.appendChild(description);
+    
+    // Download file link
+    var downloadLink = document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.download = filename;
+    downloadLink.textContent = 'Try Download Again';
+    downloadLink.style.cssText = 'display: block; width: 100%; padding: 12px; margin: 8px 0; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; text-align: center; text-decoration: none;';
+    downloadLink.onclick = function() {
+        setTimeout(function() {
+            modal.remove();
+            setTimeout(function() {
+                window.URL.revokeObjectURL(url);
+            }, 100);
+        }, 100);
+    };
+    modalContent.appendChild(downloadLink);
+    
+    // Open in new tab (for viewing)
+    var openLink = document.createElement('a');
+    openLink.href = url;
+    openLink.target = '_blank';
+    openLink.textContent = 'Open in New Tab';
+    openLink.style.cssText = 'display: block; width: 100%; padding: 12px; margin: 8px 0; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; text-align: center; text-decoration: none;';
+    openLink.onclick = function() {
+        setTimeout(function() {
+            modal.remove();
+            setTimeout(function() {
+                window.URL.revokeObjectURL(url);
+            }, 1000);
+        }, 100);
+    };
+    modalContent.appendChild(openLink);
+    
+    // Cancel button
+    var cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Close';
+    cancelBtn.style.cssText = 'display: block; width: 100%; padding: 12px; margin: 8px 0; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;';
+    cancelBtn.onclick = function() {
+        modal.remove();
+        window.URL.revokeObjectURL(url);
+    };
+    modalContent.appendChild(cancelBtn);
+    
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+    
+    // Close on background click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+            window.URL.revokeObjectURL(url);
+        }
+    });
+}
+
+// Show additional export options for mobile
+function showMobileExportOptions(url, filename, textContent) {
+    // Create a modal with export options
+    var modal = document.createElement('div');
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+    
+    var modalContent = document.createElement('div');
+    modalContent.style.cssText = 'background: white; padding: 20px; border-radius: 8px; max-width: 90%; max-height: 80%; overflow-y: auto;';
+    
+    // Store text content in a data attribute for safe access
+    modalContent.setAttribute('data-text-content', textContent);
+    modalContent.setAttribute('data-file-url', url);
+    
+    var title = document.createElement('h3');
+    title.style.cssText = 'margin-top: 0;';
+    title.textContent = 'Export Options';
+    modalContent.appendChild(title);
+    
+    var description = document.createElement('p');
+    description.textContent = 'Choose how you want to save your strategic plan:';
+    modalContent.appendChild(description);
+    
+    // Copy to clipboard button
+    var copyBtn = document.createElement('button');
+    copyBtn.textContent = 'Copy Text to Clipboard';
+    copyBtn.style.cssText = 'display: block; width: 100%; padding: 12px; margin: 8px 0; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;';
+    copyBtn.onclick = function() {
+        copyToClipboard(textContent);
+        modal.remove();
+        window.URL.revokeObjectURL(url);
+    };
+    modalContent.appendChild(copyBtn);
+    
+    // Download file link
+    var downloadLink = document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.download = filename;
+    downloadLink.textContent = 'Download File';
+    downloadLink.style.cssText = 'display: block; width: 100%; padding: 12px; margin: 8px 0; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; text-align: center; text-decoration: none;';
+    downloadLink.onclick = function() {
+        setTimeout(function() {
+            modal.remove();
+            setTimeout(function() {
+                window.URL.revokeObjectURL(url);
+            }, 100);
+        }, 100);
+    };
+    modalContent.appendChild(downloadLink);
+    
+    // Email button
+    var emailBtn = document.createElement('button');
+    emailBtn.textContent = 'Email as Text';
+    emailBtn.style.cssText = 'display: block; width: 100%; padding: 12px; margin: 8px 0; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;';
+    emailBtn.onclick = function() {
+        shareViaEmail(textContent);
+        modal.remove();
+        window.URL.revokeObjectURL(url);
+    };
+    modalContent.appendChild(emailBtn);
+    
+    // Cancel button
+    var cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.style.cssText = 'display: block; width: 100%; padding: 12px; margin: 8px 0; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;';
+    cancelBtn.onclick = function() {
+        modal.remove();
+        window.URL.revokeObjectURL(url);
+    };
+    modalContent.appendChild(cancelBtn);
+    
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+    
+    // Close on background click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+            window.URL.revokeObjectURL(url);
+        }
+    });
+}
+
+// Copy text to clipboard
+function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+            alert('Text copied to clipboard! You can now paste it into any app.');
+        }).catch(function(err) {
+            console.error('Failed to copy:', err);
+            fallbackCopyToClipboard(text);
+        });
+    } else {
+        fallbackCopyToClipboard(text);
+    }
+}
+
+// Fallback copy to clipboard for older browsers
+function fallbackCopyToClipboard(text) {
+    var textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
+        alert('Text copied to clipboard! You can now paste it into any app.');
+    } catch (err) {
+        console.error('Fallback copy failed:', err);
+        alert('Could not copy to clipboard. Please select and copy the text manually.');
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+// Share via email
+function shareViaEmail(text) {
+    var subject = encodeURIComponent('Strategic Plan - ' + new Date().toLocaleDateString());
+    var body = encodeURIComponent(text);
+    var mailtoLink = 'mailto:?subject=' + subject + '&body=' + body;
+    window.location.href = mailtoLink;
+}
+
+// Standard file download for desktop
+function downloadFile(blob, filename) {
     var url = window.URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
