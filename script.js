@@ -27,9 +27,52 @@ var planData = {
 };
 var userDataBackup = null; // Store user's data when loading sample data
 
+// Clear all form fields
+function clearForm() {
+    // Reset planData to initial state
+    planData = {
+        businessName: '',
+        userName: '',
+        vision: '',
+        values: '',
+        mission: '',
+        strengths: '',
+        weaknesses: '',
+        opportunities: '',
+        threats: '',
+        goals: [],
+        targetsInitiatives: '',
+        kpis: '',
+        strategyMap: '',
+        marketing: '',
+        sales: '',
+        operations: '',
+        administration: '',
+        mindMap: '',
+        reviewFrequency: 'quarterly',
+        successCriteria: '',
+        notes: ''
+    };
+    
+    // Clear all form fields
+    populateForm();
+    
+    // Clear goals container
+    var container = document.getElementById('goalsContainer');
+    if (container) {
+        container.innerHTML = '<div class="goal-item"><div class="form-group"><label>Goal</label><p class="field-help">Set goals for different time horizons: 6 Month, 1 Year, 10 Year, etc. What do you want to achieve in each timeframe?</p><input type="text" class="goal-title" placeholder="Enter a strategic goal..."></div><div class="form-group"><label>Time Horizon</label><select class="goal-timeline"><option value="">Select timeframe...</option><option value="6-month">6 Months</option><option value="1-year">1 Year</option><option value="3-year">3 Years</option><option value="5-year">5 Years</option><option value="10-year">10 Years</option></select></div><div class="form-group"><label>Strategic Intent</label><p class="field-help">How will you get there? Refer to your SWOT analysis when formulating this.</p><textarea class="goal-strategic-intent" placeholder="Describe how you will achieve this goal..."></textarea></div><div class="form-group"><label>Drivers (Elephant Projects)</label><p class="field-help">What will you focus on? These are your major initiatives or "elephant projects" that drive progress.</p><textarea class="goal-drivers" placeholder="List the key focus areas or major projects..."></textarea></div><div class="form-group"><label>Enablers</label><p class="field-help">What frameworks, resources, and skills will you use? What capabilities do you need to develop?</p><textarea class="goal-enablers" placeholder="List frameworks, resources, and skills needed..."></textarea></div></div>';
+        setupEventListeners();
+    }
+    
+    // Update UI
+    setupCharacterCounts();
+    updateStepCompletion();
+}
+
 // Initialize on page load
 function init() {
-    loadSavedData();
+    // Don't load saved data on initial load - start with blank form
+    // loadSavedData(); // Removed - app starts blank
     updateProgress();
     setupEventListeners();
     setupCharacterCounts();
@@ -1331,16 +1374,16 @@ function loadSampleData() {
 // Restore user's original data
 function restoreUserData() {
     if (!userDataBackup) {
-        alert('No user data to restore.');
-        return;
+        // No backup means user hasn't entered anything, so clear the form
+        clearForm();
+    } else {
+        // Restore the user's data
+        planData = JSON.parse(JSON.stringify(userDataBackup)); // Deep copy backup
+        userDataBackup = null; // Clear backup
+        
+        // Populate the form with user's data
+        populateForm();
     }
-    
-    // Restore the user's data
-    planData = JSON.parse(JSON.stringify(userDataBackup)); // Deep copy backup
-    userDataBackup = null; // Clear backup
-    
-    // Populate the form with user's data
-    populateForm();
     
     // Update UI
     updateStepCompletion();
@@ -1359,7 +1402,7 @@ function restoreUserData() {
         yourDataBtnContainer.style.display = 'none';
     }
     
-    // Save restored data
+    // Save restored/cleared data
     saveData();
 }
 
