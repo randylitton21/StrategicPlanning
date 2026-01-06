@@ -25,6 +25,7 @@ var planData = {
     successCriteria: '',
     notes: ''
 };
+var userDataBackup = null; // Store user's data when loading sample data
 
 // Initialize on page load
 function init() {
@@ -1171,6 +1172,10 @@ function formatTextForExcel(text) {
 
 // Load sample data for testing/demonstration
 function loadSampleData() {
+    // Save current user data before loading sample data
+    saveData(); // Ensure current data is saved
+    userDataBackup = JSON.parse(JSON.stringify(planData)); // Deep copy current data
+    
     // Step 1: Purpose
     planData.businessName = 'TechFlow Solutions';
     planData.userName = 'Sarah Chen, CEO';
@@ -1233,8 +1238,65 @@ function loadSampleData() {
     updateProgress();
     setupCharacterCounts();
     
+    // Show "Your data" button and hide "Load Sample Data" button
+    var sampleDataBtn = document.querySelector('button[onclick="loadSampleData()"]');
+    var yourDataBtnContainer = document.getElementById('yourDataButtonContainer');
+    
+    if (sampleDataBtn) {
+        sampleDataBtn.style.display = 'none';
+    }
+    
+    if (!yourDataBtnContainer) {
+        // Create the "Your data" button container if it doesn't exist
+        var buttonDiv = document.querySelector('div[style*="text-align: center"]');
+        if (buttonDiv) {
+            var yourDataDiv = document.createElement('div');
+            yourDataDiv.id = 'yourDataButtonContainer';
+            yourDataDiv.style.cssText = 'text-align: center; margin-top: 15px;';
+            yourDataDiv.innerHTML = '<button onclick="restoreUserData()" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 0.9em; transition: all 0.3s ease;">Your Data</button>';
+            buttonDiv.appendChild(yourDataDiv);
+        }
+    } else {
+        yourDataBtnContainer.style.display = 'block';
+    }
+    
     // Show confirmation
     alert('Sample data loaded! This demonstrates a complete strategic plan for TechFlow Solutions, a tech consulting business.');
+}
+
+// Restore user's original data
+function restoreUserData() {
+    if (!userDataBackup) {
+        alert('No user data to restore.');
+        return;
+    }
+    
+    // Restore the user's data
+    planData = JSON.parse(JSON.stringify(userDataBackup)); // Deep copy backup
+    userDataBackup = null; // Clear backup
+    
+    // Populate the form with user's data
+    populateForm();
+    
+    // Update UI
+    updateStepCompletion();
+    updateProgress();
+    setupCharacterCounts();
+    
+    // Hide "Your data" button and show "Load Sample Data" button
+    var sampleDataBtn = document.querySelector('button[onclick="loadSampleData()"]');
+    var yourDataBtnContainer = document.getElementById('yourDataButtonContainer');
+    
+    if (sampleDataBtn) {
+        sampleDataBtn.style.display = 'inline-block';
+    }
+    
+    if (yourDataBtnContainer) {
+        yourDataBtnContainer.style.display = 'none';
+    }
+    
+    // Save restored data
+    saveData();
 }
 
 // Initialize when page loads
