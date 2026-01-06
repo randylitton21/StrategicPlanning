@@ -35,6 +35,18 @@ function init() {
     setupCharacterCounts();
     setupKeyboardNavigation();
     updateStepCompletion();
+    
+    // Save data before page unload (important for iPhone Safari)
+    window.addEventListener('beforeunload', function() {
+        saveData();
+    });
+    
+    // Also save on page visibility change (when user switches tabs/apps on mobile)
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            saveData();
+        }
+    });
 }
 
 // Setup event listeners for auto-save
@@ -101,7 +113,20 @@ function setupKeyboardNavigation() {
     });
 }
 
-// Save data to localStorage
+// Check if storage is available (handles iPhone Safari private browsing)
+function isStorageAvailable(type) {
+    try {
+        var storage = window[type];
+        var x = '__storage_test__';
+        storage.setItem(x, x);
+        storage.removeItem(x);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+// Save data to localStorage with iPhone Safari compatibility
 function saveData() {
     // Save step 1 data (Purpose)
     planData.businessName = document.getElementById('business-name') ? document.getElementById('business-name').value : '';
@@ -141,11 +166,31 @@ function saveData() {
     planData.successCriteria = document.getElementById('success-criteria') ? document.getElementById('success-criteria').value : '';
     planData.notes = document.getElementById('notes') ? document.getElementById('notes').value : '';
     
-    try {
-        localStorage.setItem('strategicPlan', JSON.stringify(planData));
+    // Try localStorage first, fallback to sessionStorage for iPhone Safari compatibility
+    var dataString = JSON.stringify(planData);
+    var saved = false;
+    
+    if (isStorageAvailable('localStorage')) {
+        try {
+            localStorage.setItem('strategicPlan', dataString);
+            saved = true;
+        } catch (e) {
+            console.log('localStorage setItem failed, trying sessionStorage');
+        }
+    }
+    
+    // Fallback to sessionStorage if localStorage fails (iPhone Safari private mode)
+    if (!saved && isStorageAvailable('sessionStorage')) {
+        try {
+            sessionStorage.setItem('strategicPlan', dataString);
+            saved = true;
+        } catch (e) {
+            console.log('sessionStorage also not available');
+        }
+    }
+    
+    if (saved) {
         showSaveIndicator();
-    } catch (e) {
-        console.log('LocalStorage not available');
     }
 }
 
@@ -160,16 +205,35 @@ function showSaveIndicator() {
     }
 }
 
-// Load saved data from localStorage
+// Load saved data from localStorage with iPhone Safari compatibility
 function loadSavedData() {
-    try {
-        var saved = localStorage.getItem('strategicPlan');
-        if (saved) {
+    var saved = null;
+    
+    // Try localStorage first
+    if (isStorageAvailable('localStorage')) {
+        try {
+            saved = localStorage.getItem('strategicPlan');
+        } catch (e) {
+            console.log('localStorage getItem failed, trying sessionStorage');
+        }
+    }
+    
+    // Fallback to sessionStorage if localStorage fails (iPhone Safari private mode)
+    if (!saved && isStorageAvailable('sessionStorage')) {
+        try {
+            saved = sessionStorage.getItem('strategicPlan');
+        } catch (e) {
+            console.log('sessionStorage also not available');
+        }
+    }
+    
+    if (saved) {
+        try {
             planData = JSON.parse(saved);
             populateForm();
+        } catch (e) {
+            console.log('Could not parse saved data');
         }
-    } catch (e) {
-        console.log('Could not load saved data');
     }
 }
 
