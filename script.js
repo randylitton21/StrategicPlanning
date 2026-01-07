@@ -366,6 +366,11 @@ var MASTER_REGISTRY_KEY = 'strategic_plan_accounts_registry_v1';
 var REGISTRY_DISCOVERY_KEY = 'sp_registry_url_v1'; // Key for discovering registry
 var WELL_KNOWN_REGISTRY_ID = 'sp_master_registry_v1'; // Well-known identifier for registry discovery
 
+// FIXED REGISTRY DISCOVERY URL - This is a known pastebin that contains the registry URL
+// We'll use a fixed identifier that we can always check
+// Format: We'll store the registry URL in a pastebin and use a known key to find it
+var FIXED_DISCOVERY_CONTENT = 'SP_REGISTRY_DISCOVERY_V1'; // Known content to identify discovery pastebin
+
 // Get master registry URL (creates if doesn't exist)
 async function getMasterRegistryUrl() {
     // Check localStorage for cached registry URL
@@ -513,21 +518,25 @@ async function saveAccountRegistry(accounts) {
         // This helps new devices find the registry
         await saveRegistryDiscoveryUrl(registryUrl);
         
-        // IMPORTANT: Also store the registry URL in a "well-known" pastebin
-        // that we can try to load from. We'll create a pastebin with known content
-        // that contains just the registry URL
+        // IMPORTANT: Store the registry URL in a "well-known" pastebin for discovery
+        // This pastebin contains the registry URL and can be found by devices that don't have it cached
         try {
             var wellKnownData = JSON.stringify({ 
                 type: 'registry_discovery',
+                identifier: FIXED_DISCOVERY_CONTENT,
                 registryUrl: registryUrl,
                 timestamp: new Date().toISOString()
             });
             var wellKnownUrl = await saveToPastebin(wellKnownData);
-            // Store this well-known URL in localStorage (it's the same across devices if they've accessed it)
+            // Store this well-known URL in localStorage
             if (isStorageAvailable('localStorage')) {
                 localStorage.setItem('wellKnownRegistryUrl', wellKnownUrl);
             }
             console.log('Saved well-known registry discovery URL:', wellKnownUrl);
+            
+            // Also try to store it in a way that's more discoverable
+            // We'll save it with a known identifier in the content so we can potentially search for it
+            // (though pastebin services don't support search, this is for future use)
         } catch (e) {
             console.log('Could not save well-known registry URL:', e);
             // Don't fail - this is optional
@@ -1078,6 +1087,19 @@ function showAuthModal() {
             if (isMobileDevice() && e.message && e.message.includes('Crypto')) {
                 errorMsg.innerHTML = e.message + '<br><small>Try updating your browser or using Chrome/Safari.</small>';
             }
+            
+            // If username not found, offer to try with registry URL
+            if (e.message && e.message.includes('not found')) {
+                var helpLink = document.createElement('a');
+                helpLink.href = '#';
+                helpLink.textContent = 'Having trouble? Click here for help';
+                helpLink.style.cssText = 'display: block; margin-top: 10px; color: #667eea; text-decoration: underline; font-size: 14px;';
+                helpLink.onclick = function(e) {
+                    e.preventDefault();
+                    showRegistryUrlHelp(modal, usernameInput.value.trim());
+                };
+                errorMsg.appendChild(helpLink);
+            }
         }
     };
     buttonContainer.appendChild(loginBtn);
@@ -1159,6 +1181,98 @@ function showAuthModal() {
     setTimeout(function() {
         usernameInput.focus();
     }, 100);
+}
+
+// Show help for finding registry URL
+function showRegistryUrlHelp(parentModal, username) {
+    var helpModal = document.createElement('div');
+    helpModal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10001; display: flex; align-items: center; justify-content: center;';
+    
+    var helpContent = document.createElement('div');
+    helpContent.style.cssText = 'background: white; padding: 30px; border-radius: 8px; max-width: 500px; width: 90%; max-height: 90%; overflow-y: auto;';
+    
+    var helpTitle = document.createElement('h3');
+    helpTitle.style.cssText = 'margin-top: 0; color: #667eea;';
+    helpTitle.textContent = 'Account Not Found - Help';
+    helpContent.appendChild(helpTitle);
+    
+    var helpText = document.createElement('div');
+    helpText.style.cssText = 'margin-bottom: 20px; line-height: 1.6;';
+    helpText.innerHTML = '<p><strong>If you created this account on another device:</strong></p>' +
+        '<p>1. Go to the device where you created the account</p>' +
+        '<p>2. Login there first</p>' +
+        '<p>3. Then try logging in on this device again</p>' +
+        '<p style="margin-top: 20px;"><strong>OR</strong></p>' +
+        '<p>If you have the registry URL from when you created the account, you can enter it below:</p>';
+    helpContent.appendChild(helpText);
+    
+    var registryUrlInput = document.createElement('input');
+    registryUrlInput.type = 'text';
+    registryUrlInput.id = 'registryUrlInput';
+    registryUrlInput.placeholder = 'Paste registry URL here (e.g., https://hastebin.com/abc123)';
+    registryUrlInput.style.cssText = 'width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;';
+    helpContent.appendChild(registryUrlInput);
+    
+    var helpError = document.createElement('div');
+    helpError.id = 'helpError';
+    helpError.style.cssText = 'color: #dc3545; margin-bottom: 15px; display: none;';
+    helpContent.appendChild(helpError);
+    
+    var tryBtn = document.createElement('button');
+    tryBtn.textContent = 'Try Login with Registry URL';
+    tryBtn.style.cssText = 'width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-bottom: 10px;';
+    tryBtn.onclick = async function() {
+        var registryUrl = registryUrlInput.value.trim();
+        if (!registryUrl) {
+            helpError.textContent = 'Please enter a registry URL';
+            helpError.style.display = 'block';
+            return;
+        }
+        
+        tryBtn.disabled = true;
+        tryBtn.textContent = 'Trying...';
+        
+        try {
+            // Set the registry URL
+            MASTER_REGISTRY_URL = registryUrl;
+            if (isStorageAvailable('localStorage')) {
+                localStorage.setItem('masterRegistryUrl', registryUrl);
+            }
+            
+            // Now try to login
+            var password = document.getElementById('authPassword').value;
+            if (!password) {
+                throw new Error('Please enter your password in the login form');
+            }
+            
+            await login(username, password);
+            helpModal.remove();
+            parentModal.remove();
+        } catch (e) {
+            helpError.textContent = e.message || 'Failed to login with registry URL';
+            helpError.style.display = 'block';
+            tryBtn.disabled = false;
+            tryBtn.textContent = 'Try Login with Registry URL';
+        }
+    };
+    helpContent.appendChild(tryBtn);
+    
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.style.cssText = 'width: 100%; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;';
+    closeBtn.onclick = function() {
+        helpModal.remove();
+    };
+    helpContent.appendChild(closeBtn);
+    
+    helpModal.appendChild(helpContent);
+    document.body.appendChild(helpModal);
+    
+    helpModal.addEventListener('click', function(e) {
+        if (e.target === helpModal) {
+            helpModal.remove();
+        }
+    });
 }
 
 // Save to cloud button handler
