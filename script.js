@@ -364,6 +364,7 @@ async function loadFromPastebin(url) {
 var MASTER_REGISTRY_URL = null; // Will be set on first use
 var MASTER_REGISTRY_KEY = 'strategic_plan_accounts_registry_v1';
 var REGISTRY_DISCOVERY_KEY = 'sp_registry_url_v1'; // Key for discovering registry
+var WELL_KNOWN_REGISTRY_ID = 'sp_master_registry_v1'; // Well-known identifier for registry discovery
 
 // Get master registry URL (creates if doesn't exist)
 async function getMasterRegistryUrl() {
@@ -381,8 +382,15 @@ async function getMasterRegistryUrl() {
         return MASTER_REGISTRY_URL;
     }
     
-    // Try to discover registry URL from a known location
-    // We store the registry URL in a pastebin with a known identifier
+    // Try to discover registry URL from well-known location
+    // We'll try to load from a pastebin that contains the registry URL
+    // The well-known location is stored in localStorage with a special key
+    // that we can check across devices (though this still has the same problem...)
+    
+    // Actually, the real solution: Store registry URL in a pastebin with known content
+    // We can try to find it by checking if there's a way to search, but pastebin services don't support that
+    
+    // For now, try to discover from cached discovery URL
     try {
         var discoveryUrl = await discoverRegistryUrl();
         if (discoveryUrl) {
@@ -405,6 +413,22 @@ async function getMasterRegistryUrl() {
 async function discoverRegistryUrl() {
     // Try to load discovery URL from localStorage (if this device has accessed it before)
     if (isStorageAvailable('localStorage')) {
+        // Try well-known registry URL first
+        var wellKnownUrl = localStorage.getItem('wellKnownRegistryUrl');
+        if (wellKnownUrl && !wellKnownUrl.startsWith('localstorage://')) {
+            try {
+                var wellKnownData = await loadFromPastebin(wellKnownUrl);
+                var wellKnown = JSON.parse(wellKnownData);
+                if (wellKnown.registryUrl) {
+                    console.log('Discovered registry from well-known URL:', wellKnown.registryUrl);
+                    return wellKnown.registryUrl;
+                }
+            } catch (e) {
+                console.log('Could not load well-known registry URL:', e);
+            }
+        }
+        
+        // Try discovery pastebin URL
         var discoveryPastebinUrl = localStorage.getItem(REGISTRY_DISCOVERY_KEY);
         if (discoveryPastebinUrl && !discoveryPastebinUrl.startsWith('localstorage://')) {
             try {
@@ -420,9 +444,9 @@ async function discoverRegistryUrl() {
     }
     
     // If that doesn't work, we need another approach
-    // Since we can't deterministically find the registry, we'll need to store it
-    // in a way that's discoverable. For now, we'll rely on the fact that when
-    // a user logs in, we can potentially discover it from their account data
+    // The issue is: we can't deterministically find the registry without knowing where it is
+    // We'll need to rely on the user logging in from a device that has the registry cached,
+    // or we need to implement a different discovery mechanism
     
     return null;
 }
@@ -479,6 +503,8 @@ async function saveAccountRegistry(accounts) {
         // Cache the registry URL in localStorage for faster access
         if (isStorageAvailable('localStorage')) {
             localStorage.setItem('masterRegistryUrl', registryUrl);
+            // Also store with well-known key for cross-device discovery
+            localStorage.setItem(WELL_KNOWN_REGISTRY_ID, registryUrl);
         }
         
         MASTER_REGISTRY_URL = registryUrl;
@@ -486,6 +512,26 @@ async function saveAccountRegistry(accounts) {
         // Also save a discovery URL that points to this registry
         // This helps new devices find the registry
         await saveRegistryDiscoveryUrl(registryUrl);
+        
+        // IMPORTANT: Also store the registry URL in a "well-known" pastebin
+        // that we can try to load from. We'll create a pastebin with known content
+        // that contains just the registry URL
+        try {
+            var wellKnownData = JSON.stringify({ 
+                type: 'registry_discovery',
+                registryUrl: registryUrl,
+                timestamp: new Date().toISOString()
+            });
+            var wellKnownUrl = await saveToPastebin(wellKnownData);
+            // Store this well-known URL in localStorage (it's the same across devices if they've accessed it)
+            if (isStorageAvailable('localStorage')) {
+                localStorage.setItem('wellKnownRegistryUrl', wellKnownUrl);
+            }
+            console.log('Saved well-known registry discovery URL:', wellKnownUrl);
+        } catch (e) {
+            console.log('Could not save well-known registry URL:', e);
+            // Don't fail - this is optional
+        }
         
         return registryUrl;
     } catch (e) {
@@ -699,6 +745,18 @@ async function login(username, password) {
                         if (account._registryUrl) {
                             MASTER_REGISTRY_URL = account._registryUrl;
                             localStorage.setItem('masterRegistryUrl', account._registryUrl);
+                            console.log('Found account in cache with registry URL:', account._registryUrl);
+                            // Try loading from cloud registry now that we have the URL
+                            try {
+                                var cloudAccounts = await loadAccountRegistry();
+                                if (cloudAccounts[username]) {
+                                    account = cloudAccounts[username];
+                                    console.log('Loaded account from cloud registry');
+                                }
+                            } catch (e) {
+                                console.log('Could not load from cloud registry:', e);
+                                // Use cached account
+                            }
                         }
                     }
                 }
@@ -707,10 +765,8 @@ async function login(username, password) {
             }
         }
         
-        // If still not found, we need a way to discover the registry
-        // The issue is: we can't find the account without the registry,
-        // but we can't find the registry without... it being stored somewhere discoverable
-        
+        // If still not found, the registry is not accessible from this device
+        // This is the core issue: new devices can't find the registry
         if (!account) {
             // Show a helpful error with instructions
             var errorMsg = 'Username not found.\n\n';
@@ -720,7 +776,7 @@ async function login(username, password) {
             errorMsg += 'Please try:\n';
             errorMsg += '- Make sure you\'re connected to the internet\n';
             errorMsg += '- Wait a few seconds and try again\n';
-            errorMsg += '- Or login from the device where you created the account first';
+            errorMsg += '- Or login from the device where you created the account first, then try this device again';
             
             throw new Error(errorMsg);
         }
