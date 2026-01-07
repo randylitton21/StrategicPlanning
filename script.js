@@ -27,6 +27,663 @@ var planData = {
 };
 var userDataBackup = null; // Store user's data when loading sample data
 
+// Authentication and Cloud Storage System
+var currentUser = null; // {username, pastebinUrl, createdAt, lastLogin}
+var userSession = null; // Session token stored in sessionStorage
+var isLoggedIn = false;
+
+// Initialize authentication on page load
+function initAuth() {
+    // Check if user is logged in (sessionStorage)
+    var session = sessionStorage.getItem('userSession');
+    if (session) {
+        try {
+            var sessionData = JSON.parse(session);
+            currentUser = sessionData.user;
+            isLoggedIn = true;
+            updateAuthUI();
+            // Auto-load user's data from cloud
+            loadUserDataFromCloud();
+        } catch (e) {
+            console.log('Session invalid');
+            logout();
+        }
+    } else {
+        updateAuthUI();
+    }
+}
+
+// Generate encryption key from password using PBKDF2
+async function deriveKeyFromPassword(password, salt) {
+    const encoder = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+        'raw',
+        encoder.encode(password),
+        'PBKDF2',
+        false,
+        ['deriveBits', 'deriveKey']
+    );
+    
+    return await crypto.subtle.deriveKey(
+        {
+            name: 'PBKDF2',
+            salt: salt,
+            iterations: 100000,
+            hash: 'SHA-256'
+        },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+    );
+}
+
+// Encrypt data with password
+async function encryptData(data, password) {
+    try {
+        const encoder = new TextEncoder();
+        const dataString = JSON.stringify(data);
+        const dataBuffer = encoder.encode(dataString);
+        
+        // Generate random salt and IV
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        
+        // Derive key from password
+        const key = await deriveKeyFromPassword(password, salt);
+        
+        // Encrypt data
+        const encrypted = await crypto.subtle.encrypt(
+            { name: 'AES-GCM', iv: iv },
+            key,
+            dataBuffer
+        );
+        
+        // Combine salt, IV, and encrypted data
+        const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+        combined.set(salt, 0);
+        combined.set(iv, salt.length);
+        combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+        
+        // Convert to base64 for storage
+        return btoa(String.fromCharCode.apply(null, combined));
+    } catch (e) {
+        console.error('Encryption error:', e);
+        throw new Error('Failed to encrypt data');
+    }
+}
+
+// Decrypt data with password
+async function decryptData(encryptedBase64, password) {
+    try {
+        // Convert from base64
+        const combined = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
+        
+        // Extract salt, IV, and encrypted data
+        const salt = combined.slice(0, 16);
+        const iv = combined.slice(16, 28);
+        const encrypted = combined.slice(28);
+        
+        // Derive key from password
+        const key = await deriveKeyFromPassword(password, salt);
+        
+        // Decrypt data
+        const decrypted = await crypto.subtle.decrypt(
+            { name: 'AES-GCM', iv: iv },
+            key,
+            encrypted
+        );
+        
+        // Convert to string and parse JSON
+        const decoder = new TextDecoder();
+        const decryptedString = decoder.decode(decrypted);
+        return JSON.parse(decryptedString);
+    } catch (e) {
+        console.error('Decryption error:', e);
+        throw new Error('Failed to decrypt data. Wrong password?');
+    }
+}
+
+// Generate unique user ID from username
+function generateUserId(username) {
+    // Simple hash function (for client-side)
+    var hash = 0;
+    for (var i = 0; i < username.length; i++) {
+        var char = username.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(36);
+}
+
+// Save to pastebin (using dpaste.com API)
+async function saveToPastebin(content, expiresDays) {
+    try {
+        expiresDays = expiresDays || 365; // Default 1 year
+        const response = await fetch('https://dpaste.com/api/v2/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `content=${encodeURIComponent(content)}&format=json&lexer=text&expires_days=${expiresDays}`
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to save to pastebin');
+        }
+        
+        const result = await response.json();
+        return result.url; // Returns: https://dpaste.com/abc123/
+    } catch (e) {
+        console.error('Pastebin save error:', e);
+        throw new Error('Failed to save to cloud storage');
+    }
+}
+
+// Load from pastebin URL
+async function loadFromPastebin(url) {
+    try {
+        // Extract paste ID from URL
+        const pasteId = url.split('/').filter(part => part).pop();
+        const response = await fetch(`https://dpaste.com/${pasteId}/raw/`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to load from pastebin');
+        }
+        
+        return await response.text();
+    } catch (e) {
+        console.error('Pastebin load error:', e);
+        throw new Error('Failed to load from cloud storage');
+    }
+}
+
+// Store user account mapping (in localStorage)
+function saveUserAccount(username, pastebinUrl) {
+    var accounts = getUserAccounts();
+    accounts[username] = {
+        username: username,
+        pastebinUrl: pastebinUrl,
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString()
+    };
+    localStorage.setItem('userAccounts', JSON.stringify(accounts));
+}
+
+// Get user account by username
+function getUserAccount(username) {
+    var accounts = getUserAccounts();
+    return accounts[username] || null;
+}
+
+// Get all user accounts
+function getUserAccounts() {
+    try {
+        var accounts = localStorage.getItem('userAccounts');
+        return accounts ? JSON.parse(accounts) : {};
+    } catch (e) {
+        return {};
+    }
+}
+
+// Sign up new user
+async function signUp(username, password) {
+    if (!username || !password) {
+        throw new Error('Username and password are required');
+    }
+    
+    if (username.length < 3) {
+        throw new Error('Username must be at least 3 characters');
+    }
+    
+    if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters');
+    }
+    
+    // Check if username already exists
+    if (getUserAccount(username)) {
+        throw new Error('Username already exists');
+    }
+    
+    // Encrypt empty plan data
+    var emptyPlan = {
+        businessName: '',
+        userName: '',
+        vision: '',
+        values: '',
+        mission: '',
+        strengths: '',
+        weaknesses: '',
+        opportunities: '',
+        threats: '',
+        goals: [],
+        targetsInitiatives: '',
+        kpis: '',
+        strategyMap: '',
+        marketing: '',
+        sales: '',
+        operations: '',
+        administration: '',
+        reviewFrequency: 'quarterly',
+        successCriteria: '',
+        notes: ''
+    };
+    
+    var encryptedData = await encryptData(emptyPlan, password);
+    
+    // Save to pastebin
+    var pastebinUrl = await saveToPastebin(encryptedData);
+    
+    // Store user account
+    saveUserAccount(username, pastebinUrl);
+    
+    // Log in the user
+    await login(username, password);
+    
+    return true;
+}
+
+// Login user
+async function login(username, password) {
+    if (!username || !password) {
+        throw new Error('Username and password are required');
+    }
+    
+    // Get user account
+    var account = getUserAccount(username);
+    if (!account) {
+        throw new Error('Username not found');
+    }
+    
+    // Load encrypted data from pastebin
+    var encryptedData = await loadFromPastebin(account.pastebinUrl);
+    
+    // Decrypt data (this will throw if password is wrong)
+    var decryptedData = await decryptData(encryptedData, password);
+    
+    // Update last login
+    account.lastLogin = new Date().toISOString();
+    saveUserAccount(username, account.pastebinUrl);
+    
+    // Set current user and session
+    currentUser = account;
+    isLoggedIn = true;
+    
+    // Create session
+    var session = {
+        user: account,
+        loginTime: new Date().toISOString()
+    };
+    sessionStorage.setItem('userSession', JSON.stringify(session));
+    
+    // Load data into app
+    planData = decryptedData;
+    populateForm();
+    updateStepCompletion();
+    updateProgress();
+    setupCharacterCounts();
+    
+    updateAuthUI();
+    
+    return true;
+}
+
+// Logout user
+function logout() {
+    currentUser = null;
+    isLoggedIn = false;
+    sessionStorage.removeItem('userSession');
+    clearForm();
+    updateAuthUI();
+}
+
+// Save user data to cloud
+async function saveUserDataToCloud(password) {
+    if (!isLoggedIn || !currentUser) {
+        throw new Error('Not logged in');
+    }
+    
+    // Collect current form data
+    saveData(); // This updates planData
+    
+    // Encrypt data
+    var encryptedData = await encryptData(planData, password);
+    
+    // Save to pastebin
+    var pastebinUrl = await saveToPastebin(encryptedData);
+    
+    // Update user account with new URL
+    currentUser.pastebinUrl = pastebinUrl;
+    saveUserAccount(currentUser.username, pastebinUrl);
+    
+    // Update session
+    var session = JSON.parse(sessionStorage.getItem('userSession'));
+    session.user = currentUser;
+    sessionStorage.setItem('userSession', JSON.stringify(session));
+    
+    showSaveIndicator();
+    return pastebinUrl;
+}
+
+// Load user data from cloud
+async function loadUserDataFromCloud() {
+    if (!isLoggedIn || !currentUser) {
+        return;
+    }
+    
+    // Note: We need the password to decrypt, so this is called after login
+    // This function is mainly for auto-loading after page refresh
+    // The actual loading happens in the login function
+}
+
+// Update authentication UI
+function updateAuthUI() {
+    var authButton = document.getElementById('authButton');
+    var userInfo = document.getElementById('userInfo');
+    var saveToCloudBtn = document.getElementById('saveToCloudBtn');
+    
+    if (isLoggedIn && currentUser) {
+        // Show logged in state
+        if (authButton) {
+            authButton.textContent = 'Logout';
+            authButton.onclick = function() {
+                if (confirm('Are you sure you want to logout? Your current work will be saved.')) {
+                    logout();
+                }
+            };
+        }
+        if (userInfo) {
+            userInfo.textContent = 'Logged in as: ' + currentUser.username;
+            userInfo.style.display = 'block';
+        }
+        if (saveToCloudBtn) {
+            saveToCloudBtn.style.display = 'inline-block';
+        }
+    } else {
+        // Show login/signup state
+        if (authButton) {
+            authButton.textContent = 'Login / Sign Up';
+            authButton.onclick = showAuthModal;
+        }
+        if (userInfo) {
+            userInfo.style.display = 'none';
+        }
+        if (saveToCloudBtn) {
+            saveToCloudBtn.style.display = 'none';
+        }
+    }
+}
+
+// Show authentication modal (login/signup)
+function showAuthModal() {
+    var modal = document.createElement('div');
+    modal.id = 'authModal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+    
+    var modalContent = document.createElement('div');
+    modalContent.style.cssText = 'background: white; padding: 30px; border-radius: 8px; max-width: 400px; width: 90%; max-height: 90%; overflow-y: auto;';
+    
+    var title = document.createElement('h2');
+    title.style.cssText = 'margin-top: 0; color: #667eea;';
+    title.textContent = 'Login / Sign Up';
+    modalContent.appendChild(title);
+    
+    var description = document.createElement('p');
+    description.style.cssText = 'color: #666; margin-bottom: 20px;';
+    description.textContent = 'Create an account to save your strategic plan to the cloud and access it from any device.';
+    modalContent.appendChild(description);
+    
+    // Username input
+    var usernameLabel = document.createElement('label');
+    usernameLabel.textContent = 'Username';
+    usernameLabel.style.cssText = 'display: block; margin-bottom: 5px; font-weight: bold;';
+    modalContent.appendChild(usernameLabel);
+    
+    var usernameInput = document.createElement('input');
+    usernameInput.type = 'text';
+    usernameInput.id = 'authUsername';
+    usernameInput.placeholder = 'Enter username (min 3 characters)';
+    usernameInput.style.cssText = 'width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;';
+    modalContent.appendChild(usernameInput);
+    
+    // Password input
+    var passwordLabel = document.createElement('label');
+    passwordLabel.textContent = 'Password';
+    passwordLabel.style.cssText = 'display: block; margin-bottom: 5px; font-weight: bold;';
+    modalContent.appendChild(passwordLabel);
+    
+    var passwordInput = document.createElement('input');
+    passwordInput.type = 'password';
+    passwordInput.id = 'authPassword';
+    passwordInput.placeholder = 'Enter password (min 6 characters)';
+    passwordInput.style.cssText = 'width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;';
+    modalContent.appendChild(passwordInput);
+    
+    // Error message
+    var errorMsg = document.createElement('div');
+    errorMsg.id = 'authError';
+    errorMsg.style.cssText = 'color: #dc3545; margin-bottom: 15px; display: none;';
+    modalContent.appendChild(errorMsg);
+    
+    // Success message
+    var successMsg = document.createElement('div');
+    successMsg.id = 'authSuccess';
+    successMsg.style.cssText = 'color: #28a745; margin-bottom: 15px; display: none;';
+    modalContent.appendChild(successMsg);
+    
+    // Buttons container
+    var buttonContainer = document.createElement('div');
+    buttonContainer.style.cssText = 'display: flex; gap: 10px;';
+    
+    // Login button
+    var loginBtn = document.createElement('button');
+    loginBtn.textContent = 'Login';
+    loginBtn.style.cssText = 'flex: 1; padding: 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;';
+    loginBtn.onclick = async function() {
+        var username = usernameInput.value.trim();
+        var password = passwordInput.value;
+        
+        errorMsg.style.display = 'none';
+        successMsg.style.display = 'none';
+        
+        if (!username || !password) {
+            errorMsg.textContent = 'Please enter username and password';
+            errorMsg.style.display = 'block';
+            return;
+        }
+        
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Logging in...';
+        
+        try {
+            await login(username, password);
+            successMsg.textContent = 'Login successful!';
+            successMsg.style.display = 'block';
+            setTimeout(function() {
+                modal.remove();
+            }, 1000);
+        } catch (e) {
+            errorMsg.textContent = e.message || 'Login failed';
+            errorMsg.style.display = 'block';
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Login';
+        }
+    };
+    buttonContainer.appendChild(loginBtn);
+    
+    // Sign up button
+    var signupBtn = document.createElement('button');
+    signupBtn.textContent = 'Sign Up';
+    signupBtn.style.cssText = 'flex: 1; padding: 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;';
+    signupBtn.onclick = async function() {
+        var username = usernameInput.value.trim();
+        var password = passwordInput.value;
+        
+        errorMsg.style.display = 'none';
+        successMsg.style.display = 'none';
+        
+        if (!username || !password) {
+            errorMsg.textContent = 'Please enter username and password';
+            errorMsg.style.display = 'block';
+            return;
+        }
+        
+        signupBtn.disabled = true;
+        signupBtn.textContent = 'Creating account...';
+        
+        try {
+            await signUp(username, password);
+            successMsg.textContent = 'Account created! Logging you in...';
+            successMsg.style.display = 'block';
+            setTimeout(function() {
+                modal.remove();
+            }, 1500);
+        } catch (e) {
+            errorMsg.textContent = e.message || 'Sign up failed';
+            errorMsg.style.display = 'block';
+            signupBtn.disabled = false;
+            signupBtn.textContent = 'Sign Up';
+        }
+    };
+    buttonContainer.appendChild(signupBtn);
+    
+    modalContent.appendChild(buttonContainer);
+    
+    // Cancel button
+    var cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.style.cssText = 'width: 100%; padding: 10px; margin-top: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;';
+    cancelBtn.onclick = function() {
+        modal.remove();
+    };
+    modalContent.appendChild(cancelBtn);
+    
+    // Info text
+    var infoText = document.createElement('p');
+    infoText.style.cssText = 'font-size: 12px; color: #999; margin-top: 15px; margin-bottom: 0;';
+    infoText.textContent = 'Your data is encrypted and stored securely in the cloud. You can access it from any device.';
+    modalContent.appendChild(infoText);
+    
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+    
+    // Close on background click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+    
+    // Focus username input
+    setTimeout(function() {
+        usernameInput.focus();
+    }, 100);
+}
+
+// Save to cloud button handler
+async function saveToCloud() {
+    if (!isLoggedIn || !currentUser) {
+        showAuthModal();
+        return;
+    }
+    
+    // Show password modal
+    var modal = document.createElement('div');
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+    
+    var modalContent = document.createElement('div');
+    modalContent.style.cssText = 'background: white; padding: 30px; border-radius: 8px; max-width: 400px; width: 90%;';
+    
+    var title = document.createElement('h3');
+    title.style.cssText = 'margin-top: 0; color: #667eea;';
+    title.textContent = 'Save to Cloud';
+    modalContent.appendChild(title);
+    
+    var description = document.createElement('p');
+    description.style.cssText = 'color: #666; margin-bottom: 20px;';
+    description.textContent = 'Enter your password to encrypt and save your plan to the cloud.';
+    modalContent.appendChild(description);
+    
+    var passwordLabel = document.createElement('label');
+    passwordLabel.textContent = 'Password';
+    passwordLabel.style.cssText = 'display: block; margin-bottom: 5px; font-weight: bold;';
+    modalContent.appendChild(passwordLabel);
+    
+    var passwordInput = document.createElement('input');
+    passwordInput.type = 'password';
+    passwordInput.id = 'cloudSavePassword';
+    passwordInput.placeholder = 'Enter your password';
+    passwordInput.style.cssText = 'width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;';
+    modalContent.appendChild(passwordInput);
+    
+    var errorMsg = document.createElement('div');
+    errorMsg.id = 'cloudSaveError';
+    errorMsg.style.cssText = 'color: #dc3545; margin-bottom: 15px; display: none;';
+    modalContent.appendChild(errorMsg);
+    
+    var buttonContainer = document.createElement('div');
+    buttonContainer.style.cssText = 'display: flex; gap: 10px;';
+    
+    var saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save';
+    saveBtn.style.cssText = 'flex: 1; padding: 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;';
+    saveBtn.onclick = async function() {
+        var password = passwordInput.value;
+        if (!password) {
+            errorMsg.textContent = 'Please enter your password';
+            errorMsg.style.display = 'block';
+            return;
+        }
+        
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+        errorMsg.style.display = 'none';
+        
+        try {
+            var pastebinUrl = await saveUserDataToCloud(password);
+            modal.remove();
+            alert('Your plan has been saved to the cloud!\n\nYou can access it from any device by logging in with your username and password.');
+        } catch (e) {
+            errorMsg.textContent = e.message || 'Error saving to cloud';
+            errorMsg.style.display = 'block';
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save';
+        }
+    };
+    buttonContainer.appendChild(saveBtn);
+    
+    var cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.style.cssText = 'flex: 1; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;';
+    cancelBtn.onclick = function() {
+        modal.remove();
+    };
+    buttonContainer.appendChild(cancelBtn);
+    
+    modalContent.appendChild(buttonContainer);
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+    
+    // Close on background click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+    
+    // Enter key to save
+    passwordInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            saveBtn.click();
+        }
+    });
+    
+    // Focus password input
+    setTimeout(function() {
+        passwordInput.focus();
+    }, 100);
+}
+
 // Clear all form fields
 function clearForm() {
     // Reset planData to initial state
@@ -71,6 +728,9 @@ function clearForm() {
 
 // Initialize on page load
 function init() {
+    // Initialize authentication first
+    initAuth();
+    
     // Don't load saved data on initial load - start with blank form
     // loadSavedData(); // Removed - app starts blank
     updateProgress();
