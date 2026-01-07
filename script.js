@@ -363,6 +363,7 @@ async function loadFromPastebin(url) {
 // This is a known pastebin URL that stores all account mappings
 var MASTER_REGISTRY_URL = null; // Will be set on first use
 var MASTER_REGISTRY_KEY = 'strategic_plan_accounts_registry_v1';
+var REGISTRY_DISCOVERY_KEY = 'sp_registry_url_v1'; // Key for discovering registry
 
 // Get master registry URL (creates if doesn't exist)
 async function getMasterRegistryUrl() {
@@ -370,6 +371,7 @@ async function getMasterRegistryUrl() {
     if (isStorageAvailable('localStorage')) {
         var cached = localStorage.getItem('masterRegistryUrl');
         if (cached && !cached.startsWith('localstorage://')) {
+            MASTER_REGISTRY_URL = cached;
             return cached;
         }
     }
@@ -379,7 +381,70 @@ async function getMasterRegistryUrl() {
         return MASTER_REGISTRY_URL;
     }
     
+    // Try to discover registry URL from a known location
+    // We store the registry URL in a pastebin with a known identifier
+    try {
+        var discoveryUrl = await discoverRegistryUrl();
+        if (discoveryUrl) {
+            MASTER_REGISTRY_URL = discoveryUrl;
+            // Cache it
+            if (isStorageAvailable('localStorage')) {
+                localStorage.setItem('masterRegistryUrl', discoveryUrl);
+            }
+            return discoveryUrl;
+        }
+    } catch (e) {
+        console.log('Could not discover registry URL:', e);
+    }
+    
     // No registry exists yet - will be created on first account save
+    return null;
+}
+
+// Discover registry URL from a known location
+async function discoverRegistryUrl() {
+    // Try to load discovery URL from localStorage (if this device has accessed it before)
+    if (isStorageAvailable('localStorage')) {
+        var discoveryPastebinUrl = localStorage.getItem(REGISTRY_DISCOVERY_KEY);
+        if (discoveryPastebinUrl && !discoveryPastebinUrl.startsWith('localstorage://')) {
+            try {
+                var discoveryData = await loadFromPastebin(discoveryPastebinUrl);
+                var discovery = JSON.parse(discoveryData);
+                if (discovery.registryUrl) {
+                    return discovery.registryUrl;
+                }
+            } catch (e) {
+                console.log('Could not load discovery pastebin:', e);
+            }
+        }
+    }
+    
+    // If that doesn't work, we need another approach
+    // Since we can't deterministically find the registry, we'll need to store it
+    // in a way that's discoverable. For now, we'll rely on the fact that when
+    // a user logs in, we can potentially discover it from their account data
+    
+    return null;
+}
+
+// Save registry discovery URL (a pastebin that points to the main registry)
+async function saveRegistryDiscoveryUrl(registryUrl) {
+    try {
+        // Save a simple pastebin that contains just the registry URL
+        var discoveryData = JSON.stringify({ registryUrl: registryUrl });
+        var discoveryPastebinUrl = await saveToPastebin(discoveryData);
+        
+        // Store the discovery URL in localStorage with a known key
+        // This way, if a device has ever accessed the registry, it will have this
+        if (isStorageAvailable('localStorage')) {
+            localStorage.setItem(REGISTRY_DISCOVERY_KEY, discoveryPastebinUrl);
+        }
+        
+        return discoveryPastebinUrl;
+    } catch (e) {
+        console.error('Failed to save registry discovery URL:', e);
+        // Don't throw - this is optional
+    }
     return null;
 }
 
@@ -417,6 +482,11 @@ async function saveAccountRegistry(accounts) {
         }
         
         MASTER_REGISTRY_URL = registryUrl;
+        
+        // Also save a discovery URL that points to this registry
+        // This helps new devices find the registry
+        await saveRegistryDiscoveryUrl(registryUrl);
+        
         return registryUrl;
     } catch (e) {
         console.error('Failed to save account registry:', e);
@@ -427,15 +497,23 @@ async function saveAccountRegistry(accounts) {
 // Store user account mapping (in cloud registry)
 async function saveUserAccount(username, pastebinUrl) {
     var accounts = await loadAccountRegistry();
+    var registryUrl = await getMasterRegistryUrl();
+    
     accounts[username] = {
         username: username,
         pastebinUrl: pastebinUrl,
         createdAt: accounts[username] ? accounts[username].createdAt : new Date().toISOString(),
-        lastLogin: new Date().toISOString()
+        lastLogin: new Date().toISOString(),
+        _registryUrl: registryUrl // Store registry URL in account for discovery
     };
     
     // Save to cloud
-    await saveAccountRegistry(accounts);
+    var newRegistryUrl = await saveAccountRegistry(accounts);
+    
+    // Update all accounts with the new registry URL
+    for (var key in accounts) {
+        accounts[key]._registryUrl = newRegistryUrl;
+    }
     
     // Also cache in localStorage for faster access
     if (isStorageAvailable('localStorage')) {
@@ -452,6 +530,12 @@ async function getUserAccount(username) {
             if (cached) {
                 var accounts = JSON.parse(cached);
                 if (accounts[username]) {
+                    // Also check if this account has registry URL info
+                    if (accounts[username]._registryUrl) {
+                        // Update the global registry URL
+                        MASTER_REGISTRY_URL = accounts[username]._registryUrl;
+                        localStorage.setItem('masterRegistryUrl', accounts[username]._registryUrl);
+                    }
                     return accounts[username];
                 }
             }
@@ -461,8 +545,23 @@ async function getUserAccount(username) {
     }
     
     // Load from cloud registry
+    // If registry URL is not known, try to discover it first
+    var registryUrl = await getMasterRegistryUrl();
+    if (!registryUrl) {
+        // Can't find registry - return null
+        console.log('Cannot find account registry - username may not exist or registry not accessible');
+        return null;
+    }
+    
     var accounts = await loadAccountRegistry();
-    return accounts[username] || null;
+    var account = accounts[username] || null;
+    
+    // If we found the account, also store the registry URL in the account for future reference
+    if (account) {
+        account._registryUrl = registryUrl;
+    }
+    
+    return account;
 }
 
 // Get all user accounts (from cloud registry)
@@ -503,7 +602,18 @@ async function signUp(username, password) {
         throw new Error('Username already exists');
     }
     
-    // Encrypt empty plan data
+    // Load or create registry first (so we can include registry URL in user data for discovery)
+    var accounts = await loadAccountRegistry();
+    var registryUrl = await getMasterRegistryUrl();
+    
+    // If no registry exists, create one
+    if (!registryUrl) {
+        // Create empty registry
+        registryUrl = await saveAccountRegistry({});
+        console.log('Created new account registry:', registryUrl);
+    }
+    
+    // Encrypt empty plan data (include registry URL in metadata for cross-device discovery)
     var emptyPlan = {
         businessName: '',
         userName: '',
@@ -524,7 +634,12 @@ async function signUp(username, password) {
         administration: '',
         reviewFrequency: 'quarterly',
         successCriteria: '',
-        notes: ''
+        notes: '',
+        _metadata: {
+            registryUrl: registryUrl, // Store registry URL for discovery on other devices
+            username: username,
+            createdAt: new Date().toISOString()
+        }
     };
     
     var encryptedData;
@@ -569,8 +684,46 @@ async function login(username, password) {
     
     // Get user account from cloud registry
     var account = await getUserAccount(username);
+    
+    // If account not found, try to discover registry from cached accounts
     if (!account) {
-        throw new Error('Username not found. Make sure you created the account on this device or another device with the same username.');
+        // Try to load from localStorage cache first
+        if (isStorageAvailable('localStorage')) {
+            try {
+                var cached = localStorage.getItem('userAccounts');
+                if (cached) {
+                    var accounts = JSON.parse(cached);
+                    if (accounts[username]) {
+                        account = accounts[username];
+                        // If this account has a registry URL, use it to update the global registry
+                        if (account._registryUrl) {
+                            MASTER_REGISTRY_URL = account._registryUrl;
+                            localStorage.setItem('masterRegistryUrl', account._registryUrl);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log('Error reading cached accounts:', e);
+            }
+        }
+        
+        // If still not found, we need a way to discover the registry
+        // The issue is: we can't find the account without the registry,
+        // but we can't find the registry without... it being stored somewhere discoverable
+        
+        if (!account) {
+            // Show a helpful error with instructions
+            var errorMsg = 'Username not found.\n\n';
+            errorMsg += 'This usually happens when:\n';
+            errorMsg += '1. The account was created on another device\n';
+            errorMsg += '2. The account registry hasn\'t synced yet\n\n';
+            errorMsg += 'Please try:\n';
+            errorMsg += '- Make sure you\'re connected to the internet\n';
+            errorMsg += '- Wait a few seconds and try again\n';
+            errorMsg += '- Or login from the device where you created the account first';
+            
+            throw new Error(errorMsg);
+        }
     }
     
     var encryptedData;
@@ -612,6 +765,31 @@ async function login(username, password) {
     
     // Decrypt data (this will throw if password is wrong)
     var decryptedData = await decryptData(encryptedData, password);
+    
+    // IMPORTANT: Check if decrypted data contains registry URL (for cross-device discovery)
+    // This is how new devices discover the registry when logging in!
+    if (decryptedData._metadata && decryptedData._metadata.registryUrl) {
+        var discoveredRegistryUrl = decryptedData._metadata.registryUrl;
+        if (discoveredRegistryUrl && discoveredRegistryUrl !== MASTER_REGISTRY_URL) {
+            // Update global registry URL - this is the key to cross-device sync!
+            MASTER_REGISTRY_URL = discoveredRegistryUrl;
+            if (isStorageAvailable('localStorage')) {
+                localStorage.setItem('masterRegistryUrl', discoveredRegistryUrl);
+            }
+            console.log('✅ Discovered registry URL from user data:', discoveredRegistryUrl);
+            
+            // Now reload the registry with the discovered URL to get latest account data
+            try {
+                var updatedAccounts = await loadAccountRegistry();
+                if (updatedAccounts[username]) {
+                    // Update account with latest from registry
+                    account = Object.assign(account, updatedAccounts[username]);
+                }
+            } catch (e) {
+                console.log('Could not reload registry after discovery:', e);
+            }
+        }
+    }
     
     // Update last login
     account.lastLogin = new Date().toISOString();
