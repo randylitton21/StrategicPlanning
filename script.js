@@ -212,6 +212,7 @@ async function saveToPastebin(content, expiresDays) {
         
         const response = await fetch('https://hastebin.com/documents', {
             method: 'POST',
+            mode: 'cors',
             headers: {
                 'Content-Type': 'text/plain',
             },
@@ -226,13 +227,20 @@ async function saveToPastebin(content, expiresDays) {
             if (result.key) {
                 console.log('Saved to cloud (hastebin.com):', `https://hastebin.com/${result.key}`);
                 return `https://hastebin.com/${result.key}`;
+            } else {
+                console.error('hastebin.com response missing key. Full response:', result);
             }
         } else {
             const errorText = await response.text();
-            console.log('hastebin.com error response:', response.status, errorText);
+            console.error('hastebin.com error response:', response.status, response.statusText, errorText);
         }
     } catch (e) {
-        console.log('hastebin.com failed:', e.message);
+        console.error('hastebin.com failed:', e.name, e.message, e.stack);
+        if (e.name === 'AbortError') {
+            console.error('Request timed out after', timeout, 'ms');
+        } else if (e.message && e.message.includes('CORS')) {
+            console.error('CORS error - hastebin.com may not allow cross-origin requests');
+        }
     }
     
     // Fallback: Try dpaste.com (with timeout) - same for both mobile and desktop
@@ -242,6 +250,7 @@ async function saveToPastebin(content, expiresDays) {
         
         const response = await fetch('https://dpaste.com/api/v2/', {
             method: 'POST',
+            mode: 'cors',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
@@ -258,14 +267,64 @@ async function saveToPastebin(content, expiresDays) {
                 return result.url;
             }
             if (result) {
-                console.log('dpaste.com response:', result);
+                console.error('dpaste.com response missing url. Full response:', result);
+            } else {
+                console.error('dpaste.com returned empty result');
             }
         } else {
             const errorText = await response.text();
-            console.log('dpaste.com error response:', response.status, errorText);
+            console.error('dpaste.com error response:', response.status, response.statusText, errorText);
         }
     } catch (e) {
-        console.log('dpaste.com failed:', e.message);
+        console.error('dpaste.com failed:', e.name, e.message, e.stack);
+        if (e.name === 'AbortError') {
+            console.error('Request timed out after', timeout, 'ms');
+        } else if (e.message && e.message.includes('CORS')) {
+            console.error('CORS error - dpaste.com may not allow cross-origin requests');
+        }
+    }
+    
+    // Additional fallback: Try paste.gg (another pastebin service)
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        
+        const response = await fetch('https://api.paste.gg/v1/pastes', {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: 'Strategic Plan',
+                description: 'Strategic planning data',
+                visibility: 'unlisted',
+                files: [{
+                    name: 'plan.json',
+                    content: {
+                        format: 'text',
+                        value: content
+                    }
+                }]
+            }),
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.result && result.result.id) {
+                const pasteUrl = `https://paste.gg/${result.result.id}`;
+                console.log('Saved to cloud (paste.gg):', pasteUrl);
+                return pasteUrl;
+            }
+        } else {
+            const errorText = await response.text();
+            console.error('paste.gg error response:', response.status, response.statusText, errorText);
+        }
+    } catch (e) {
+        console.error('paste.gg failed:', e.name, e.message);
     }
     
     // LAST RESORT: Use localStorage (device-specific, won't sync across devices)
@@ -277,10 +336,9 @@ async function saveToPastebin(content, expiresDays) {
             localStorage.setItem('cloud_' + shareKey, content);
             console.warn('WARNING: Using localStorage fallback. Data will NOT sync across devices!');
             console.log('localStorage key:', shareKey);
-            // Show warning to user
-            setTimeout(function() {
-                alert('⚠️ WARNING: Could not save to cloud storage. Data saved locally only and will NOT sync across devices. Please check your internet connection.');
-            }, 100);
+            // Show warning to user (only if this is actually being used, not just as backup)
+            // Don't show alert immediately - let the calling function decide if it should warn
+            // The alert will be shown by the saveUserDataToCloud function if needed
             // Return localStorage URL but this is device-specific
             return 'localstorage://' + shareKey;
         }
@@ -571,7 +629,11 @@ async function saveUserDataToCloud(password) {
     if (pastebinUrl.startsWith('localstorage://')) {
         // Warn user that this won't sync across devices
         console.warn('Data saved to localStorage - will not sync across devices');
-        // Still update the account, but user should know it's device-specific
+        // Show warning alert
+        alert('⚠️ WARNING: Could not save to cloud storage. Data saved locally only and will NOT sync across devices.\n\nPlease check:\n- Your internet connection\n- Browser console for error details (F12)\n- Try again in a few moments');
+    } else {
+        // Successfully saved to cloud
+        console.log('Successfully saved to cloud storage:', pastebinUrl);
     }
     
     // Update user account with new URL
