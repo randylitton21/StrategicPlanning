@@ -78,8 +78,20 @@ async function deriveKeyFromPassword(password, salt) {
     );
 }
 
+// Check if Web Crypto API is available
+function isWebCryptoAvailable() {
+    return typeof crypto !== 'undefined' && 
+           typeof crypto.subtle !== 'undefined' &&
+           typeof crypto.getRandomValues !== 'undefined';
+}
+
 // Encrypt data with password
 async function encryptData(data, password) {
+    // Check if Web Crypto API is available
+    if (!isWebCryptoAvailable()) {
+        throw new Error('Web Crypto API not available. Please use a modern browser.');
+    }
+    
     try {
         const encoder = new TextEncoder();
         const dataString = JSON.stringify(data);
@@ -109,12 +121,21 @@ async function encryptData(data, password) {
         return btoa(String.fromCharCode.apply(null, combined));
     } catch (e) {
         console.error('Encryption error:', e);
-        throw new Error('Failed to encrypt data');
+        const isMobile = isMobileDevice();
+        if (isMobile && e.message && e.message.includes('not supported')) {
+            throw new Error('Encryption not supported on this device. Please try a different browser or update your device.');
+        }
+        throw new Error('Failed to encrypt data: ' + (e.message || 'Unknown error'));
     }
 }
 
 // Decrypt data with password
 async function decryptData(encryptedBase64, password) {
+    // Check if Web Crypto API is available
+    if (!isWebCryptoAvailable()) {
+        throw new Error('Web Crypto API not available. Please use a modern browser.');
+    }
+    
     try {
         // Convert from base64
         const combined = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
@@ -140,7 +161,14 @@ async function decryptData(encryptedBase64, password) {
         return JSON.parse(decryptedString);
     } catch (e) {
         console.error('Decryption error:', e);
-        throw new Error('Failed to decrypt data. Wrong password?');
+        const isMobile = isMobileDevice();
+        if (e.message && e.message.includes('not supported')) {
+            throw new Error('Decryption not supported on this device. Please try a different browser.');
+        }
+        if (e.message && e.message.includes('operation')) {
+            throw new Error('Failed to decrypt data. Wrong password?');
+        }
+        throw new Error('Failed to decrypt data: ' + (e.message || 'Unknown error'));
     }
 }
 
@@ -156,19 +184,50 @@ function generateUserId(username) {
     return Math.abs(hash).toString(36);
 }
 
+// Fetch with timeout (important for mobile)
+function fetchWithTimeout(url, options, timeout) {
+    timeout = timeout || 15000; // 15 second default timeout
+    return Promise.race([
+        fetch(url, options),
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), timeout)
+        )
+    ]);
+}
+
 // Save to pastebin (using multiple services with fallback)
 async function saveToPastebin(content, expiresDays) {
     expiresDays = expiresDays || 365; // Default 1 year
+    const isMobile = isMobileDevice();
+    const timeout = isMobile ? 20000 : 15000; // Longer timeout for mobile
+    
+    // On mobile, prefer localStorage first if available (more reliable)
+    if (isMobile && isStorageAvailable('localStorage')) {
+        const shareKey = 'sp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        try {
+            localStorage.setItem('cloud_' + shareKey, content);
+            console.log('Using localStorage for mobile with key:', shareKey);
+            // Still try cloud, but localStorage is ready as backup
+        } catch (e) {
+            console.error('localStorage setup failed:', e);
+        }
+    }
     
     // Try hastebin.com first (more reliable, simpler API)
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        
         const response = await fetch('https://hastebin.com/documents', {
             method: 'POST',
             headers: {
                 'Content-Type': 'text/plain',
             },
-            body: content
+            body: content,
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         if (response.ok) {
             const result = await response.json();
@@ -180,25 +239,33 @@ async function saveToPastebin(content, expiresDays) {
             console.log('hastebin.com error response:', response.status, errorText);
         }
     } catch (e) {
-        console.log('hastebin.com failed, trying alternative...', e.message);
+        console.log('hastebin.com failed:', e.message);
+        if (isMobile && e.name === 'AbortError') {
+            console.log('Mobile timeout - using localStorage fallback');
+        }
     }
     
-    // Fallback: Try dpaste.com
+    // Fallback: Try dpaste.com (with timeout)
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        
         const response = await fetch('https://dpaste.com/api/v2/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: `content=${encodeURIComponent(content)}&format=json&lexer=text&expires_days=${expiresDays}`
+            body: `content=${encodeURIComponent(content)}&format=json&lexer=text&expires_days=${expiresDays}`,
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         if (response.ok) {
             const result = await response.json();
             if (result.url) {
                 return result.url;
             }
-            // Sometimes dpaste returns the URL in a different format
             if (result) {
                 console.log('dpaste.com response:', result);
             }
@@ -207,17 +274,20 @@ async function saveToPastebin(content, expiresDays) {
             console.log('dpaste.com error response:', response.status, errorText);
         }
     } catch (e) {
-        console.log('dpaste.com failed, trying alternative...', e.message);
+        console.log('dpaste.com failed:', e.message);
     }
     
     // Fallback: Use localStorage with a shareable key
-    // Generate a unique key and store in localStorage
     const shareKey = 'sp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     try {
         if (isStorageAvailable('localStorage')) {
             localStorage.setItem('cloud_' + shareKey, content);
-            // Return a special URL that indicates localStorage storage
             console.log('Using localStorage fallback with key:', shareKey);
+            // On mobile, localStorage is acceptable
+            if (isMobile) {
+                return 'localstorage://' + shareKey;
+            }
+            // On desktop, warn but still allow
             return 'localstorage://' + shareKey;
         }
     } catch (e) {
@@ -229,6 +299,9 @@ async function saveToPastebin(content, expiresDays) {
 
 // Load from pastebin URL
 async function loadFromPastebin(url) {
+    const isMobile = isMobileDevice();
+    const timeout = isMobile ? 20000 : 15000;
+    
     try {
         // Check if it's a localStorage URL
         if (url.startsWith('localstorage://')) {
@@ -246,29 +319,48 @@ async function loadFromPastebin(url) {
         // Remove any query parameters or fragments
         pasteId = pasteId.split('?')[0].split('#')[0];
         
-        // Try dpaste.com first
+        // Try hastebin.com first (more reliable)
         try {
-            const response = await fetch(`https://dpaste.com/${pasteId}/raw/`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            
+            const response = await fetch(`https://hastebin.com/raw/${pasteId}`, {
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
             if (response.ok) {
                 return await response.text();
             }
         } catch (e) {
-            console.log('dpaste.com load failed, trying alternative...', e);
+            console.log('hastebin.com load failed:', e.message);
         }
         
-        // Try hastebin.com
+        // Try dpaste.com
         try {
-            const response = await fetch(`https://hastebin.com/raw/${pasteId}`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            
+            const response = await fetch(`https://dpaste.com/${pasteId}/raw/`, {
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
             if (response.ok) {
                 return await response.text();
             }
         } catch (e) {
-            console.log('hastebin.com load failed', e);
+            console.log('dpaste.com load failed:', e.message);
         }
         
         throw new Error('Failed to load from cloud storage');
     } catch (e) {
         console.error('Pastebin load error:', e);
+        if (isMobile && e.message && e.message.includes('timeout')) {
+            throw new Error('Connection timeout on mobile. Please check your internet connection and try again.');
+        }
         throw new Error('Failed to load from cloud storage. The data may have expired or the URL is invalid.');
     }
 }
@@ -528,6 +620,14 @@ function showAuthModal() {
     description.textContent = 'Create an account to save your strategic plan to the cloud and access it from any device.';
     modalContent.appendChild(description);
     
+    // Check Web Crypto API availability and show warning if needed
+    if (!isWebCryptoAvailable()) {
+        var warningMsg = document.createElement('div');
+        warningMsg.style.cssText = 'background: #fff3cd; border: 1px solid #ffc107; color: #856404; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 14px;';
+        warningMsg.textContent = '⚠️ Encryption not available on this browser. Please use a modern browser (Chrome, Firefox, Safari, Edge) for secure cloud storage.';
+        modalContent.appendChild(warningMsg);
+    }
+    
     // Username input
     var usernameLabel = document.createElement('label');
     usernameLabel.textContent = 'Username';
@@ -591,6 +691,11 @@ function showAuthModal() {
         loginBtn.textContent = 'Logging in...';
         
         try {
+            // Check Web Crypto before attempting login
+            if (!isWebCryptoAvailable()) {
+                throw new Error('Web Crypto API not available. Please use a modern browser.');
+            }
+            
             await login(username, password);
             successMsg.textContent = 'Login successful!';
             successMsg.style.display = 'block';
@@ -602,6 +707,11 @@ function showAuthModal() {
             errorMsg.style.display = 'block';
             loginBtn.disabled = false;
             loginBtn.textContent = 'Login';
+            
+            // Show mobile-specific help
+            if (isMobileDevice() && e.message && e.message.includes('Crypto')) {
+                errorMsg.innerHTML = e.message + '<br><small>Try updating your browser or using Chrome/Safari.</small>';
+            }
         }
     };
     buttonContainer.appendChild(loginBtn);
@@ -627,6 +737,11 @@ function showAuthModal() {
         signupBtn.textContent = 'Creating account...';
         
         try {
+            // Check Web Crypto before attempting signup
+            if (!isWebCryptoAvailable()) {
+                throw new Error('Web Crypto API not available. Please use a modern browser.');
+            }
+            
             await signUp(username, password);
             successMsg.textContent = 'Account created! Logging you in...';
             successMsg.style.display = 'block';
@@ -638,6 +753,11 @@ function showAuthModal() {
             errorMsg.style.display = 'block';
             signupBtn.disabled = false;
             signupBtn.textContent = 'Sign Up';
+            
+            // Show mobile-specific help
+            if (isMobileDevice() && e.message && e.message.includes('Crypto')) {
+                errorMsg.innerHTML = e.message + '<br><small>Try updating your browser or using Chrome/Safari.</small>';
+            }
         }
     };
     buttonContainer.appendChild(signupBtn);
