@@ -196,24 +196,16 @@ function fetchWithTimeout(url, options, timeout) {
 }
 
 // Save to pastebin (using multiple services with fallback)
+// IMPORTANT: Both mobile and desktop use the SAME cloud storage for cross-device sync
 async function saveToPastebin(content, expiresDays) {
     expiresDays = expiresDays || 365; // Default 1 year
     const isMobile = isMobileDevice();
     const timeout = isMobile ? 20000 : 15000; // Longer timeout for mobile
     
-    // On mobile, prefer localStorage first if available (more reliable)
-    if (isMobile && isStorageAvailable('localStorage')) {
-        const shareKey = 'sp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        try {
-            localStorage.setItem('cloud_' + shareKey, content);
-            console.log('Using localStorage for mobile with key:', shareKey);
-            // Still try cloud, but localStorage is ready as backup
-        } catch (e) {
-            console.error('localStorage setup failed:', e);
-        }
-    }
+    // ALWAYS try cloud storage first (both mobile and desktop)
+    // This ensures data can be shared across devices
     
-    // Try hastebin.com first (more reliable, simpler API)
+    // Try hastebin.com first (more reliable, simpler API, works on both mobile and desktop)
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -232,6 +224,7 @@ async function saveToPastebin(content, expiresDays) {
         if (response.ok) {
             const result = await response.json();
             if (result.key) {
+                console.log('Saved to cloud (hastebin.com):', `https://hastebin.com/${result.key}`);
                 return `https://hastebin.com/${result.key}`;
             }
         } else {
@@ -240,12 +233,9 @@ async function saveToPastebin(content, expiresDays) {
         }
     } catch (e) {
         console.log('hastebin.com failed:', e.message);
-        if (isMobile && e.name === 'AbortError') {
-            console.log('Mobile timeout - using localStorage fallback');
-        }
     }
     
-    // Fallback: Try dpaste.com (with timeout)
+    // Fallback: Try dpaste.com (with timeout) - same for both mobile and desktop
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -264,6 +254,7 @@ async function saveToPastebin(content, expiresDays) {
         if (response.ok) {
             const result = await response.json();
             if (result.url) {
+                console.log('Saved to cloud (dpaste.com):', result.url);
                 return result.url;
             }
             if (result) {
@@ -277,17 +268,20 @@ async function saveToPastebin(content, expiresDays) {
         console.log('dpaste.com failed:', e.message);
     }
     
-    // Fallback: Use localStorage with a shareable key
+    // LAST RESORT: Use localStorage (device-specific, won't sync across devices)
+    // Only use this if ALL cloud services fail
+    // Warn user that this won't work across devices
     const shareKey = 'sp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     try {
         if (isStorageAvailable('localStorage')) {
             localStorage.setItem('cloud_' + shareKey, content);
-            console.log('Using localStorage fallback with key:', shareKey);
-            // On mobile, localStorage is acceptable
-            if (isMobile) {
-                return 'localstorage://' + shareKey;
-            }
-            // On desktop, warn but still allow
+            console.warn('WARNING: Using localStorage fallback. Data will NOT sync across devices!');
+            console.log('localStorage key:', shareKey);
+            // Show warning to user
+            setTimeout(function() {
+                alert('⚠️ WARNING: Could not save to cloud storage. Data saved locally only and will NOT sync across devices. Please check your internet connection.');
+            }, 100);
+            // Return localStorage URL but this is device-specific
             return 'localstorage://' + shareKey;
         }
     } catch (e) {
@@ -482,8 +476,42 @@ async function login(username, password) {
         throw new Error('Username not found');
     }
     
-    // Load encrypted data from pastebin
-    var encryptedData = await loadFromPastebin(account.pastebinUrl);
+    var encryptedData;
+    
+    // Check if account is using localStorage (device-specific, needs migration)
+    if (account.pastebinUrl && account.pastebinUrl.startsWith('localstorage://')) {
+        // Load from localStorage
+        const key = account.pastebinUrl.replace('localstorage://', '');
+        encryptedData = localStorage.getItem('cloud_' + key);
+        
+        if (!encryptedData) {
+            throw new Error('Data not found. It may have been cleared from this device.');
+        }
+        
+        // Try to migrate to cloud storage automatically
+        try {
+            console.log('Migrating localStorage account to cloud storage...');
+            const newCloudUrl = await saveToPastebin(encryptedData);
+            
+            // Only update if we got a real cloud URL (not localStorage)
+            if (!newCloudUrl.startsWith('localstorage://')) {
+                account.pastebinUrl = newCloudUrl;
+                saveUserAccount(username, newCloudUrl);
+                console.log('Successfully migrated to cloud storage:', newCloudUrl);
+                
+                // Show success message
+                setTimeout(function() {
+                    alert('✅ Your account has been migrated to cloud storage! Your data will now sync across all devices.');
+                }, 500);
+            }
+        } catch (e) {
+            console.warn('Could not migrate to cloud storage:', e);
+            // Continue with localStorage for now
+        }
+    } else {
+        // Load encrypted data from cloud storage (hastebin/dpaste)
+        encryptedData = await loadFromPastebin(account.pastebinUrl);
+    }
     
     // Decrypt data (this will throw if password is wrong)
     var decryptedData = await decryptData(encryptedData, password);
@@ -536,8 +564,15 @@ async function saveUserDataToCloud(password) {
     // Encrypt data
     var encryptedData = await encryptData(planData, password);
     
-    // Save to pastebin
+    // Save to pastebin (same cloud storage for both mobile and desktop)
     var pastebinUrl = await saveToPastebin(encryptedData);
+    
+    // Check if localStorage was used (device-specific, won't sync)
+    if (pastebinUrl.startsWith('localstorage://')) {
+        // Warn user that this won't sync across devices
+        console.warn('Data saved to localStorage - will not sync across devices');
+        // Still update the account, but user should know it's device-specific
+    }
     
     // Update user account with new URL
     currentUser.pastebinUrl = pastebinUrl;
