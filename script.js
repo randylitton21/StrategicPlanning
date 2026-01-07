@@ -359,32 +359,128 @@ async function loadFromPastebin(url) {
     }
 }
 
-// Store user account mapping (in localStorage)
-function saveUserAccount(username, pastebinUrl) {
-    var accounts = getUserAccounts();
+// Master account registry URL (stored in cloud, accessible from all devices)
+// This is a known pastebin URL that stores all account mappings
+var MASTER_REGISTRY_URL = null; // Will be set on first use
+var MASTER_REGISTRY_KEY = 'strategic_plan_accounts_registry_v1';
+
+// Get master registry URL (creates if doesn't exist)
+async function getMasterRegistryUrl() {
+    // Check localStorage for cached registry URL
+    if (isStorageAvailable('localStorage')) {
+        var cached = localStorage.getItem('masterRegistryUrl');
+        if (cached && !cached.startsWith('localstorage://')) {
+            return cached;
+        }
+    }
+    
+    // Check if we have a global registry URL
+    if (MASTER_REGISTRY_URL) {
+        return MASTER_REGISTRY_URL;
+    }
+    
+    // No registry exists yet - will be created on first account save
+    return null;
+}
+
+// Load account registry from cloud
+async function loadAccountRegistry() {
+    try {
+        var registryUrl = await getMasterRegistryUrl();
+        if (!registryUrl) {
+            // No registry exists yet (first account) - return empty
+            console.log('No account registry found - will create on first account');
+            return {};
+        }
+        
+        var registryData = await loadFromPastebin(registryUrl);
+        if (registryData) {
+            return JSON.parse(registryData);
+        }
+        return {};
+    } catch (e) {
+        console.log('Could not load account registry:', e);
+        // Return empty registry if load fails
+        return {};
+    }
+}
+
+// Save account registry to cloud
+async function saveAccountRegistry(accounts) {
+    try {
+        var registryData = JSON.stringify(accounts);
+        var registryUrl = await saveToPastebin(registryData);
+        
+        // Cache the registry URL in localStorage for faster access
+        if (isStorageAvailable('localStorage')) {
+            localStorage.setItem('masterRegistryUrl', registryUrl);
+        }
+        
+        MASTER_REGISTRY_URL = registryUrl;
+        return registryUrl;
+    } catch (e) {
+        console.error('Failed to save account registry:', e);
+        throw e;
+    }
+}
+
+// Store user account mapping (in cloud registry)
+async function saveUserAccount(username, pastebinUrl) {
+    var accounts = await loadAccountRegistry();
     accounts[username] = {
         username: username,
         pastebinUrl: pastebinUrl,
-        createdAt: new Date().toISOString(),
+        createdAt: accounts[username] ? accounts[username].createdAt : new Date().toISOString(),
         lastLogin: new Date().toISOString()
     };
-    localStorage.setItem('userAccounts', JSON.stringify(accounts));
+    
+    // Save to cloud
+    await saveAccountRegistry(accounts);
+    
+    // Also cache in localStorage for faster access
+    if (isStorageAvailable('localStorage')) {
+        localStorage.setItem('userAccounts', JSON.stringify(accounts));
+    }
 }
 
-// Get user account by username
-function getUserAccount(username) {
-    var accounts = getUserAccounts();
+// Get user account by username (from cloud registry)
+async function getUserAccount(username) {
+    // First check localStorage cache
+    if (isStorageAvailable('localStorage')) {
+        try {
+            var cached = localStorage.getItem('userAccounts');
+            if (cached) {
+                var accounts = JSON.parse(cached);
+                if (accounts[username]) {
+                    return accounts[username];
+                }
+            }
+        } catch (e) {
+            console.log('Error reading cached accounts:', e);
+        }
+    }
+    
+    // Load from cloud registry
+    var accounts = await loadAccountRegistry();
     return accounts[username] || null;
 }
 
-// Get all user accounts
-function getUserAccounts() {
-    try {
-        var accounts = localStorage.getItem('userAccounts');
-        return accounts ? JSON.parse(accounts) : {};
-    } catch (e) {
-        return {};
+// Get all user accounts (from cloud registry)
+async function getUserAccounts() {
+    // First check localStorage cache
+    if (isStorageAvailable('localStorage')) {
+        try {
+            var cached = localStorage.getItem('userAccounts');
+            if (cached) {
+                return JSON.parse(cached);
+            }
+        } catch (e) {
+            console.log('Error reading cached accounts:', e);
+        }
     }
+    
+    // Load from cloud registry
+    return await loadAccountRegistry();
 }
 
 // Sign up new user
@@ -401,8 +497,9 @@ async function signUp(username, password) {
         throw new Error('Password must be at least 6 characters');
     }
     
-    // Check if username already exists
-    if (getUserAccount(username)) {
+    // Check if username already exists (check cloud registry)
+    var existingAccount = await getUserAccount(username);
+    if (existingAccount) {
         throw new Error('Username already exists');
     }
     
@@ -455,8 +552,8 @@ async function signUp(username, password) {
         }
     }
     
-    // Store user account
-    saveUserAccount(username, pastebinUrl);
+    // Store user account in cloud registry
+    await saveUserAccount(username, pastebinUrl);
     
     // Log in the user
     await login(username, password);
@@ -470,10 +567,10 @@ async function login(username, password) {
         throw new Error('Username and password are required');
     }
     
-    // Get user account
-    var account = getUserAccount(username);
+    // Get user account from cloud registry
+    var account = await getUserAccount(username);
     if (!account) {
-        throw new Error('Username not found');
+        throw new Error('Username not found. Make sure you created the account on this device or another device with the same username.');
     }
     
     var encryptedData;
@@ -496,7 +593,7 @@ async function login(username, password) {
             // Only update if we got a real cloud URL (not localStorage)
             if (!newCloudUrl.startsWith('localstorage://')) {
                 account.pastebinUrl = newCloudUrl;
-                saveUserAccount(username, newCloudUrl);
+                await saveUserAccount(username, newCloudUrl);
                 console.log('Successfully migrated to cloud storage:', newCloudUrl);
                 
                 // Show success message
@@ -518,7 +615,7 @@ async function login(username, password) {
     
     // Update last login
     account.lastLogin = new Date().toISOString();
-    saveUserAccount(username, account.pastebinUrl);
+    await saveUserAccount(username, account.pastebinUrl);
     
     // Set current user and session
     currentUser = account;
@@ -574,9 +671,9 @@ async function saveUserDataToCloud(password) {
         // Still update the account, but user should know it's device-specific
     }
     
-    // Update user account with new URL
+    // Update user account with new URL (in cloud registry)
     currentUser.pastebinUrl = pastebinUrl;
-    saveUserAccount(currentUser.username, pastebinUrl);
+    await saveUserAccount(currentUser.username, pastebinUrl);
     
     // Update session
     var session = JSON.parse(sessionStorage.getItem('userSession'));
