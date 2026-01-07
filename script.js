@@ -156,10 +156,35 @@ function generateUserId(username) {
     return Math.abs(hash).toString(36);
 }
 
-// Save to pastebin (using dpaste.com API)
+// Save to pastebin (using multiple services with fallback)
 async function saveToPastebin(content, expiresDays) {
+    expiresDays = expiresDays || 365; // Default 1 year
+    
+    // Try hastebin.com first (more reliable, simpler API)
     try {
-        expiresDays = expiresDays || 365; // Default 1 year
+        const response = await fetch('https://hastebin.com/documents', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain',
+            },
+            body: content
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.key) {
+                return `https://hastebin.com/${result.key}`;
+            }
+        } else {
+            const errorText = await response.text();
+            console.log('hastebin.com error response:', response.status, errorText);
+        }
+    } catch (e) {
+        console.log('hastebin.com failed, trying alternative...', e.message);
+    }
+    
+    // Fallback: Try dpaste.com
+    try {
         const response = await fetch('https://dpaste.com/api/v2/', {
             method: 'POST',
             headers: {
@@ -168,33 +193,83 @@ async function saveToPastebin(content, expiresDays) {
             body: `content=${encodeURIComponent(content)}&format=json&lexer=text&expires_days=${expiresDays}`
         });
         
-        if (!response.ok) {
-            throw new Error('Failed to save to pastebin');
+        if (response.ok) {
+            const result = await response.json();
+            if (result.url) {
+                return result.url;
+            }
+            // Sometimes dpaste returns the URL in a different format
+            if (result) {
+                console.log('dpaste.com response:', result);
+            }
+        } else {
+            const errorText = await response.text();
+            console.log('dpaste.com error response:', response.status, errorText);
         }
-        
-        const result = await response.json();
-        return result.url; // Returns: https://dpaste.com/abc123/
     } catch (e) {
-        console.error('Pastebin save error:', e);
-        throw new Error('Failed to save to cloud storage');
+        console.log('dpaste.com failed, trying alternative...', e.message);
     }
+    
+    // Fallback: Use localStorage with a shareable key
+    // Generate a unique key and store in localStorage
+    const shareKey = 'sp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    try {
+        if (isStorageAvailable('localStorage')) {
+            localStorage.setItem('cloud_' + shareKey, content);
+            // Return a special URL that indicates localStorage storage
+            console.log('Using localStorage fallback with key:', shareKey);
+            return 'localstorage://' + shareKey;
+        }
+    } catch (e) {
+        console.error('localStorage fallback failed:', e);
+    }
+    
+    throw new Error('Failed to save to cloud storage. Please check your internet connection and try again.');
 }
 
 // Load from pastebin URL
 async function loadFromPastebin(url) {
     try {
-        // Extract paste ID from URL
-        const pasteId = url.split('/').filter(part => part).pop();
-        const response = await fetch(`https://dpaste.com/${pasteId}/raw/`);
-        
-        if (!response.ok) {
-            throw new Error('Failed to load from pastebin');
+        // Check if it's a localStorage URL
+        if (url.startsWith('localstorage://')) {
+            const key = url.replace('localstorage://', '');
+            const content = localStorage.getItem('cloud_' + key);
+            if (content) {
+                return content;
+            }
+            throw new Error('Data not found in local storage');
         }
         
-        return await response.text();
+        // Try to extract paste ID from URL
+        let pasteId = url.split('/').filter(part => part).pop();
+        
+        // Remove any query parameters or fragments
+        pasteId = pasteId.split('?')[0].split('#')[0];
+        
+        // Try dpaste.com first
+        try {
+            const response = await fetch(`https://dpaste.com/${pasteId}/raw/`);
+            if (response.ok) {
+                return await response.text();
+            }
+        } catch (e) {
+            console.log('dpaste.com load failed, trying alternative...', e);
+        }
+        
+        // Try hastebin.com
+        try {
+            const response = await fetch(`https://hastebin.com/raw/${pasteId}`);
+            if (response.ok) {
+                return await response.text();
+            }
+        } catch (e) {
+            console.log('hastebin.com load failed', e);
+        }
+        
+        throw new Error('Failed to load from cloud storage');
     } catch (e) {
         console.error('Pastebin load error:', e);
-        throw new Error('Failed to load from cloud storage');
+        throw new Error('Failed to load from cloud storage. The data may have expired or the URL is invalid.');
     }
 }
 
@@ -269,10 +344,30 @@ async function signUp(username, password) {
         notes: ''
     };
     
-    var encryptedData = await encryptData(emptyPlan, password);
+    var encryptedData;
+    try {
+        encryptedData = await encryptData(emptyPlan, password);
+    } catch (e) {
+        console.error('Encryption error:', e);
+        throw new Error('Failed to encrypt data: ' + e.message);
+    }
     
     // Save to pastebin
-    var pastebinUrl = await saveToPastebin(encryptedData);
+    var pastebinUrl;
+    try {
+        pastebinUrl = await saveToPastebin(encryptedData);
+        console.log('Saved to cloud storage:', pastebinUrl);
+    } catch (e) {
+        console.error('Pastebin save error:', e);
+        // Provide more helpful error message
+        if (e.message.includes('network') || e.message.includes('fetch')) {
+            throw new Error('Network error. Please check your internet connection and try again.');
+        } else if (e.message.includes('CORS')) {
+            throw new Error('Cloud storage service unavailable. Please try again later or check your browser settings.');
+        } else {
+            throw new Error('Failed to save to cloud storage: ' + e.message);
+        }
+    }
     
     // Store user account
     saveUserAccount(username, pastebinUrl);
