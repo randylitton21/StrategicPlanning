@@ -473,12 +473,16 @@ main {
     padding: 20px;
     border-radius: 8px;
     border: 2px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
 }
 
 .swot-item h3 {
     margin-bottom: 10px;
     color: #667eea;
     font-size: 1.3em;
+    flex-shrink: 0;
 }
 
 .swot-help {
@@ -487,6 +491,7 @@ main {
     margin-bottom: 12px;
     font-style: italic;
     line-height: 1.4;
+    flex-shrink: 0;
 }
 
 .swot-item:nth-child(1) {
@@ -510,7 +515,14 @@ main {
 }
 
 .swot-item textarea {
-    min-height: 150px;
+    min-height: 250px;
+    flex: 1;
+    width: 100%;
+}
+
+.swot-item .char-count {
+    flex-shrink: 0;
+    margin-top: 8px;
 }
 
 .goal-item,
