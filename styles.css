@@ -6,7 +6,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
     min-height: 100vh;
     padding: 20px;
     color: #333;
@@ -23,7 +23,7 @@ body {
 }
 
 header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
     color: white;
     padding: 30px;
     text-align: center;
@@ -175,16 +175,16 @@ main {
 }
 
 .step h2 {
-    color: #667eea;
+    color: #1e3a5f;
     margin-bottom: 20px;
     font-size: 2em;
-    border-bottom: 3px solid #667eea;
+    border-bottom: 3px solid #1e3a5f;
     padding-bottom: 10px;
 }
 
 .education-box {
     background: #f8f9fa;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #1e3a5f;
     padding: 20px;
     border-radius: 6px;
     margin-bottom: 25px;
@@ -203,13 +203,13 @@ main {
 }
 
 .education-header h3 {
-    color: #667eea;
+    color: #1e3a5f;
     margin: 0;
     font-size: 1.3em;
 }
 
 .toggle-btn {
-    background: #667eea;
+    background: #1e3a5f;
     color: white;
     border: none;
     border-radius: 50%;
@@ -225,7 +225,7 @@ main {
 }
 
 .toggle-btn:hover {
-    background: #5568d3;
+    background: #2d5a87;
     transform: scale(1.1);
 }
 
@@ -307,7 +307,7 @@ main {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #667eea;
+    background: #1e3a5f;
     color: white;
     border: none;
     font-size: 0.8em;
@@ -320,7 +320,7 @@ main {
 }
 
 .help-toggle:hover {
-    background: #5568d3;
+    background: #2d5a87;
     transform: scale(1.1);
 }
 
@@ -330,7 +330,7 @@ main {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: #667eea;
+    background: #1e3a5f;
     color: white;
     border: none;
     font-size: 0.9em;
@@ -343,7 +343,7 @@ main {
 }
 
 .proponent-help:hover {
-    background: #5568d3;
+    background: #2d5a87;
     transform: scale(1.15);
 }
 
@@ -421,7 +421,7 @@ main {
 }
 
 .popup-content h3 {
-    color: #667eea;
+    color: #1e3a5f;
     margin-bottom: 15px;
     font-size: 1.5em;
     padding-right: 40px;
@@ -462,7 +462,7 @@ main {
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #1e3a5f;
 }
 
 .form-group textarea {
@@ -491,7 +491,7 @@ main {
 
 .swot-item h3 {
     margin-bottom: 10px;
-    color: #667eea;
+    color: #1e3a5f;
     font-size: 1.3em;
     flex-shrink: 0;
 }
@@ -543,7 +543,7 @@ main {
     padding: 25px;
     border-radius: 8px;
     margin-bottom: 20px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #1e3a5f;
 }
 
 .proponents-education {
@@ -555,11 +555,11 @@ main {
     padding: 25px;
     border-radius: 8px;
     margin-bottom: 20px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #1e3a5f;
 }
 
 .proponent-education-item h3 {
-    color: #667eea;
+    color: #1e3a5f;
     margin-bottom: 10px;
     font-size: 1.4em;
 }
@@ -575,7 +575,7 @@ main {
 }
 
 .proponent-item h3 {
-    color: #667eea;
+    color: #1e3a5f;
     margin-bottom: 10px;
     font-size: 1.4em;
     display: flex;
@@ -616,14 +616,14 @@ main {
 
 .btn-next,
 .btn-export {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
     color: white;
 }
 
 .btn-next:hover,
 .btn-export:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 5px 15px rgba(30, 58, 95, 0.4);
 }
 
 .btn-next:active,
@@ -733,7 +733,7 @@ main {
 }
 
 .summary h2 {
-    color: #667eea;
+    color: #1e3a5f;
     margin-bottom: 30px;
     font-size: 2em;
 }
@@ -746,7 +746,7 @@ main {
 }
 
 .summary-section h3 {
-    color: #667eea;
+    color: #1e3a5f;
     margin-bottom: 15px;
 }
 

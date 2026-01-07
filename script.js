@@ -708,7 +708,7 @@ function showAuthModal() {
     modalContent.style.cssText = 'background: white; padding: 30px; border-radius: 8px; max-width: 400px; width: 90%; max-height: 90%; overflow-y: auto;';
     
     var title = document.createElement('h2');
-    title.style.cssText = 'margin-top: 0; color: #667eea;';
+    title.style.cssText = 'margin-top: 0; color: #1e3a5f;';
     title.textContent = 'Login / Sign Up';
     modalContent.appendChild(title);
     
@@ -770,7 +770,7 @@ function showAuthModal() {
     // Login button
     var loginBtn = document.createElement('button');
     loginBtn.textContent = 'Login';
-    loginBtn.style.cssText = 'flex: 1; padding: 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;';
+    loginBtn.style.cssText = 'flex: 1; padding: 12px; background: #1e3a5f; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;';
     loginBtn.onclick = async function() {
         var username = usernameInput.value.trim();
         var password = passwordInput.value;
@@ -907,7 +907,7 @@ async function saveToCloud() {
     modalContent.style.cssText = 'background: white; padding: 30px; border-radius: 8px; max-width: 400px; width: 90%;';
     
     var title = document.createElement('h3');
-    title.style.cssText = 'margin-top: 0; color: #667eea;';
+    title.style.cssText = 'margin-top: 0; color: #1e3a5f;';
     title.textContent = 'Save to Cloud';
     modalContent.appendChild(title);
     
@@ -1784,7 +1784,7 @@ function showMobileFileOptions(url, filename, mimeType) {
     openLink.href = url;
     openLink.target = '_blank';
     openLink.textContent = 'Open in New Tab';
-    openLink.style.cssText = 'display: block; width: 100%; padding: 12px; margin: 8px 0; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; text-align: center; text-decoration: none;';
+    openLink.style.cssText = 'display: block; width: 100%; padding: 12px; margin: 8px 0; background: #1e3a5f; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; text-align: center; text-decoration: none;';
     openLink.onclick = function() {
         setTimeout(function() {
             modal.remove();
@@ -1857,7 +1857,7 @@ function showMobileExportOptions(url, filename, textContent) {
     // Copy to clipboard button
     var copyBtn = document.createElement('button');
     copyBtn.textContent = 'Copy Text to Clipboard';
-    copyBtn.style.cssText = 'display: block; width: 100%; padding: 12px; margin: 8px 0; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;';
+    copyBtn.style.cssText = 'display: block; width: 100%; padding: 12px; margin: 8px 0; background: #1e3a5f; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;';
     copyBtn.onclick = function() {
         copyToClipboard(textContent);
         modal.remove();
@@ -2100,19 +2100,19 @@ function generateWordDocument() {
     html += '<style>\n';
     html += '@page { size: 8.5in 11in; margin: 1in; }\n';
     html += 'body { font-family: "Calibri", "Arial", sans-serif; font-size: 11pt; margin: 0; padding: 0; line-height: 1.5; color: #333; }\n';
-    html += '.header { text-align: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 3px solid #667eea; page-break-after: avoid; }\n';
-    html += '.header h1 { color: #667eea; font-size: 16pt; margin: 10px 0 5px 0; font-weight: bold; }\n';
+        html += '.header { text-align: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 3px solid #1e3a5f; page-break-after: avoid; }\n';
+        html += '.header h1 { color: #1e3a5f; font-size: 16pt; margin: 10px 0 5px 0; font-weight: bold; }\n';
     html += '.header .business-name { color: #333; font-size: 14pt; font-weight: bold; margin: 5px 0; }\n';
     html += '.header .subtitle { color: #666; font-size: 10pt; margin-top: 5px; }\n';
     html += '.header .meta { color: #999; font-size: 9pt; margin-top: 10px; }\n';
     html += '.section { margin-bottom: 30px; page-break-inside: avoid; }\n';
-    html += '.section-title { color: #667eea; font-size: 14pt; font-weight: bold; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #667eea; page-break-after: avoid; }\n';
+        html += '.section-title { color: #1e3a5f; font-size: 14pt; font-weight: bold; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #1e3a5f; page-break-after: avoid; }\n';
     html += '.subsection { margin-bottom: 15px; margin-left: 0; }\n';
     html += '.subsection-title { color: #555; font-size: 12pt; font-weight: bold; margin-bottom: 6px; margin-top: 12px; }\n';
     html += '.content { margin-bottom: 10px; line-height: 1.5; text-align: left; font-size: 11pt; }\n';
     html += '.content p { margin: 6px 0; }\n';
-    html += '.goal-item { background: #f8f9fa; padding: 12px; margin-bottom: 12px; border-left: 4px solid #667eea; page-break-inside: avoid; }\n';
-    html += '.goal-title { font-weight: bold; color: #667eea; font-size: 12pt; margin-bottom: 6px; }\n';
+        html += '.goal-item { background: #f8f9fa; padding: 12px; margin-bottom: 12px; border-left: 4px solid #1e3a5f; page-break-inside: avoid; }\n';
+        html += '.goal-title { font-weight: bold; color: #1e3a5f; font-size: 12pt; margin-bottom: 6px; }\n';
     html += '.goal-detail { margin-left: 12px; margin-bottom: 6px; color: #555; font-size: 11pt; line-height: 1.5; }\n';
     html += '.goal-label { font-weight: bold; color: #333; }\n';
     html += '.swot-grid { display: table; width: 100%; margin: 12px 0; border-collapse: separate; border-spacing: 10px; }\n';
@@ -2124,8 +2124,8 @@ function generateWordDocument() {
     html += '.swot-weaknesses { background: #fff3e0; border-left: 3px solid #ff9800; }\n';
     html += '.swot-opportunities { background: #e3f2fd; border-left: 3px solid #2196f3; }\n';
     html += '.swot-threats { background: #fce4ec; border-left: 3px solid #e91e63; }\n';
-    html += '.proponent-item { background: #f8f9fa; padding: 12px; margin-bottom: 12px; border-left: 4px solid #667eea; page-break-inside: avoid; }\n';
-    html += '.proponent-title { font-weight: bold; color: #667eea; font-size: 12pt; margin-bottom: 6px; }\n';
+        html += '.proponent-item { background: #f8f9fa; padding: 12px; margin-bottom: 12px; border-left: 4px solid #1e3a5f; page-break-inside: avoid; }\n';
+        html += '.proponent-title { font-weight: bold; color: #1e3a5f; font-size: 12pt; margin-bottom: 6px; }\n';
     html += 'p { margin: 8px 0; }\n';
     html += 'ul { margin: 8px 0; padding-left: 25px; }\n';
     html += 'li { margin: 4px 0; line-height: 1.5; }\n';
@@ -2369,7 +2369,7 @@ function generateExcelDocument() {
     html += '</xml><![endif]-->\n';
     html += '<style>\n';
     html += 'td { font-family: Calibri, Arial, sans-serif; font-size: 11pt; padding: 8px; vertical-align: top; }\n';
-    html += '.header-cell { background-color: #667eea; color: white; font-weight: bold; font-size: 14pt; text-align: center; padding: 15px; }\n';
+        html += '.header-cell { background-color: #1e3a5f; color: white; font-weight: bold; font-size: 14pt; text-align: center; padding: 15px; }\n';
     html += '.section-header { background-color: #764ba2; color: white; font-weight: bold; font-size: 12pt; padding: 12px; }\n';
     html += '.subsection-header { background-color: #9b7bb8; color: white; font-weight: bold; font-size: 11pt; padding: 10px; }\n';
     html += '.label-cell { background-color: #f0f0f0; font-weight: bold; width: 200px; border-right: 2px solid #ddd; }\n';
@@ -2378,8 +2378,8 @@ function generateExcelDocument() {
     html += '.swot-weaknesses { background-color: #fff3e0; border-left: 4px solid #ff9800; }\n';
     html += '.swot-opportunities { background-color: #e3f2fd; border-left: 4px solid #2196f3; }\n';
     html += '.swot-threats { background-color: #fce4ec; border-left: 4px solid #e91e63; }\n';
-    html += '.goal-row { background-color: #f8f9fa; border-left: 4px solid #667eea; }\n';
-    html += '.proponent-row { background-color: #f8f9fa; border-left: 4px solid #667eea; }\n';
+        html += '.goal-row { background-color: #f8f9fa; border-left: 4px solid #1e3a5f; }\n';
+        html += '.proponent-row { background-color: #f8f9fa; border-left: 4px solid #1e3a5f; }\n';
     html += 'table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }\n';
     html += 'td { border: 1px solid #ddd; }\n';
     html += '.meta-row { background-color: #f5f5f5; font-size: 9pt; color: #666; }\n';
