@@ -673,8 +673,11 @@ function exportPlan(format) {
         filename += extension;
     }
     
-    // Use Web Share API for mobile devices if available
-    if (isMobileDevice() && isWebShareAvailable()) {
+    // For text files on mobile, always show options (better for iPhone)
+    if (isMobileDevice() && format === 'txt') {
+        shareFileMobileFallback(blob, filename, mimeType, content);
+    } else if (isMobileDevice() && isWebShareAvailable()) {
+        // Use Web Share API for mobile devices if available
         shareFileMobile(blob, filename, mimeType);
     } else if (isMobileDevice()) {
         // Fallback for mobile devices without Web Share API
@@ -844,6 +847,8 @@ function showMobileFileOptions(url, filename, mimeType) {
 
 // Show additional export options for mobile
 function showMobileExportOptions(url, filename, textContent) {
+    var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    
     // Create a modal with export options
     var modal = document.createElement('div');
     modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;';
@@ -863,6 +868,19 @@ function showMobileExportOptions(url, filename, textContent) {
     var description = document.createElement('p');
     description.textContent = 'Choose how you want to save your strategic plan:';
     modalContent.appendChild(description);
+    
+    // For iOS, add "View & Save" option first (best for iPhone)
+    if (isIOS) {
+        var viewSaveBtn = document.createElement('button');
+        viewSaveBtn.textContent = 'View & Save to Files (Recommended for iPhone)';
+        viewSaveBtn.style.cssText = 'display: block; width: 100%; padding: 12px; margin: 8px 0; background: #007AFF; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold;';
+        viewSaveBtn.onclick = function() {
+            openTextForIOSSave(textContent, filename);
+            modal.remove();
+            window.URL.revokeObjectURL(url);
+        };
+        modalContent.appendChild(viewSaveBtn);
+    }
     
     // Copy to clipboard button
     var copyBtn = document.createElement('button');
@@ -922,6 +940,56 @@ function showMobileExportOptions(url, filename, textContent) {
             window.URL.revokeObjectURL(url);
         }
     });
+}
+
+// Open text in a new page that can be saved on iOS
+function openTextForIOSSave(textContent, filename) {
+    // Create an HTML page with the text content that can be saved
+    var htmlContent = '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>' + escapeHtml(filename) + '</title>\n<style>body{font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;}</style>\n</head>\n<body>\n' + escapeHtml(textContent) + '\n</body>\n</html>';
+    
+    // Create a blob with the HTML content
+    var blob = new Blob([htmlContent], { type: 'text/html' });
+    var blobUrl = window.URL.createObjectURL(blob);
+    
+    // Try to open in new window/tab
+    var newWindow = window.open(blobUrl, '_blank');
+    
+    // If that doesn't work, create a link and click it
+    if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+        var link = document.createElement('a');
+        link.href = blobUrl;
+        link.target = '_blank';
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    
+    // Also create a plain text version for direct download
+    setTimeout(function() {
+        var textBlob = new Blob([textContent], { type: 'text/plain' });
+        var textBlobUrl = window.URL.createObjectURL(textBlob);
+        var textLink = document.createElement('a');
+        textLink.href = textBlobUrl;
+        textLink.download = filename;
+        textLink.style.display = 'none';
+        document.body.appendChild(textLink);
+        textLink.click();
+        document.body.removeChild(textLink);
+        
+        // Clean up after a delay
+        setTimeout(function() {
+            window.URL.revokeObjectURL(textBlobUrl);
+        }, 1000);
+    }, 500);
+    
+    // Clean up HTML blob URL after a delay
+    setTimeout(function() {
+        window.URL.revokeObjectURL(blobUrl);
+    }, 5000);
+    
+    // Show instructions
+    alert('The document has been opened. On iPhone:\n\n1. Tap the Share button (square with arrow) at the bottom\n2. Scroll and tap "Save to Files"\n3. Choose where to save it\n\nOr use "Copy Text" option to paste into Notes or other apps.');
 }
 
 // Copy text to clipboard
