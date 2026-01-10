@@ -1186,10 +1186,10 @@ function saveData() {
     var saved = false;
     
     if (isStorageAvailable('localStorage')) {
-        try {
+    try {
             localStorage.setItem('strategicPlan', dataString);
             saved = true;
-        } catch (e) {
+    } catch (e) {
             console.log('localStorage setItem failed, trying sessionStorage');
         }
     }
@@ -1242,11 +1242,11 @@ function loadSavedData() {
         }
     }
     
-    if (saved) {
+        if (saved) {
         try {
             planData = JSON.parse(saved);
             populateForm();
-        } catch (e) {
+    } catch (e) {
             console.log('Could not parse saved data');
         }
     }
@@ -1717,17 +1717,17 @@ function shareFileMobileFallback(blob, filename, mimeType, content) {
     
     if (isIOS) {
         // iOS: Try download first, then show options
-        var a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
         a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
+    document.body.appendChild(a);
+    a.click();
         
         // Show options after a brief delay
         setTimeout(function() {
             showMobileFileOptions(url, filename, mimeType);
-            document.body.removeChild(a);
+    document.body.removeChild(a);
         }, 300);
     } else {
         // Android: Try download
