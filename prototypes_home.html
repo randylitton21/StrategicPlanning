@@ -1080,6 +1080,12 @@
            FINAL MOBILE OVERRIDES (must be last to win CSS cascade)
            ========================================================================= */
         @media (max-width: 850px) {
+            /* Ensure left/right spacing matches the visible container edge (incl. notches/safe areas) */
+            body {
+                padding-left: calc(12px + env(safe-area-inset-left));
+                padding-right: calc(12px + env(safe-area-inset-right));
+            }
+
             /* Prototype buttons: match container width (same as workflow section) */
             .btn-primary {
                 width: 100%;
