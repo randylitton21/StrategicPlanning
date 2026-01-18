@@ -378,6 +378,7 @@
             .btn-primary {
                 /* smaller button on mobile */
                 width: 100%;
+                box-sizing: border-box; /* critical: width includes padding, prevents overflow */
                 padding: 10px 12px;
                 font-size: 0.9em;
                 gap: 8px;
@@ -393,6 +394,11 @@
             /* Remove the decorative rocket on mobile to save horizontal space */
             .btn-primary::before {
                 content: '';
+                display: none;
+            }
+
+            /* Disable the large hover ripple on mobile to prevent any visual spill */
+            .btn-primary::after {
                 display: none;
             }
 
