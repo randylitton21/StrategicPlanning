@@ -1075,6 +1075,39 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* =========================================================================
+           FINAL MOBILE OVERRIDES (must be last to win CSS cascade)
+           ========================================================================= */
+        @media (max-width: 850px) {
+            /* Prototype buttons: match container width (same as workflow section) */
+            .btn-primary {
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+
+            /* Force button text to one line */
+            .btn-primary span {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+            }
+
+            /* Remove decorative rocket + ripple (they can visually spill on mobile) */
+            .btn-primary::before,
+            .btn-primary::after {
+                display: none;
+                content: '';
+            }
+
+            /* Prevent scale/translate on tap/hover (mobile browsers can "stick" hover) */
+            .btn-primary:hover,
+            .btn-primary:active {
+                transform: none;
+            }
+        }
     </style>
 </head>
 <body>
