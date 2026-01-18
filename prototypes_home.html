@@ -277,10 +277,9 @@
             grid-auto-rows: minmax(min-content, max-content);
         }
         
-        /* Mobile/tablet:
-           - Keep the SAME card sizing as desktop (don’t shrink typography/padding)
-           - Stack cards (no overlap)
-           - No horizontal page scrolling */
+        /* Mobile/tablet: keep the same 2-column desktop layout (no stacking),
+           but scale spacing/typography down to fit. On very narrow screens,
+           do NOT allow horizontal page scrolling. */
         @media (max-width: 850px) {
             html, body {
                 overflow-x: hidden; /* best practice: avoid side-to-side page scroll */
@@ -323,46 +322,97 @@
             }
 
             .tools-grid {
-                /* Stack on mobile to guarantee no overlap and no side-scroll */
-                display: flex;
-                flex-direction: column;
-                gap: 32px;
+                /* Best practice: use a responsive grid so items reflow instead of overlapping */
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
                 margin-top: 28px;
                 width: 100%;
                 max-width: 100%;
             }
 
             .tools-column {
-                flex: 1;
-                display: grid;
-                grid-template-columns: 1fr;
-                gap: 32px;
-                align-items: start;
-                grid-auto-rows: minmax(min-content, max-content);
+                /* Let the cards themselves be grid items */
+                display: contents;
             }
 
-            /* Make prototype cards ~half-height on mobile (collapsed state) */
             .tool-card-header {
-                padding: 18px;
+                padding: 12px;
                 min-height: 64px;
             }
 
             .tool-card h3 {
-                font-size: 1.45em;
-            }
-
-            .tool-icon {
                 font-size: 1.25em;
             }
 
-            .expand-icon {
+            .tool-icon {
                 font-size: 1.15em;
             }
 
-            /* Mobile browsers can keep :hover states; prevent transforms from causing visual overlap */
+            .expand-icon {
+                font-size: 1.1em;
+            }
+
+            .tool-card-content {
+                padding: 0 18px;
+            }
+
+            .tool-card.expanded .tool-card-content {
+                padding: 0 18px 18px 18px;
+            }
+
+            .tool-card .description {
+                font-size: 0.92em;
+                padding-top: 12px;
+            }
+
+            .tool-card .use-case {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            .tool-card .features li {
+                font-size: 0.9em;
+            }
+
+            .btn-primary {
+                padding: 12px 14px;
+                font-size: 0.95em;
+            }
+
+            /* Mobile browsers can keep :hover states; prevent translated cards from visually overlapping */
             .tool-card:hover,
             .tool-card.expanded:hover {
                 transform: none;
+            }
+
+            .workflow-section h2 {
+                font-size: 1.7em;
+            }
+
+            .workflow-header {
+                padding: 24px;
+            }
+
+            .workflow-step {
+                padding: 18px;
+                gap: 16px;
+            }
+
+            .step-number {
+                width: 44px;
+                height: 44px;
+                font-size: 1.2em;
+            }
+
+            .step-content h4 {
+                font-size: 1.2em;
+                margin-bottom: 8px;
+            }
+
+            .step-content p {
+                font-size: 0.98em;
+                line-height: 1.7;
             }
         }
 
@@ -955,8 +1005,12 @@
             font-size: 1.05em;
         }
 
-        /* Smaller phones: keep desktop sizing; only tighten outer spacing */
+        /* Smaller phones: keep the desktop layout, just shrink further. */
         @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.95em;
+            }
+
             .container {
                 padding: 14px;
             }
@@ -964,6 +1018,31 @@
             .tools-grid {
                 gap: 12px;
                 margin-top: 22px;
+            }
+
+            .tool-card-header {
+                padding: 16px;
+                min-height: 74px;
+            }
+
+            .tool-card h3 {
+                font-size: 1.15em;
+            }
+
+            .tool-card .description {
+                font-size: 0.9em;
+            }
+
+            .workflow-step {
+                /* keep row layout (desktop-like) */
+                flex-direction: row;
+            }
+        }
+
+        /* Extra-small phones: 2 columns can’t fit reliably—use 1 column to avoid overlap */
+        @media (max-width: 560px) {
+            .tools-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
