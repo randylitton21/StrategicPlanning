@@ -396,6 +396,14 @@
                 display: none;
             }
 
+            /* Mobile browsers can "stick" :hover styles after tapping.
+               Prevent the button from scaling/overflowing the card on mobile. */
+            .btn-primary:hover,
+            .btn-primary:active {
+                transform: none;
+                box-shadow: var(--shadow-md);
+            }
+
             /* Mobile browsers can keep :hover states; prevent translated cards from visually overlapping */
             .tool-card:hover,
             .tool-card.expanded:hover {
