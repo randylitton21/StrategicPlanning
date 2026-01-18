@@ -277,9 +277,130 @@
             grid-auto-rows: minmax(min-content, max-content);
         }
         
+        /* Mobile/tablet: keep the same 2-column desktop layout (no stacking),
+           but scale spacing/typography down to fit. On very narrow screens,
+           allow horizontal scrolling for the tools grid rather than stacking. */
         @media (max-width: 850px) {
+            body {
+                padding: 12px;
+            }
+
+            .container {
+                padding: 16px;
+            }
+
+            header {
+                padding: 28px 18px;
+            }
+
+            header h1 {
+                font-size: 2.2em;
+            }
+
+            .subtitle {
+                font-size: 1.05em;
+            }
+
+            .intro {
+                padding: 22px;
+                margin-bottom: 30px;
+            }
+
+            .intro h2 {
+                font-size: 1.5em;
+            }
+
+            .intro p {
+                font-size: 0.98em;
+                line-height: 1.7;
+                margin-bottom: 14px;
+            }
+
             .tools-grid {
-                flex-direction: column;
+                flex-direction: row; /* keep desktop layout */
+                gap: 14px;
+                margin-top: 28px;
+                overflow-x: auto; /* narrow phones: swipe horizontally vs stack */
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 10px;
+            }
+
+            .tools-column {
+                gap: 14px;
+                flex: 0 0 320px; /* ensures 2-column structure; scroll if needed */
+            }
+
+            .tool-card-header {
+                padding: 18px;
+                min-height: 80px;
+            }
+
+            .tool-card h3 {
+                font-size: 1.6em;
+            }
+
+            .tool-icon {
+                font-size: 1.4em;
+            }
+
+            .expand-icon {
+                font-size: 1.25em;
+            }
+
+            .tool-card-content {
+                padding: 0 18px;
+            }
+
+            .tool-card.expanded .tool-card-content {
+                padding: 0 18px 18px 18px;
+            }
+
+            .tool-card .description {
+                font-size: 0.98em;
+                padding-top: 16px;
+            }
+
+            .tool-card .use-case {
+                padding: 16px;
+                margin-bottom: 16px;
+            }
+
+            .tool-card .features li {
+                font-size: 0.95em;
+            }
+
+            .btn-primary {
+                padding: 14px 18px;
+                font-size: 1em;
+            }
+
+            .workflow-section h2 {
+                font-size: 1.7em;
+            }
+
+            .workflow-header {
+                padding: 24px;
+            }
+
+            .workflow-step {
+                padding: 18px;
+                gap: 16px;
+            }
+
+            .step-number {
+                width: 44px;
+                height: 44px;
+                font-size: 1.2em;
+            }
+
+            .step-content h4 {
+                font-size: 1.2em;
+                margin-bottom: 8px;
+            }
+
+            .step-content p {
+                font-size: 0.98em;
+                line-height: 1.7;
             }
         }
 
@@ -872,21 +993,41 @@
             font-size: 1.05em;
         }
 
+        /* Smaller phones: keep the desktop layout, just shrink further. */
         @media (max-width: 768px) {
-            .tools-grid {
-                grid-template-columns: 1fr;
-            }
-
             header h1 {
-                font-size: 2em;
+                font-size: 1.95em;
             }
 
             .container {
-                padding: 20px;
+                padding: 14px;
+            }
+
+            .tools-grid {
+                gap: 12px;
+                margin-top: 22px;
+            }
+
+            .tools-column {
+                flex-basis: 300px;
+            }
+
+            .tool-card-header {
+                padding: 16px;
+                min-height: 74px;
+            }
+
+            .tool-card h3 {
+                font-size: 1.45em;
+            }
+
+            .tool-card .description {
+                font-size: 0.95em;
             }
 
             .workflow-step {
-                flex-direction: column;
+                /* keep row layout (desktop-like) */
+                flex-direction: row;
             }
         }
     </style>
