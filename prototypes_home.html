@@ -341,6 +341,24 @@
                 grid-auto-rows: minmax(min-content, max-content);
             }
 
+            /* Make prototype cards ~half-height on mobile (collapsed state) */
+            .tool-card-header {
+                padding: 18px;
+                min-height: 64px;
+            }
+
+            .tool-card h3 {
+                font-size: 1.45em;
+            }
+
+            .tool-icon {
+                font-size: 1.25em;
+            }
+
+            .expand-icon {
+                font-size: 1.15em;
+            }
+
             /* Mobile browsers can keep :hover states; prevent transforms from causing visual overlap */
             .tool-card:hover,
             .tool-card.expanded:hover {
