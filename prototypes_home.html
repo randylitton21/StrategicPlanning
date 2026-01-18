@@ -376,8 +376,25 @@
             }
 
             .btn-primary {
-                padding: 12px 14px;
-                font-size: 0.95em;
+                /* smaller button on mobile */
+                width: fit-content;
+                max-width: 100%;
+                padding: 10px 12px;
+                font-size: 0.9em;
+                gap: 8px;
+            }
+
+            /* Force button label to a single line on mobile */
+            .btn-primary span {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            /* Remove the decorative rocket on mobile to save horizontal space */
+            .btn-primary::before {
+                content: '';
+                display: none;
             }
 
             /* Mobile browsers can keep :hover states; prevent translated cards from visually overlapping */
