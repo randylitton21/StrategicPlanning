@@ -322,17 +322,18 @@
             }
 
             .tools-grid {
-                flex-direction: row; /* keep desktop layout */
-                gap: 10px;
+                /* Best practice: use a responsive grid so items reflow instead of overlapping */
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
                 margin-top: 28px;
                 width: 100%;
                 max-width: 100%;
             }
 
             .tools-column {
-                gap: 10px;
-                flex: 1 1 0; /* true 2-column fit on small screens */
-                min-width: 0; /* critical for flex children to shrink without overflow */
+                /* Let the cards themselves be grid items */
+                display: contents;
             }
 
             .tool-card-header {
@@ -377,6 +378,12 @@
             .btn-primary {
                 padding: 12px 14px;
                 font-size: 0.95em;
+            }
+
+            /* Mobile browsers can keep :hover states; prevent translated cards from visually overlapping */
+            .tool-card:hover,
+            .tool-card.expanded:hover {
+                transform: none;
             }
 
             .workflow-section h2 {
@@ -1013,10 +1020,6 @@
                 margin-top: 22px;
             }
 
-            .tools-column {
-                flex-basis: auto;
-            }
-
             .tool-card-header {
                 padding: 16px;
                 min-height: 74px;
@@ -1033,6 +1036,13 @@
             .workflow-step {
                 /* keep row layout (desktop-like) */
                 flex-direction: row;
+            }
+        }
+
+        /* Extra-small phones: 2 columns can’t fit reliably—use 1 column to avoid overlap */
+        @media (max-width: 560px) {
+            .tools-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
