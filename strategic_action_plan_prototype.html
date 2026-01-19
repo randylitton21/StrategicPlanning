@@ -1313,6 +1313,7 @@
         </div>
     </div>
 
+    <script src="guide.js"></script>
     <script>
         // Goal Setting Modal Functions
         let currentGoalTextarea = null;
@@ -2838,6 +2839,91 @@
             document.getElementById('learnContentDisplay').style.display = 'none';
         }
 
+        // ---------------------------------------------------------------------------
+        // Guided workflow: prompted imports + in-tool guide panel
+        // ---------------------------------------------------------------------------
+        async function handleGuideHandoff() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('guide') !== '1' || urlParams.get('handoff') !== '1') return;
+                if (!window.Guide) return;
+
+                const username = getCurrentUsername();
+                if (!username) return;
+
+                const handoff = window.Guide.consumeHandoff();
+                if (!handoff || handoff.type !== 'import_goal_from_goal_template') return;
+
+                // Prefer saved goals list if available, else use current template
+                const savedGoalsKey = 'goalSetting_savedGoals_' + username;
+                const savedGoals = window.Guide.readJson(savedGoalsKey) || [];
+
+                let candidates = [];
+                if (Array.isArray(savedGoals) && savedGoals.length) {
+                    candidates = savedGoals.map(function(g) {
+                        return { title: g.goal || g.title || g.name || '', ...g };
+                    });
+                } else {
+                    const template = window.Guide.readJson('goalSettingTemplateData_' + username);
+                    if (template && template.goal) {
+                        candidates = [{ title: template.goal, ...template }];
+                    }
+                }
+
+                if (!candidates.length) {
+                    alert('No goals found in Goal Setting yet. Open Goal Setting Template and create/save a goal first.');
+                    return;
+                }
+
+                const selected = await window.Guide.promptSelectGoal(candidates, { title: 'Select a goal to bring into Action Plan' });
+                if (!selected) return;
+
+                const current = getCurrentGoal();
+                const hasExisting = current && current.goal && String(current.goal).trim();
+                if (hasExisting) {
+                    const ok = confirm('Replace the current Action Plan goal text with the selected goal?');
+                    if (!ok) return;
+                }
+
+                if (current) {
+                    current.goal = selected.title || selected.goal || '';
+                    if (!current.name || String(current.name).indexOf('Goal ') === 0) {
+                        current.name = (selected.title || selected.goal || 'Goal').slice(0, 32);
+                    }
+                    saveData();
+                    renderGoals();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
+
+        function initGuidePanel() {
+            try {
+                if (!window.Guide) return;
+                window.Guide.addGuidePanel({
+                    title: 'Guided Workflow',
+                    steps: [
+                        {
+                            label: 'Back: Goal Setting',
+                            cta: 'Open',
+                            onClick: function() {
+                                window.location.href = 'goal_setting_template_prototype.html?guide=1';
+                            }
+                        },
+                        {
+                            label: 'Next: Review on Home',
+                            cta: 'Finish',
+                            onClick: function() { window.location.href = 'prototypes_home.html?guide=1'; }
+                        }
+                    ]
+                });
+            } catch (e) {
+                // ignore
+            }
+        }
+
 
         // Initialize when DOM is ready
         if (document.readyState === 'loading') {
@@ -2845,12 +2931,16 @@
                 loadSavedData(); // Load user's saved data
                 initializeDefaultGoal();
                 renderGoals(); // Render action plan
+                handleGuideHandoff();
+                initGuidePanel();
             });
         } else {
             // DOM is already ready
             loadSavedData(); // Load user's saved data
             initializeDefaultGoal();
             renderGoals(); // Render action plan
+            handleGuideHandoff();
+            initGuidePanel();
         }
 
         // Auto-save on input

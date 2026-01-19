@@ -262,6 +262,123 @@
             font-weight: 700;
         }
 
+        /* =========================================================================
+           Guided Workflow Hub (Home Page)
+           ========================================================================= */
+        .guide-hub {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--success-light) 100%);
+            border-left: 6px solid var(--success);
+            padding: 28px;
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-lg);
+            margin-top: 30px;
+            margin-bottom: 24px;
+        }
+
+        .guide-hub h2 {
+            color: var(--primary-color);
+            font-size: 1.8em;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
+
+        .guide-hub p {
+            color: var(--text-secondary);
+            margin-bottom: 18px;
+            line-height: 1.7;
+        }
+
+        .guide-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .btn-guide {
+            border: none;
+            border-radius: var(--radius-full);
+            padding: 14px 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            box-shadow: var(--shadow-md);
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-guide.secondary {
+            background: var(--primary-color);
+        }
+
+        .btn-guide.tertiary {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border: 2px solid var(--bg-tertiary);
+        }
+
+        .btn-guide:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .progress-card {
+            background: rgba(255, 255, 255, 0.85);
+            border: 2px solid var(--bg-tertiary);
+            border-radius: var(--radius-xl);
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .progress-card h3 {
+            margin: 0 0 6px 0;
+            font-size: 1.05em;
+            color: var(--text-primary);
+            font-weight: 800;
+            letter-spacing: -0.01em;
+        }
+
+        .progress-card .status {
+            font-size: 0.95em;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .progress-bar-mini {
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .progress-bar-mini > div {
+            height: 100%;
+            width: 0%;
+            background: var(--success);
+            transition: width var(--transition-base);
+        }
+
+        @media (max-width: 850px) {
+            .guide-hub {
+                padding: 18px;
+            }
+
+            .progress-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-guide:hover {
+                transform: none;
+            }
+        }
+
         .tools-grid {
             display: flex;
             gap: 32px;
@@ -1038,6 +1155,34 @@
             </div>
         </div>
 
+        <!-- Guided Workflow Hub -->
+        <div class="guide-hub" id="guideHub">
+            <h2>Guided Workflow</h2>
+            <p>Follow a guided path from defining your strategy to turning it into an actionable plan. You can start guided mode anytime and continue where you left off.</p>
+            <div class="guide-actions">
+                <button class="btn-guide" id="startGuidedBtn">Start Guided Workflow</button>
+                <button class="btn-guide secondary" id="continueGuidedBtn">Continue Guided Workflow</button>
+                <button class="btn-guide tertiary" id="viewProgressBtn">Refresh Progress</button>
+            </div>
+            <div class="progress-grid" id="progressGrid">
+                <div class="progress-card">
+                    <h3>Strategic Planning</h3>
+                    <div class="status" id="progressStrategicStatus">—</div>
+                    <div class="progress-bar-mini"><div id="progressStrategicBar"></div></div>
+                </div>
+                <div class="progress-card">
+                    <h3>Goal Setting</h3>
+                    <div class="status" id="progressGoalStatus">—</div>
+                    <div class="progress-bar-mini"><div id="progressGoalBar"></div></div>
+                </div>
+                <div class="progress-card">
+                    <h3>Action Plan</h3>
+                    <div class="status" id="progressActionStatus">—</div>
+                    <div class="progress-bar-mini"><div id="progressActionBar"></div></div>
+                </div>
+            </div>
+        </div>
+
         <div class="tools-grid" id="toolsGrid">
             <div class="tools-column" id="column1">
             <!-- Strategic Planning Guide (Main App) Card -->
@@ -1436,6 +1581,7 @@
         </div>
     </div>
 
+    <script src="guide.js"></script>
     <script>
 // Toggle workflow section
 function toggleWorkflow() {
@@ -2192,11 +2338,161 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
         initAuth();
         handleUrlActions();
+        initGuidedHub();
     });
 } else {
     initAuth();
     handleUrlActions();
+    initGuidedHub();
 }
+
+// ---------------------------------------------------------------------------
+// Guided Workflow Hub (Home Page)
+// ---------------------------------------------------------------------------
+function getCurrentUsername() {
+    try {
+        var session = sessionStorage.getItem('prototype_userSession');
+        if (session) {
+            var sessionData = JSON.parse(session);
+            return sessionData.user ? sessionData.user.username : null;
+        }
+    } catch (e) {
+        return null;
+    }
+    return null;
+}
+
+function readJson(key) {
+    try {
+        var raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function computeProgress(username) {
+    // Strategic Planning
+    var strategic = readJson('prototype_strategicPlan_' + username);
+    var strategicGoals = strategic && Array.isArray(strategic.goals) ? strategic.goals : [];
+    var strategicPct = 0;
+    if (strategic) {
+        // Rough heuristic: goals + any core purpose fields
+        var hasPurpose = !!(strategic.businessName || strategic.userName || strategic.vision || strategic.values || strategic.mission);
+        var hasSwot = !!(strategic.strengths || strategic.weaknesses || strategic.opportunities || strategic.threats);
+        var hasGoals = strategicGoals.length > 0;
+        strategicPct = (hasPurpose ? 0.34 : 0) + (hasSwot ? 0.33 : 0) + (hasGoals ? 0.33 : 0);
+    }
+
+    // Goal Setting Template
+    var goalTemplate = readJson('goalSettingTemplateData_' + username);
+    var goalPct = 0;
+    if (goalTemplate) {
+        var hasGoal = !!goalTemplate.goal;
+        var hasPlan = !!(goalTemplate.actionPlan || goalTemplate.blockers || goalTemplate.importance);
+        goalPct = (hasGoal ? 0.6 : 0) + (hasPlan ? 0.4 : 0);
+    }
+
+    // Action Plan
+    var action = readJson('strategicActionPlanData_' + username);
+    var actionPct = 0;
+    if (action) {
+        var goalsArr = Array.isArray(action.goals) ? action.goals : (action.goal ? [{ goal: action.goal }] : []);
+        var anyGoalText = goalsArr.some(function(g) { return g && g.goal && String(g.goal).trim(); });
+        actionPct = anyGoalText ? 1 : 0.2;
+    }
+
+    return {
+        strategic: { pct: Math.round(strategicPct * 100), goalsCount: strategicGoals.length },
+        goal: { pct: Math.round(goalPct * 100) },
+        action: { pct: Math.round(actionPct * 100) }
+    };
+}
+
+function nextGuidedStep(progress) {
+    if (progress.strategic.pct < 67 || progress.strategic.goalsCount === 0) return 'strategic';
+    if (progress.goal.pct < 60) return 'goal';
+    if (progress.action.pct < 80) return 'action';
+    return 'review';
+}
+
+function initGuidedHub() {
+    var startBtn = document.getElementById('startGuidedBtn');
+    var contBtn = document.getElementById('continueGuidedBtn');
+    var refreshBtn = document.getElementById('viewProgressBtn');
+
+    function render() {
+        var username = getCurrentUsername();
+        var sStatus = document.getElementById('progressStrategicStatus');
+        var gStatus = document.getElementById('progressGoalStatus');
+        var aStatus = document.getElementById('progressActionStatus');
+        var sBar = document.getElementById('progressStrategicBar');
+        var gBar = document.getElementById('progressGoalBar');
+        var aBar = document.getElementById('progressActionBar');
+
+        if (!username) {
+            sStatus.textContent = 'Login to track progress';
+            gStatus.textContent = 'Login to track progress';
+            aStatus.textContent = 'Login to track progress';
+            sBar.style.width = '0%';
+            gBar.style.width = '0%';
+            aBar.style.width = '0%';
+            return;
+        }
+
+        var p = computeProgress(username);
+        sStatus.textContent = p.strategic.pct + '% complete' + (p.strategic.goalsCount ? ' • ' + p.strategic.goalsCount + ' goals' : '');
+        gStatus.textContent = p.goal.pct + '% complete';
+        aStatus.textContent = p.action.pct + '% complete';
+        sBar.style.width = p.strategic.pct + '%';
+        gBar.style.width = p.goal.pct + '%';
+        aBar.style.width = p.action.pct + '%';
+    }
+
+    function requireLoginOrShow() {
+        var username = getCurrentUsername();
+        if (!username) {
+            alert('Please login to use Guided Workflow (so we can safely connect your tools).');
+            showAuthModal();
+            return null;
+        }
+        return username;
+    }
+
+    if (startBtn) {
+        startBtn.onclick = function() {
+            var username = requireLoginOrShow();
+            if (!username) return;
+            window.location.href = 'main_app_prototype.html?guide=1';
+        };
+    }
+
+    if (contBtn) {
+        contBtn.onclick = function() {
+            var username = requireLoginOrShow();
+            if (!username) return;
+            var p = computeProgress(username);
+            var step = nextGuidedStep(p);
+            if (step === 'strategic') {
+                window.location.href = 'main_app_prototype.html?guide=1';
+            } else if (step === 'goal') {
+                Guide.startHandoff({ type: 'import_goal_from_strategic_plan' });
+                window.location.href = 'goal_setting_template_prototype.html?guide=1&handoff=1';
+            } else if (step === 'action') {
+                Guide.startHandoff({ type: 'import_goal_from_goal_template' });
+                window.location.href = 'strategic_action_plan_prototype.html?guide=1&handoff=1';
+            } else {
+                alert('Nice work — you look up to date. Consider reviewing your plan or refining with Five Forces / Strategic Canvas.');
+            }
+        };
+    }
+
+    if (refreshBtn) {
+        refreshBtn.onclick = render;
+    }
+
+    render();
+ }
 
 // Handle URL actions (login, save)
 function handleUrlActions() {

@@ -1449,6 +1449,7 @@
         </div>
     </div>
 
+    <script src="guide.js"></script>
     <script>
         // Data structure
         let goalData = {
@@ -2987,6 +2988,71 @@
         }
 
         // Initialize on page load
+        // Guided workflow handoff (prompted import)
+        (function handleGuideHandoff() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('guide') !== '1' || urlParams.get('handoff') !== '1') return;
+                if (!window.Guide) return;
+
+                const username = getCurrentUsername();
+                if (!username) return;
+
+                const handoff = window.Guide.consumeHandoff();
+                if (!handoff || handoff.type !== 'import_goal_from_strategic_plan') return;
+
+                const strategic = window.Guide.readJson('prototype_strategicPlan_' + username);
+                const goals = strategic && Array.isArray(strategic.goals) ? strategic.goals : [];
+                if (!goals.length) {
+                    alert('No goals found in Strategic Planning yet. Add at least one goal in Step 5, then come back here.');
+                    return;
+                }
+
+                window.Guide.promptSelectGoal(goals, { title: 'Select a goal to refine (from Strategic Planning)' })
+                    .then(function(selected) {
+                        if (!selected) return;
+
+                        const hasExisting = !!(goalData.goal || goalData.importance || goalData.blockers || goalData.actionPlan);
+                        if (hasExisting) {
+                            const ok = confirm('Replace your current Goal Setting Template fields with the selected goal?');
+                            if (!ok) return;
+                        }
+
+                        goalData.goal = selected.title || '';
+                        goalData.importance = selected.strategicIntent || '';
+                        goalData.blockers = selected.drivers || '';
+                        goalData.actionPlan = selected.enablers || '';
+                        goalData.smart = {
+                            specific: false,
+                            measurable: false,
+                            attainable: false,
+                            relevant: false,
+                            'time-specific': false
+                        };
+
+                        // Update UI
+                        const goalInput = document.getElementById('goal');
+                        const importanceInput = document.getElementById('importance');
+                        const blockersInput = document.getElementById('blockers');
+                        const actionPlanInput = document.getElementById('actionPlan');
+                        if (goalInput) goalInput.value = goalData.goal;
+                        if (importanceInput) importanceInput.value = goalData.importance;
+                        if (blockersInput) blockersInput.value = goalData.blockers;
+                        if (actionPlanInput) actionPlanInput.value = goalData.actionPlan;
+
+                        Object.keys(goalData.smart).forEach(function(key) {
+                            const checkbox = document.getElementById('smart-' + key);
+                            if (checkbox) checkbox.classList.remove('checked');
+                        });
+
+                        saveData();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+            } catch (e) {
+                // ignore
+            }
+        })();
+
         checkModalMode();
         
         // Only load saved data if we're not loading a specific goal
@@ -3014,6 +3080,32 @@
                 checkbox.classList.add('checked');
             }
         });
+
+        // In-tool guide panel
+        try {
+            if (window.Guide) {
+                window.Guide.addGuidePanel({
+                    title: 'Guided Workflow',
+                    steps: [
+                        {
+                            label: 'Back: Strategic Planning',
+                            cta: 'Open',
+                            onClick: function() { window.location.href = 'main_app_prototype.html?guide=1'; }
+                        },
+                        {
+                            label: 'Next: Action Plan',
+                            cta: 'Continue',
+                            onClick: function() {
+                                window.Guide.startHandoff({ type: 'import_goal_from_goal_template' });
+                                window.location.href = 'strategic_action_plan_prototype.html?guide=1&handoff=1';
+                            }
+                        }
+                    ]
+                });
+            }
+        } catch (e) {
+            // ignore
+        }
     </script>
     <script>
         // Save to profile function - redirects to home page for login

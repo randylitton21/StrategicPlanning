@@ -2141,6 +2141,7 @@ main {
             line-height: 1.6;
         }
     </style>
+    <script src="guide.js"></script>
     <script>
 // Strategic Planning Workflow Script
 
@@ -2238,6 +2239,32 @@ function init() {
             saveData();
         }
     });
+
+    // Guided workflow panel (lightweight, in-page)
+    try {
+        if (window.Guide) {
+            window.Guide.addGuidePanel({
+                title: 'Guided Workflow',
+                steps: [
+                    {
+                        label: 'Back: Home Progress',
+                        cta: 'Home',
+                        onClick: function() { window.location.href = 'prototypes_home.html?guide=1'; }
+                    },
+                    {
+                        label: 'Next: Refine a Goal',
+                        cta: 'Continue',
+                        onClick: function() {
+                            window.Guide.startHandoff({ type: 'import_goal_from_strategic_plan' });
+                            window.location.href = 'goal_setting_template_prototype.html?guide=1&handoff=1';
+                        }
+                    }
+                ]
+            });
+        }
+    } catch (e) {
+        // ignore
+    }
 }
 
 // Goal Setting Modal Functions
