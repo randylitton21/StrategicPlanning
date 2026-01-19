@@ -1451,6 +1451,23 @@
 
     <script src="guide.js"></script>
     <script>
+        // Premium gate: require login (Strategic Planning is the only free tool)
+        (function requireLoginForPremium() {
+            function getSessionUsername() {
+                try {
+                    var raw = sessionStorage.getItem('prototype_userSession');
+                    if (!raw) return null;
+                    var data = JSON.parse(raw);
+                    return (data && data.user && data.user.username) || data.username || null;
+                } catch (e) { return null; }
+            }
+
+            if (!getSessionUsername()) {
+                var page = window.location.pathname.split('/').pop() + window.location.search + window.location.hash;
+                window.location.replace('prototypes_home.html?action=login&return=' + encodeURIComponent(page));
+            }
+        })();
+
         // Data structure
         let goalData = {
             goal: '',

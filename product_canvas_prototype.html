@@ -831,6 +831,23 @@
     </div>
 
     <script>
+        // Premium gate: require login (Strategic Planning is the only free tool)
+        (function requireLoginForPremium() {
+            function getSessionUsername() {
+                try {
+                    const raw = sessionStorage.getItem('prototype_userSession');
+                    if (!raw) return null;
+                    const data = JSON.parse(raw);
+                    return (data && data.user && data.user.username) || data.username || null;
+                } catch (e) { return null; }
+            }
+
+            if (!getSessionUsername()) {
+                const page = window.location.pathname.split('/').pop() + window.location.search + window.location.hash;
+                window.location.replace('prototypes_home.html?action=login&return=' + encodeURIComponent(page));
+            }
+        })();
+
         // Get current username from session
         function getCurrentUsername() {
             const sessionData = sessionStorage.getItem('prototype_userSession');

@@ -460,6 +460,28 @@
         .tool-card:nth-child(5) h3 { color: var(--info); }
         .tool-card:nth-child(5) .expand-icon { color: var(--info); }
 
+        /* Premium locks (client-side paywall) */
+        .tool-card.locked {
+            opacity: 0.92;
+        }
+
+        .tool-card.locked h3::after {
+            content: ' 🔒';
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        .tool-card.locked .btn-primary.premium-locked {
+            background: #6B7280 !important;
+            box-shadow: none !important;
+        }
+
+        .tool-card.locked .btn-primary.premium-locked:hover,
+        .tool-card.locked .btn-primary.premium-locked:active {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
         .tool-icon {
             font-size: 1.8em;
             display: inline-block;
@@ -1932,6 +1954,7 @@ function login(username, password) {
     loadUserData(username);
     
     updateAuthUI();
+    handlePostAuthReturn();
     return true;
 }
 
@@ -2003,6 +2026,93 @@ function updateAuthUI() {
             userInfo.style.display = 'none';
         }
     }
+
+    // Keep premium locks in sync with auth state
+    applyPremiumLocks();
+}
+
+// --------------------------------------------
+// Premium locks (client-side paywall)
+// Note: This is a UX gate only (static site). It does not provide real security.
+// --------------------------------------------
+function getSessionUsername() {
+    try {
+        var raw = sessionStorage.getItem('prototype_userSession');
+        if (!raw) return null;
+        var data = JSON.parse(raw);
+        return (data && data.user && data.user.username) || data.username || null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function sanitizeReturnTarget(target) {
+    if (!target) return null;
+    // prevent open redirects; only allow same-folder html files
+    if (target.indexOf('://') !== -1) return null;
+    if (target.indexOf('\\') !== -1) return null;
+    if (target.indexOf('..') !== -1) return null;
+    // allow query/hash
+    var base = target.split('?')[0].split('#')[0];
+    if (!base || base.indexOf('/') !== -1) return null;
+    if (!base.toLowerCase().endsWith('.html')) return null;
+    return target;
+}
+
+function startAuthFlow(returnTarget) {
+    var safe = sanitizeReturnTarget(returnTarget);
+    if (safe) {
+        sessionStorage.setItem('prototype_postAuthReturn', safe);
+    }
+    showAuthModal();
+}
+
+function handlePostAuthReturn() {
+    var pending = sessionStorage.getItem('prototype_postAuthReturn');
+    if (!pending) return;
+    var safe = sanitizeReturnTarget(pending);
+    if (!safe) {
+        sessionStorage.removeItem('prototype_postAuthReturn');
+        return;
+    }
+    // Only redirect if logged in
+    if (isLoggedIn && currentUser) {
+        sessionStorage.removeItem('prototype_postAuthReturn');
+        window.location.replace(safe);
+    }
+}
+
+function applyPremiumLocks() {
+    var loggedIn = !!getSessionUsername();
+    var cards = document.querySelectorAll('.tool-card');
+    cards.forEach(function(card) {
+        var id = card.getAttribute('data-card-id');
+        var isFree = id === '1'; // Strategic Planning is free
+        var shouldLock = !loggedIn && !isFree;
+
+        card.classList.toggle('locked', shouldLock);
+
+        // Allow previewing cards, but block navigation to premium pages when locked.
+        var btn = card.querySelector('a.btn-primary');
+        if (btn) {
+            // Snapshot original href/text once
+            if (!btn.dataset.originalHref) btn.dataset.originalHref = btn.getAttribute('href') || '';
+            var span = btn.querySelector('span');
+            if (span && !btn.dataset.originalLabel) btn.dataset.originalLabel = span.textContent || '';
+
+            if (shouldLock) {
+                btn.classList.add('premium-locked');
+                btn.dataset.premiumLocked = '1';
+                btn.setAttribute('href', '#');
+                if (span) span.textContent = '🔒 Sign in to unlock';
+            } else {
+                btn.classList.remove('premium-locked');
+                delete btn.dataset.premiumLocked;
+                if (btn.dataset.originalHref) btn.setAttribute('href', btn.dataset.originalHref);
+                if (span && btn.dataset.originalLabel) span.textContent = btn.dataset.originalLabel;
+            }
+        }
+    });
 }
 
 // Show authentication modal
@@ -2224,10 +2334,20 @@ if (document.readyState === 'loading') {
 function handleUrlActions() {
     var urlParams = new URLSearchParams(window.location.search);
     var action = urlParams.get('action');
+    var returnTarget = sanitizeReturnTarget(urlParams.get('return'));
+
+    // If we're already logged in and there's a return target, go there immediately.
+    if (returnTarget && isLoggedIn && currentUser) {
+        window.location.replace(returnTarget);
+        return;
+    }
     
     if (action === 'login') {
         // Show login modal
         setTimeout(function() {
+            if (returnTarget) {
+                sessionStorage.setItem('prototype_postAuthReturn', returnTarget);
+            }
             showAuthModal();
         }, 100);
     } else if (action === 'save') {
@@ -2242,6 +2362,16 @@ function handleUrlActions() {
         }
     }
 }
+
+// Paywall click handler (event delegation)
+document.addEventListener('click', function(e) {
+    var lockedBtn = e.target.closest('a.btn-primary[data-premium-locked="1"]');
+    if (!lockedBtn) return;
+    e.preventDefault();
+    // Use the originally intended destination as the post-auth return.
+    var returnTarget = lockedBtn.dataset.originalHref;
+    startAuthFlow(returnTarget);
+});
 
 // Collect all prototype data into unified structure (user-specific)
 function collectAllPrototypeData() {
