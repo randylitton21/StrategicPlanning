@@ -854,6 +854,129 @@
             }
         }
 
+        /* =========================================================================
+           FINAL MOBILE OVERRIDES (must be last to win CSS cascade)
+           Goal: show the SAME desktop diagram on mobile (scaled to fit),
+           but allow tapping a force header to open it full-screen for editing.
+           ========================================================================= */
+        @media (max-width: 850px) {
+            html, body {
+                overflow-x: hidden;
+                width: 100%;
+            }
+
+            body {
+                padding-left: calc(12px + env(safe-area-inset-left));
+                padding-right: calc(12px + env(safe-area-inset-right));
+                padding-top: 12px;
+                padding-bottom: 12px;
+            }
+
+            .container {
+                max-width: 100%;
+                padding: 12px;
+            }
+
+            /* Mobile diagram viewport wrapper (created by JS) */
+            .forces-grid-viewport {
+                width: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+                margin-top: 18px;
+            }
+
+            /* Override the 1024px "single column" rule: keep desktop diagram layout */
+            .forces-grid {
+                grid-template-columns: 1fr 1fr 1fr !important;
+                grid-template-rows: auto 1fr auto !important;
+                max-width: none !important;
+                width: 1200px; /* desktop diagram target width; JS scales this to fit */
+                margin: 0;
+                transform-origin: top center;
+            }
+
+            .force-section.new-entrants { grid-column: 2 !important; grid-row: 1 !important; }
+            .force-section.suppliers   { grid-column: 1 !important; grid-row: 2 !important; }
+            .force-section.rivalry     { grid-column: 2 !important; grid-row: 2 !important; }
+            .force-section.buyers      { grid-column: 3 !important; grid-row: 2 !important; }
+            .force-section.substitutes { grid-column: 2 !important; grid-row: 3 !important; }
+
+            /* Make "tap to expand" discoverable */
+            .force-section .section-header {
+                cursor: pointer;
+            }
+
+            .force-section .section-title::after {
+                content: ' (tap to expand)';
+                font-size: 0.75em;
+                font-weight: 500;
+                color: rgba(0,0,0,0.45);
+            }
+
+            /* Full-screen expanded force (overlay) */
+            body.mobile-force-open {
+                overflow: hidden;
+            }
+
+            .mobile-force-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(15, 23, 42, 0.65);
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                padding: calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right))
+                         calc(12px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
+            }
+
+            .mobile-force-overlay.show {
+                display: flex;
+            }
+
+            .mobile-force-sheet {
+                width: 100%;
+                max-width: 720px;
+                max-height: 92vh;
+                background: var(--bg-primary);
+                border-radius: var(--radius-xl);
+                box-shadow: var(--shadow-xl);
+                overflow: auto;
+                -webkit-overflow-scrolling: touch;
+                padding: 14px;
+                position: relative;
+            }
+
+            .mobile-force-close {
+                position: sticky;
+                top: 0;
+                width: 100%;
+                display: block;
+                background: rgba(248, 250, 252, 0.95);
+                border: 1px solid rgba(0,0,0,0.08);
+                border-radius: var(--radius-md);
+                padding: 10px 12px;
+                font-weight: 700;
+                cursor: pointer;
+                margin-bottom: 12px;
+            }
+
+            .mobile-force-content .force-section {
+                min-height: auto;
+            }
+
+            /* In overlay, don't show the "(tap to expand)" hint */
+            .mobile-force-content .section-title::after {
+                content: '';
+            }
+
+            /* Placeholder keeps grid from collapsing when a section is moved into overlay */
+            .mobile-force-placeholder {
+                min-height: 300px;
+            }
+        }
+
         @media (max-width: 768px) {
             header h1 {
                 font-size: 2em;
@@ -2333,6 +2456,157 @@
         // Initialize on page load
         // Don't load saved data on initial load - start with blank form
         renderAllCards(); // Render empty forces grid
+
+        // Mobile-only: keep desktop diagram layout (scaled to fit) and tap-to-expand sections.
+        (function setupMobilePortersDiagram() {
+            function isMobileLayout() {
+                return window.matchMedia && window.matchMedia('(max-width: 850px)').matches;
+            }
+
+            function ensureViewportWrapper(grid) {
+                if (!grid || !grid.parentNode) return null;
+                if (grid.parentElement && grid.parentElement.classList.contains('forces-grid-viewport')) {
+                    return grid.parentElement;
+                }
+                var viewport = document.createElement('div');
+                viewport.className = 'forces-grid-viewport';
+                grid.parentNode.insertBefore(viewport, grid);
+                viewport.appendChild(grid);
+                return viewport;
+            }
+
+            function setupScale(grid, viewport) {
+                if (!grid || !viewport) return function() {};
+                var baseWidth = 1200; // keep in sync with CSS width
+
+                function update() {
+                    if (!isMobileLayout()) return;
+                    var available = Math.max(280, document.documentElement.clientWidth - 24);
+                    var scale = Math.min(1, available / baseWidth);
+                    grid.style.transform = 'scale(' + scale.toFixed(4) + ')';
+                    grid.style.transformOrigin = 'top center';
+
+                    // Make layout height match the transformed visual height
+                    var rect = grid.getBoundingClientRect();
+                    viewport.style.height = rect.height + 'px';
+                }
+
+                var onResize = function() { window.requestAnimationFrame(update); };
+                window.addEventListener('resize', onResize, { passive: true });
+                window.requestAnimationFrame(update);
+
+                return function cleanup() {
+                    window.removeEventListener('resize', onResize);
+                };
+            }
+
+            function setupOverlay() {
+                var overlay = document.getElementById('mobileForceOverlay');
+                if (overlay) return overlay;
+                overlay = document.createElement('div');
+                overlay.id = 'mobileForceOverlay';
+                overlay.className = 'mobile-force-overlay';
+                overlay.innerHTML =
+                    '<div class="mobile-force-sheet" role="dialog" aria-modal="true" aria-label="Force details">' +
+                    '  <button type="button" class="mobile-force-close" aria-label="Close">Close ✕</button>' +
+                    '  <div class="mobile-force-content"></div>' +
+                    '</div>';
+                document.body.appendChild(overlay);
+                return overlay;
+            }
+
+            function init() {
+                if (!isMobileLayout()) return;
+
+                var grid = document.querySelector('.forces-grid');
+                if (!grid) return;
+
+                var viewport = ensureViewportWrapper(grid);
+                var cleanupScale = setupScale(grid, viewport);
+
+                var overlay = setupOverlay();
+                var content = overlay.querySelector('.mobile-force-content');
+                var closeBtn = overlay.querySelector('.mobile-force-close');
+
+                var activeSection = null;
+                var restoreActive = null;
+
+                function close() {
+                    if (!activeSection || !restoreActive) return;
+                    restoreActive();
+                    activeSection = null;
+                    restoreActive = null;
+                    overlay.classList.remove('show');
+                    document.body.classList.remove('mobile-force-open');
+                }
+
+                closeBtn.onclick = close;
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === overlay) close();
+                });
+
+                if (!grid.dataset.mobileExpandBound) {
+                    grid.dataset.mobileExpandBound = '1';
+                    grid.addEventListener('click', function(e) {
+                        if (!isMobileLayout()) return;
+                        var header = e.target.closest('.section-header');
+                        if (!header) return;
+                        if (e.target.closest('.help-toggle')) return; // keep help button behavior
+
+                        var section = header.closest('.force-section');
+                        if (!section) return;
+
+                        e.preventDefault();
+
+                        // Move the selected force section into the overlay
+                        if (activeSection) close();
+
+                        var parent = section.parentNode;
+                        var next = section.nextSibling;
+                        var placeholder = document.createElement('div');
+                        placeholder.className = 'mobile-force-placeholder';
+                        parent.insertBefore(placeholder, section);
+
+                        restoreActive = function() {
+                            if (next && next.parentNode === parent) {
+                                parent.insertBefore(section, next);
+                            } else {
+                                parent.appendChild(section);
+                            }
+                            placeholder.remove();
+                        };
+                        activeSection = section;
+
+                        content.innerHTML = '';
+                        content.appendChild(section);
+                        overlay.classList.add('show');
+                        document.body.classList.add('mobile-force-open');
+                        overlay.querySelector('.mobile-force-sheet').scrollTop = 0;
+                    });
+                }
+
+                // Cleanup if viewport changes out of mobile
+                var mq = window.matchMedia('(max-width: 850px)');
+                if (mq && !window.__portersMobileMqBound) {
+                    window.__portersMobileMqBound = true;
+                    mq.addEventListener('change', function() {
+                        if (!isMobileLayout()) {
+                            // restore if overlay open
+                            if (activeSection) close();
+                            cleanupScale();
+                            if (viewport) viewport.style.height = '';
+                            if (grid) grid.style.transform = '';
+                        }
+                    });
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
 
         // Auto-save on any input change
         document.addEventListener('input', function(e) {
