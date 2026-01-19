@@ -336,6 +336,47 @@
             font-weight: 600;
         }
 
+        /* Collapsible imported context (from Strategic Planning Step 5) */
+        .strategy-context {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            border: 2px solid rgba(226, 232, 240, 0.9);
+            background: rgba(248, 250, 252, 0.96);
+            color: #0f172a;
+            text-align: left;
+        }
+
+        .strategy-context-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-weight: 800;
+        }
+
+        .strategy-context-toggle {
+            border: none;
+            border-radius: 999px;
+            background: rgba(226, 232, 240, 0.9);
+            color: #0f172a;
+            font-weight: 800;
+            padding: 6px 10px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .strategy-context-body {
+            margin-top: 10px;
+            white-space: pre-wrap;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .strategy-context.collapsed .strategy-context-body {
+            display: none;
+        }
+
         .goal-input {
             width: 100%;
             background: rgba(255, 255, 255, 0.1);
@@ -1782,11 +1823,25 @@
                 // Optional imported context from Strategic Planning Step 5
                 if (goal.strategyContext) {
                     const ctxWrap = document.createElement('div');
-                    ctxWrap.style.cssText = 'margin-top:12px;padding:12px;border-radius:10px;border:2px solid #e2e8f0;background:#f8fafc;';
+                    ctxWrap.className = 'strategy-context collapsed';
 
-                    const ctxTitle = document.createElement('div');
-                    ctxTitle.style.cssText = 'font-weight:800;color:#0f172a;margin-bottom:8px;';
-                    ctxTitle.textContent = 'Imported Strategy Context (from Step 5)';
+                    const header = document.createElement('div');
+                    header.className = 'strategy-context-header';
+
+                    const title = document.createElement('div');
+                    title.textContent = 'Imported Strategy Context (from Step 5)';
+
+                    const toggle = document.createElement('button');
+                    toggle.type = 'button';
+                    toggle.className = 'strategy-context-toggle';
+                    toggle.textContent = 'Show';
+                    toggle.onclick = () => {
+                        const isCollapsed = ctxWrap.classList.toggle('collapsed');
+                        toggle.textContent = isCollapsed ? 'Show' : 'Hide';
+                    };
+
+                    header.appendChild(title);
+                    header.appendChild(toggle);
 
                     const parts = [];
                     if (goal.strategyContext.timeline) parts.push('Time Horizon: ' + goal.strategyContext.timeline);
@@ -1794,12 +1849,12 @@
                     if (goal.strategyContext.drivers) parts.push('Drivers: ' + goal.strategyContext.drivers);
                     if (goal.strategyContext.enablers) parts.push('Enablers: ' + goal.strategyContext.enablers);
 
-                    const ctxBody = document.createElement('div');
-                    ctxBody.style.cssText = 'white-space:pre-wrap;color:#334155;line-height:1.6;';
-                    ctxBody.textContent = parts.join('\n\n');
+                    const body = document.createElement('div');
+                    body.className = 'strategy-context-body';
+                    body.textContent = parts.join('\n\n');
 
-                    ctxWrap.appendChild(ctxTitle);
-                    ctxWrap.appendChild(ctxBody);
+                    ctxWrap.appendChild(header);
+                    ctxWrap.appendChild(body);
                     goalSection.appendChild(ctxWrap);
                 }
 
