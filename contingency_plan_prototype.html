@@ -1161,6 +1161,188 @@
                 margin-bottom: 15px;
             }
         }
+
+        /* =========================================================================
+           FINAL MOBILE OVERRIDES (must be last to win CSS cascade)
+           Goal: fit to screen, avoid page-level horizontal scrolling, keep desktop unchanged.
+           ========================================================================= */
+        @media (max-width: 850px) {
+            html, body {
+                overflow-x: hidden;
+                width: 100%;
+            }
+
+            body {
+                padding-left: calc(12px + env(safe-area-inset-left));
+                padding-right: calc(12px + env(safe-area-inset-right));
+                padding-top: 12px;
+                padding-bottom: 12px;
+            }
+
+            .container {
+                max-width: 100%;
+                padding: 12px;
+            }
+
+            header {
+                padding-top: 70px; /* smaller than desktop 100px so content fits */
+                margin-bottom: 18px;
+            }
+
+            header h1 {
+                font-size: 2.1em; /* override the 768px rule slightly */
+            }
+
+            .nav-btn {
+                padding: 8px 14px;
+                font-size: 0.88em;
+            }
+
+            .control-buttons {
+                gap: 8px;
+            }
+
+            .btn-control {
+                padding: 10px 14px;
+                font-size: 0.95em;
+            }
+
+            /* Main flowchart container */
+            .contingency-flowchart {
+                padding: 16px;
+                margin: 18px 0;
+            }
+
+            .flowchart-wrapper {
+                padding: 12px 0;
+            }
+
+            /* Root + category cards: remove fixed min-widths so they don't spill */
+            .root-node {
+                min-width: 0;
+                width: 100%;
+                max-width: 560px;
+                padding: 18px 16px;
+                font-size: 1.25em;
+            }
+
+            .categories-row {
+                gap: 14px;
+                margin-top: 28px;
+            }
+
+            .category-node {
+                min-width: 0;
+                width: 100%;
+                max-width: 560px;
+                padding: 16px 18px;
+                font-size: 1.15em;
+            }
+
+            /* Category/Subcategory flowcharts: switch to vertical layout on mobile */
+            .category-flowchart {
+                padding: 12px;
+                overflow-x: hidden; /* avoid page-level horizontal scroll */
+            }
+
+            /* Neutralize legacy min-width rules that force horizontal scrolling */
+            .flowchart-container,
+            .category-flowchart-container {
+                min-width: 0 !important;
+            }
+
+            .category-flowchart-container {
+                padding: 12px;
+                gap: 14px;
+                align-items: stretch;
+            }
+
+            .category-name-node {
+                min-width: 0;
+                width: 100%;
+                padding: 16px 18px;
+                font-size: 1.2em;
+            }
+
+            .subcategory-container {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .subcategory-group {
+                gap: 12px;
+            }
+
+            .subcategory-node {
+                min-width: 0;
+                max-width: none;
+                width: 100%;
+                padding: 14px 16px;
+                font-size: 1.05em;
+            }
+
+            .subcategory-flowchart-container {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 16px;
+                padding: 12px;
+                min-height: auto;
+            }
+
+            .events-column {
+                max-width: none;
+                width: 100%;
+                gap: 12px;
+            }
+
+            .event-wrapper {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+                min-height: auto;
+            }
+
+            .event-node,
+            .response-node {
+                min-width: 0;
+                width: 100%;
+                padding: 12px 14px;
+            }
+
+            .response-column {
+                min-width: 0;
+                width: 100%;
+                margin-left: 0;
+                gap: 12px;
+            }
+
+            .response-wrapper {
+                min-height: auto;
+            }
+
+            /* Connection lines don't match after mobile reflow; hide them on small screens */
+            .flowchart-lines-container,
+            .category-to-subcategory-line,
+            .subcategory-to-events-line,
+            .event-to-response-line,
+            .event-response-connection {
+                display: none !important;
+            }
+
+            /* Modals: make form grids stack and reduce padding */
+            .category-select-modal-content,
+            .response-modal-content {
+                width: 94%;
+                max-width: 94%;
+                padding: 16px;
+                max-height: 90vh;
+            }
+
+            .response-modal-content [style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+            }
+        }
     </style>
 </head>
 <body>
