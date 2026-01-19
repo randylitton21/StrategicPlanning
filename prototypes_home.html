@@ -676,6 +676,202 @@
             transform: translateY(-2px) scale(1.02);
         }
 
+        .workflow-section {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--success-light) 100%);
+            border-radius: var(--radius-2xl);
+            padding: 0;
+            margin-top: 60px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .workflow-header {
+            padding: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background var(--transition-base);
+            user-select: none;
+            -webkit-user-select: none;
+            position: relative;
+        }
+        
+        .workflow-header:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .workflow-header * {
+            pointer-events: none;
+        }
+        
+        .workflow-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height var(--transition-slow) cubic-bezier(0.4, 0, 0.2, 1),
+                        padding var(--transition-base);
+        }
+        
+        .workflow-section.expanded .workflow-content {
+            max-height: 5000px;
+            padding: 0 40px 40px 40px;
+        }
+        
+        .workflow-toggle-icon {
+            font-size: 1.5em;
+            transition: transform var(--transition-base);
+            color: var(--primary-color);
+            pointer-events: none;
+            flex-shrink: 0;
+        }
+        
+        .workflow-section.expanded .workflow-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .workflow-section::before {
+            content: '📊';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 4em;
+            opacity: 0.1;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .workflow-section h2 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 2.2em;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .workflow-section h2::before {
+            content: '🎮';
+            font-size: 1em;
+        }
+
+        .workflow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .workflow-step {
+            background: var(--bg-primary);
+            padding: 28px;
+            border-radius: var(--radius-xl);
+            border-left: 6px solid var(--info);
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .workflow-step:nth-child(1) { border-left-color: var(--primary-color); }
+        .workflow-step:nth-child(2) { border-left-color: var(--accent-purple); }
+        .workflow-step:nth-child(3) { border-left-color: var(--warning); }
+        .workflow-step:nth-child(4) { border-left-color: var(--success); }
+        .workflow-step:nth-child(5) { border-left-color: var(--info); }
+        .workflow-step:nth-child(6) { border-left-color: var(--accent-pink); }
+
+        .workflow-step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: var(--info);
+            transform: scaleY(0);
+            transform-origin: bottom;
+            transition: transform var(--transition-base);
+        }
+
+        .workflow-step:nth-child(1)::before { background: var(--primary-color); }
+        .workflow-step:nth-child(2)::before { background: var(--accent-purple); }
+        .workflow-step:nth-child(3)::before { background: var(--warning); }
+        .workflow-step:nth-child(4)::before { background: var(--success); }
+        .workflow-step:nth-child(5)::before { background: var(--info); }
+        .workflow-step:nth-child(6)::before { background: var(--accent-pink); }
+
+        .workflow-step:hover {
+            transform: translateX(8px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .workflow-step:hover::before {
+            transform: scaleY(1);
+        }
+
+        .step-number {
+            background: var(--info);
+            color: white;
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.5em;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-base);
+            position: relative;
+            z-index: 1;
+        }
+
+        .workflow-step:nth-child(1) .step-number { background: var(--primary-color); }
+        .workflow-step:nth-child(2) .step-number { background: var(--accent-purple); }
+        .workflow-step:nth-child(3) .step-number { background: var(--warning); }
+        .workflow-step:nth-child(4) .step-number { background: var(--success); }
+        .workflow-step:nth-child(5) .step-number { background: var(--info); }
+        .workflow-step:nth-child(6) .step-number { background: var(--accent-pink); }
+
+        .workflow-step:hover .step-number {
+            transform: scale(1.15) rotate(360deg);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .step-content h4 {
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            font-size: 1.4em;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .workflow-step:nth-child(1) .step-content h4 { color: var(--primary-color); }
+        .workflow-step:nth-child(2) .step-content h4 { color: var(--accent-purple); }
+        .workflow-step:nth-child(3) .step-content h4 { color: var(--warning); }
+        .workflow-step:nth-child(4) .step-content h4 { color: var(--success); }
+        .workflow-step:nth-child(5) .step-content h4 { color: var(--info); }
+        .workflow-step:nth-child(6) .step-content h4 { color: var(--accent-pink); }
+
+        .step-content p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            font-size: 1.05em;
+        }
+
+        /* NOTE: Mobile layout is defined in one place at the bottom of the CSS
+           ("FINAL MOBILE OVERRIDES") to avoid cascade conflicts. */
+
         /* =========================================================================
            FINAL MOBILE OVERRIDES (single source of truth for mobile)
            Goal: everything centered and predictable; no overflow/cascade surprises.
@@ -783,6 +979,14 @@
             .tool-card.expanded:hover {
                 transform: none;
                 box-shadow: none;
+            }
+
+            /* Workflow: keep centered and prevent side spill */
+            .workflow-section,
+            .intro {
+                max-width: 560px;
+                margin-left: auto;
+                margin-right: auto;
             }
         }
     </style>
@@ -1147,9 +1351,100 @@
             </div>
 
         </div>
+
+        <div class="workflow-section" id="workflowSection">
+            <div class="workflow-header" onclick="toggleWorkflow()">
+                <h2>Recommended Workflow</h2>
+                <span class="workflow-toggle-icon">▼</span>
+            </div>
+            <div class="workflow-content">
+                <div class="workflow-steps">
+                <div class="workflow-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Complete the Strategic Planning Guide</h4>
+                        <p>
+                            Start with the Strategic Planning Guide for a comprehensive 7-step workflow. Begin by defining your purpose 
+                            (vision, values, mission), understand your business proponents, create a mind map, conduct SWOT analysis, 
+                            develop your strategy, plan execution, and set up review processes. This provides the foundation for all strategic planning.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Refine Your Goals with SMART Criteria</h4>
+                        <p>
+                            Use the Goal Setting Template to refine each goal you defined in Step 5 of the Strategic Planning Guide. This tool helps you 
+                            ensure your goals are Specific, Measurable, Attainable, Relevant, and Time-specific. It guides you through understanding why 
+                            each goal matters, identifying potential blockers, and creating initial action plans. This step ensures your goals are well-defined 
+                            and actionable before moving to detailed planning.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Deepen Your Competitive Analysis (Optional)</h4>
+                        <p>
+                            Use Porter's Five Forces for deeper competitive industry analysis. This supplementary tool helps you understand 
+                            industry dynamics, competitive threats, and opportunities beyond what's covered in the SWOT analysis. Use this 
+                            to refine your strategy based on competitive insights.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>Visualize and Refine Your Strategy (Optional)</h4>
+                        <p>
+                            Use the Strategic Canvas to visualize and further organize your strategy components. This supplementary tool 
+                            helps you brainstorm, identify connections between elements, and refine your strategic approach. Use this to 
+                            enhance the strategy you developed in Step 5 of the Strategic Planning Guide.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h4>Create Detailed Action Plans (Optional)</h4>
+                        <p>
+                            Use the Strategic Action Plan for more detailed action planning beyond Step 6 of the Strategic Planning Guide. 
+                            This supplementary tool provides enhanced tracking capabilities, allowing you to break down your refined goals into specific 
+                            action steps with detailed accountability, resources, progress benchmarks, and evidence tracking.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="step-number">6</div>
+                    <div class="step-content">
+                        <h4>Execute, Review, and Iterate</h4>
+                        <p>
+                            Execute your plan using the Strategic Planning Guide's Step 7 review process. Regularly update progress, track 
+                            completion, and document evidence of improvement. Return to any of the supplementary tools (Goal Setting Template, 
+                            Porter's Five Forces, Strategic Canvas, or Strategic Action Plan) as needed to refine your strategy based on what you learn during execution.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
     </div>
 
     <script>
+// Toggle workflow section
+function toggleWorkflow() {
+    var workflowSection = document.getElementById('workflowSection');
+    if (workflowSection) {
+        workflowSection.classList.toggle('expanded');
+    }
+}
+
 // Initialize card toggle functionality using event delegation
 document.addEventListener('DOMContentLoaded', function() {
     var toolsGrid = document.getElementById('toolsGrid');
