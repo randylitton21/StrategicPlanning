@@ -1086,6 +1086,18 @@
                 padding-right: calc(12px + env(safe-area-inset-right));
             }
 
+            /* Prevent any inner elements from rendering past the rounded container border on iOS */
+            .container {
+                overflow: hidden;
+            }
+
+            /* Keep the tools area inset so cards match the intro/workflow widths */
+            .tools-grid {
+                padding-left: 2px;
+                padding-right: 2px;
+                box-sizing: border-box;
+            }
+
             /* Prototype buttons: match container width (same as workflow section) */
             .btn-primary {
                 width: 100%;
