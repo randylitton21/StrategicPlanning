@@ -313,6 +313,7 @@
             transition: all var(--transition-base);
             cursor: pointer;
             min-height: 120px;
+            position: relative;
             outline: none;
         }
         
@@ -325,6 +326,14 @@
             background: var(--bg-secondary);
         }
         
+        .tool-card-header-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            min-width: 0; /* allow title ellipsis instead of forcing wrap */
+        }
+
         .tool-card-header h3 {
             word-wrap: break-word;
             overflow-wrap: break-word;
@@ -365,12 +374,7 @@
             transform: rotate(180deg);
         }
         
-        .tool-card-header-content {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex: 1;
-        }
+        /* (moved above to include min-width: 0) */
 
         .tool-card:nth-child(1) { 
             animation-delay: 0.1s;
@@ -465,10 +469,28 @@
             opacity: 0.92;
         }
 
-        .tool-card.locked h3::after {
-            content: ' 🔒';
-            font-size: 0.85em;
-            opacity: 0.8;
+        /* Desktop: keep headers uniform + prevent wrapping when lock is shown */
+        @media (min-width: 851px) {
+            .tool-card-header h3 {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                word-wrap: normal;
+                overflow-wrap: normal;
+                hyphens: none;
+                font-size: 2.0em; /* slightly smaller to avoid wrap */
+            }
+
+            .tool-card.locked .tool-card-header::after {
+                content: '🔒';
+                position: absolute;
+                top: 50%;
+                right: 56px; /* keep clear of the expand icon at the far right */
+                transform: translateY(-50%);
+                font-size: 1.05em;
+                opacity: 0.85;
+                pointer-events: none;
+            }
         }
 
         .tool-card.locked .btn-primary.premium-locked {
