@@ -277,174 +277,8 @@
             grid-auto-rows: minmax(min-content, max-content);
         }
         
-        /* Mobile/tablet: keep the same 2-column desktop layout (no stacking),
-           but scale spacing/typography down to fit. On very narrow screens,
-           do NOT allow horizontal page scrolling. */
-        @media (max-width: 850px) {
-            html, body {
-                overflow-x: hidden; /* best practice: avoid side-to-side page scroll */
-                width: 100%;
-            }
-
-            body {
-                padding: 12px;
-            }
-
-            .container {
-                padding: 16px;
-            }
-
-            header {
-                padding: 28px 18px;
-            }
-
-            header h1 {
-                font-size: 2.2em;
-            }
-
-            .subtitle {
-                font-size: 1.05em;
-            }
-
-            .intro {
-                padding: 22px;
-                margin-bottom: 30px;
-            }
-
-            .intro h2 {
-                font-size: 1.5em;
-            }
-
-            .intro p {
-                font-size: 0.98em;
-                line-height: 1.7;
-                margin-bottom: 14px;
-            }
-
-            .tools-grid {
-                /* Best practice: use a responsive grid so items reflow instead of overlapping */
-                display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 12px;
-                margin-top: 28px;
-                width: 100%;
-                max-width: 100%;
-            }
-
-            .tools-column {
-                /* Let the cards themselves be grid items */
-                display: contents;
-            }
-
-            .tool-card-header {
-                padding: 12px;
-                min-height: 64px;
-            }
-
-            .tool-card h3 {
-                font-size: 1.25em;
-            }
-
-            .tool-icon {
-                font-size: 1.15em;
-            }
-
-            .expand-icon {
-                font-size: 1.1em;
-            }
-
-            .tool-card-content {
-                padding: 0 18px;
-            }
-
-            .tool-card.expanded .tool-card-content {
-                padding: 0 18px 18px 18px;
-            }
-
-            .tool-card .description {
-                font-size: 0.92em;
-                padding-top: 12px;
-            }
-
-            .tool-card .use-case {
-                padding: 12px;
-                margin-bottom: 12px;
-            }
-
-            .tool-card .features li {
-                font-size: 0.9em;
-            }
-
-            .btn-primary {
-                /* smaller button on mobile */
-                width: 100%;
-                box-sizing: border-box; /* critical: width includes padding, prevents overflow */
-                padding: 10px 12px;
-                font-size: 0.9em;
-                gap: 8px;
-            }
-
-            /* Force button label to a single line on mobile */
-            .btn-primary span {
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
-            /* Remove the decorative rocket on mobile to save horizontal space */
-            .btn-primary::before {
-                content: '';
-                display: none;
-            }
-
-            /* Disable the large hover ripple on mobile to prevent any visual spill */
-            .btn-primary::after {
-                display: none;
-            }
-
-            /* Mobile browsers can "stick" :hover styles after tapping.
-               Prevent the button from scaling/overflowing the card on mobile. */
-            .btn-primary:hover,
-            .btn-primary:active {
-                transform: none;
-                box-shadow: var(--shadow-md);
-            }
-
-            /* Mobile browsers can keep :hover states; prevent translated cards from visually overlapping */
-            .tool-card:hover,
-            .tool-card.expanded:hover {
-                transform: none;
-            }
-
-            .workflow-section h2 {
-                font-size: 1.7em;
-            }
-
-            .workflow-header {
-                padding: 24px;
-            }
-
-            .workflow-step {
-                padding: 18px;
-                gap: 16px;
-            }
-
-            .step-number {
-                width: 44px;
-                height: 44px;
-                font-size: 1.2em;
-            }
-
-            .step-content h4 {
-                font-size: 1.2em;
-                margin-bottom: 8px;
-            }
-
-            .step-content p {
-                font-size: 0.98em;
-                line-height: 1.7;
-            }
-        }
+        /* NOTE: Mobile layout is defined in one place at the bottom of the CSS
+           ("FINAL MOBILE OVERRIDES") to avoid cascade conflicts. */
 
         .tool-card {
             background: var(--bg-primary);
@@ -1035,80 +869,97 @@
             font-size: 1.05em;
         }
 
-        /* Smaller phones: keep the desktop layout, just shrink further. */
-        @media (max-width: 768px) {
-            header h1 {
-                font-size: 1.95em;
-            }
-
-            .container {
-                padding: 14px;
-            }
-
-            .tools-grid {
-                gap: 12px;
-                margin-top: 22px;
-            }
-
-            .tool-card-header {
-                padding: 16px;
-                min-height: 74px;
-            }
-
-            .tool-card h3 {
-                font-size: 1.15em;
-            }
-
-            .tool-card .description {
-                font-size: 0.9em;
-            }
-
-            .workflow-step {
-                /* keep row layout (desktop-like) */
-                flex-direction: row;
-            }
-        }
-
-        /* Extra-small phones: 2 columns can’t fit reliably—use 1 column to avoid overlap */
-        @media (max-width: 560px) {
-            .tools-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+        /* NOTE: Mobile layout is defined in one place at the bottom of the CSS
+           ("FINAL MOBILE OVERRIDES") to avoid cascade conflicts. */
 
         /* =========================================================================
-           FINAL MOBILE OVERRIDES (must be last to win CSS cascade)
+           FINAL MOBILE OVERRIDES (single source of truth for mobile)
+           Goal: everything centered and predictable; no overflow/cascade surprises.
            ========================================================================= */
         @media (max-width: 850px) {
-            /* Ensure left/right spacing matches the visible container edge (incl. notches/safe areas) */
+            html, body {
+                overflow-x: hidden;
+                width: 100%;
+            }
+
             body {
                 padding-left: calc(12px + env(safe-area-inset-left));
                 padding-right: calc(12px + env(safe-area-inset-right));
             }
 
-            /* Don’t clip; instead, inset the tools area so cards render fully inside the container border */
+            /* Keep the whole page centered and comfortable on mobile */
+            .container {
+                width: 100%;
+                max-width: 560px;
+                margin: 0 auto;
+                padding: 16px;
+            }
+
+            header {
+                padding: 28px 18px;
+            }
+
+            header h1 {
+                font-size: 2.2em;
+            }
+
+            /* Tools: single column, centered */
             .tools-grid {
-                padding-left: 18px;
-                padding-right: 18px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 14px;
+                margin-top: 22px;
+                width: 100%;
+                padding: 0;
                 box-sizing: border-box;
             }
 
-            /* Reduce card shadow on mobile so it doesn’t visually exceed the container border */
+            .tools-column {
+                width: 100%;
+                max-width: 560px;
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+            }
+
+            /* Cards: centered and contained */
             .tool-card {
+                width: 100%;
+                max-width: 560px;
+                margin: 0 auto;
                 box-shadow: var(--shadow-md);
             }
 
-            /* Prototype buttons: match container width (same as workflow section) */
+            .tool-card-header {
+                padding: 14px 16px;
+                min-height: 64px;
+            }
+
+            .tool-card h3 {
+                font-size: 1.25em;
+            }
+
+            .tool-icon {
+                font-size: 1.15em;
+            }
+
+            .expand-icon {
+                font-size: 1.1em;
+            }
+
+            /* Buttons: centered and full width within the card */
             .btn-primary {
                 width: 100%;
                 max-width: 100%;
                 box-sizing: border-box;
                 display: block;
                 margin: 0;
-                box-shadow: none; /* prevents visual spill past the card border */
+                box-shadow: none;
+                padding: 10px 12px;
+                font-size: 0.9em;
             }
 
-            /* Force button text to one line */
             .btn-primary span {
                 white-space: nowrap;
                 overflow: hidden;
@@ -1116,18 +967,26 @@
                 max-width: 100%;
             }
 
-            /* Remove decorative rocket + ripple (they can visually spill on mobile) */
             .btn-primary::before,
             .btn-primary::after {
                 display: none;
                 content: '';
             }
 
-            /* Prevent scale/translate on tap/hover (mobile browsers can "stick" hover) */
             .btn-primary:hover,
-            .btn-primary:active {
+            .btn-primary:active,
+            .tool-card:hover,
+            .tool-card.expanded:hover {
                 transform: none;
-                box-shadow: none; /* override desktop hover shadow that can "stick" on mobile */
+                box-shadow: none;
+            }
+
+            /* Workflow: keep centered and prevent side spill */
+            .workflow-section,
+            .intro {
+                max-width: 560px;
+                margin-left: auto;
+                margin-right: auto;
             }
         }
     </style>
