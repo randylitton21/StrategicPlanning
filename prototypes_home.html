@@ -1445,8 +1445,16 @@ function toggleWorkflow() {
     }
 }
 
-// Initialize card toggle functionality using event delegation
+// Initialize page behaviors on load
 document.addEventListener('DOMContentLoaded', function() {
+    // On desktop, auto-expand the Recommended Workflow so it’s visible without clicking.
+    // Keep it collapsed on mobile to avoid a very long initial page.
+    var workflowSection = document.getElementById('workflowSection');
+    if (workflowSection && window.innerWidth > 850) {
+        workflowSection.classList.add('expanded');
+    }
+
+    // Initialize card toggle functionality using event delegation
     var toolsGrid = document.getElementById('toolsGrid');
     if (toolsGrid) {
         toolsGrid.addEventListener('click', function(event) {
