@@ -1448,6 +1448,8 @@
                 id: goalId,
                 name: `Goal ${actionPlanData.goals.length + 1}`,
                 goal: '',
+                // Optional context imported from Strategic Planning Step 5
+                strategyContext: null, // { timeline, strategicIntent, drivers, enablers }
                 actionSteps: [
                     { id: 1, responsible: '', resources: '', progress: '', completion: '', evidence: '' },
                     { id: 2, responsible: '', resources: '', progress: '', completion: '', evidence: '' },
@@ -1758,6 +1760,30 @@
                 
                 goalSection.appendChild(goalHeader);
                 goalSection.appendChild(goalTextarea);
+
+                // Optional imported context from Strategic Planning Step 5
+                if (goal.strategyContext) {
+                    const ctxWrap = document.createElement('div');
+                    ctxWrap.style.cssText = 'margin-top:12px;padding:12px;border-radius:10px;border:2px solid #e2e8f0;background:#f8fafc;';
+
+                    const ctxTitle = document.createElement('div');
+                    ctxTitle.style.cssText = 'font-weight:800;color:#0f172a;margin-bottom:8px;';
+                    ctxTitle.textContent = 'Imported Strategy Context (from Step 5)';
+
+                    const parts = [];
+                    if (goal.strategyContext.timeline) parts.push('Time Horizon: ' + goal.strategyContext.timeline);
+                    if (goal.strategyContext.strategicIntent) parts.push('Strategic Intent: ' + goal.strategyContext.strategicIntent);
+                    if (goal.strategyContext.drivers) parts.push('Drivers: ' + goal.strategyContext.drivers);
+                    if (goal.strategyContext.enablers) parts.push('Enablers: ' + goal.strategyContext.enablers);
+
+                    const ctxBody = document.createElement('div');
+                    ctxBody.style.cssText = 'white-space:pre-wrap;color:#334155;line-height:1.6;';
+                    ctxBody.textContent = parts.join('\n\n');
+
+                    ctxWrap.appendChild(ctxTitle);
+                    ctxWrap.appendChild(ctxBody);
+                    goalSection.appendChild(ctxWrap);
+                }
 
                 // Action Steps Container
                 const stepsContainer = document.createElement('div');
@@ -2853,14 +2879,44 @@
         async function handleGuideHandoff() {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('guide') !== '1' || urlParams.get('handoff') !== '1') return;
+                if (urlParams.get('handoff') !== '1') return;
                 if (!window.Guide) return;
 
                 const username = getCurrentUsername();
                 if (!username) return;
 
                 const handoff = window.Guide.consumeHandoff();
-                if (!handoff || handoff.type !== 'import_goal_from_goal_template') return;
+                if (!handoff) return;
+
+                // 1) Import a specific goal from Strategic Planning Step 5 (no prompt; auto-create new goal tab)
+                if (handoff.type === 'import_goal_from_strategic_plan_step5' && handoff.goal) {
+                    const incoming = handoff.goal || {};
+                    const goalText = (incoming.title || '').trim();
+                    if (!goalText) return;
+
+                    // Ensure base structure exists
+                    if (!actionPlanData.goals || !Array.isArray(actionPlanData.goals)) actionPlanData.goals = [];
+
+                    const newGoal = createNewGoal();
+                    newGoal.goal = goalText;
+                    newGoal.name = goalText.slice(0, 32);
+                    newGoal.strategyContext = {
+                        timeline: incoming.timeline || '',
+                        strategicIntent: incoming.strategicIntent || '',
+                        drivers: incoming.drivers || '',
+                        enablers: incoming.enablers || ''
+                    };
+
+                    actionPlanData.goals.push(newGoal);
+                    actionPlanData.currentGoalId = newGoal.id;
+                    saveData();
+                    renderGoals();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    return;
+                }
+
+                // 2) Import from Goal Setting Template (prompt selection)
+                if (handoff.type !== 'import_goal_from_goal_template') return;
 
                 // Prefer saved goals list if available, else use current template
                 const savedGoalsKey = 'goalSetting_savedGoals_' + username;

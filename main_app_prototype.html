@@ -443,7 +443,10 @@
                 <div class="form-section">
                     <div class="goals-tabs" id="strategyGoalsTabs"></div>
                     <div id="goalsContainer"></div>
-                    <button class="btn-add" onclick="addGoal()">+ Add Goal</button>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                        <button class="btn-add" onclick="addGoal()">+ Add Goal</button>
+                        <button class="btn-add" onclick="openCurrentGoalInActionPlan()" style="background:#2563EB;">📋 Open in Action Plan</button>
+                    </div>
                 </div>
                 <div class="button-group">
                     <button class="btn-prev" onclick="prevStep()">Previous</button>
@@ -2595,6 +2598,50 @@ function deleteGoal(goalId) {
     renderCurrentGoalForm();
     saveData();
     updateStepCompletion();
+}
+
+// Send the currently selected Step 5 goal into Strategic Action Plan and auto-create a goal there
+function openCurrentGoalInActionPlan() {
+    // Make sure planData reflects the latest UI edits
+    syncCurrentGoalFromForm();
+
+    var goal = getCurrentStrategicGoal();
+    if (!goal) return;
+
+    if (!goal.title || !String(goal.title).trim()) {
+        alert('Please create/select a goal first (click the Goal field to create it), then try again.');
+        return;
+    }
+
+    // Build a lightweight payload for the Action Plan
+    var payload = {
+        title: goal.title || '',
+        timeline: goal.timeline || '',
+        strategicIntent: goal.strategicIntent || '',
+        drivers: goal.drivers || '',
+        enablers: goal.enablers || ''
+    };
+
+    if (window.Guide && typeof window.Guide.startHandoff === 'function') {
+        window.Guide.startHandoff({
+            type: 'import_goal_from_strategic_plan_step5',
+            goal: payload
+        });
+    } else {
+        // Fallback (shouldn't happen because guide.js is loaded)
+        try {
+            sessionStorage.setItem('prototype_handoff', JSON.stringify({
+                type: 'import_goal_from_strategic_plan_step5',
+                goal: payload,
+                ts: new Date().toISOString()
+            }));
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    // Navigate to the Strategic Action Plan; it will consume the handoff and auto-create a goal
+    window.location.href = 'strategic_action_plan_prototype.html?handoff=1';
 }
 
 // Setup event listeners for auto-save
