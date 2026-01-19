@@ -1451,7 +1451,8 @@
 
     <script src="guide.js"></script>
     <script>
-        // Premium gate: require login (Strategic Planning is the only free tool)
+        // Premium gate: allow free-tier access when opened from Strategic Planning (modal),
+        // but keep direct (non-modal) access locked.
         (function requireLoginForPremium() {
             function getSessionUsername() {
                 try {
@@ -1461,6 +1462,10 @@
                     return (data && data.user && data.user.username) || data.username || null;
                 } catch (e) { return null; }
             }
+
+            var urlParams = new URLSearchParams(window.location.search);
+            var isModal = urlParams.get('modal') === 'true';
+            if (isModal) return;
 
             if (!getSessionUsername()) {
                 var page = window.location.pathname.split('/').pop() + window.location.search + window.location.hash;
@@ -1556,21 +1561,19 @@
             return null;
         }
 
-        // Save data to localStorage (user-specific, auto-save)
+        // Save data to localStorage (auto-save)
         function saveData() {
             var username = getCurrentUsername();
-            if (!username) {
-                // Not logged in - don't save
-                return;
-            }
             
             try {
+                // Always update in-memory state from the form
                 goalData.goal = document.getElementById('goal').value;
                 goalData.importance = document.getElementById('importance').value;
                 goalData.blockers = document.getElementById('blockers').value;
                 goalData.actionPlan = document.getElementById('actionPlan').value;
                 
-                var storageKey = 'goalSettingTemplateData_' + username;
+                // Persist draft for convenience (user-specific if logged in, otherwise guest key)
+                var storageKey = username ? ('goalSettingTemplateData_' + username) : 'goalSettingTemplateData';
                 localStorage.setItem(storageKey, JSON.stringify(goalData));
                 showSaveIndicator();
             } catch (e) {
