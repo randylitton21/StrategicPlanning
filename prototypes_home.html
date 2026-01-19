@@ -2411,7 +2411,6 @@ function computeProgress(username) {
 
 function nextGuidedStep(progress) {
     if (progress.strategic.pct < 67 || progress.strategic.goalsCount === 0) return 'strategic';
-    if (progress.goal.pct < 60) return 'goal';
     if (progress.action.pct < 80) return 'action';
     return 'review';
 }
@@ -2475,11 +2474,8 @@ function initGuidedHub() {
             var step = nextGuidedStep(p);
             if (step === 'strategic') {
                 window.location.href = 'main_app_prototype.html?guide=1';
-            } else if (step === 'goal') {
-                Guide.startHandoff({ type: 'import_goal_from_strategic_plan' });
-                window.location.href = 'goal_setting_template_prototype.html?guide=1&handoff=1';
             } else if (step === 'action') {
-                Guide.startHandoff({ type: 'import_goal_from_goal_template' });
+                Guide.startHandoff({ type: 'import_goal_from_strategic_plan' });
                 window.location.href = 'strategic_action_plan_prototype.html?guide=1&handoff=1';
             } else {
                 alert('Nice work — you look up to date. Consider reviewing your plan or refining with Five Forces / Strategic Canvas.');
@@ -2489,6 +2485,38 @@ function initGuidedHub() {
 
     if (refreshBtn) {
         refreshBtn.onclick = render;
+    }
+
+    // Guide panel on home (so Guide button exists on all guided pages)
+    try {
+        if (window.Guide) {
+            window.Guide.addGuidePanel({
+                title: 'Guided Workflow',
+                steps: [
+                    {
+                        label: 'Start: Strategic Planning',
+                        cta: 'Open',
+                        onClick: function() { window.location.href = 'main_app_prototype.html?guide=1'; }
+                    },
+                    {
+                        label: 'Next: Action Plan',
+                        cta: 'Continue',
+                        onClick: function() {
+                            var username = getCurrentUsername();
+                            if (!username) {
+                                alert('Please login to use Guided Workflow.');
+                                showAuthModal();
+                                return;
+                            }
+                            window.Guide.startHandoff({ type: 'import_goal_from_strategic_plan' });
+                            window.location.href = 'strategic_action_plan_prototype.html?guide=1&handoff=1';
+                        }
+                    }
+                ]
+            });
+        }
+    } catch (e) {
+        // ignore
     }
 
     render();

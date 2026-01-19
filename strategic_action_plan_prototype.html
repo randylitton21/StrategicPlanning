@@ -2852,30 +2852,44 @@
                 if (!username) return;
 
                 const handoff = window.Guide.consumeHandoff();
-                if (!handoff || handoff.type !== 'import_goal_from_goal_template') return;
-
-                // Prefer saved goals list if available, else use current template
-                const savedGoalsKey = 'goalSetting_savedGoals_' + username;
-                const savedGoals = window.Guide.readJson(savedGoalsKey) || [];
+                if (!handoff) return;
 
                 let candidates = [];
-                if (Array.isArray(savedGoals) && savedGoals.length) {
-                    candidates = savedGoals.map(function(g) {
-                        return { title: g.goal || g.title || g.name || '', ...g };
-                    });
-                } else {
-                    const template = window.Guide.readJson('goalSettingTemplateData_' + username);
-                    if (template && template.goal) {
-                        candidates = [{ title: template.goal, ...template }];
-                    }
-                }
 
-                if (!candidates.length) {
-                    alert('No goals found in Goal Setting yet. Open Goal Setting Template and create/save a goal first.');
+                if (handoff.type === 'import_goal_from_strategic_plan') {
+                    const strategic = window.Guide.readJson('prototype_strategicPlan_' + username);
+                    const goals = strategic && Array.isArray(strategic.goals) ? strategic.goals : [];
+                    candidates = goals.map(function(g) {
+                        return { title: g.title || '', ...g };
+                    });
+                } else if (handoff.type === 'import_goal_from_goal_template') {
+                    // Prefer saved goals list if available, else use current template
+                    const savedGoalsKey = 'goalSetting_savedGoals_' + username;
+                    const savedGoals = window.Guide.readJson(savedGoalsKey) || [];
+                    if (Array.isArray(savedGoals) && savedGoals.length) {
+                        candidates = savedGoals.map(function(g) {
+                            return { title: g.goal || g.title || g.name || '', ...g };
+                        });
+                    } else {
+                        const template = window.Guide.readJson('goalSettingTemplateData_' + username);
+                        if (template && template.goal) {
+                            candidates = [{ title: template.goal, ...template }];
+                        }
+                    }
+                } else {
                     return;
                 }
 
-                const selected = await window.Guide.promptSelectGoal(candidates, { title: 'Select a goal to bring into Action Plan' });
+                if (!candidates.length) {
+                    alert('No goals found to import yet. Add at least one goal, then try again.');
+                    return;
+                }
+
+                const promptTitle = handoff.type === 'import_goal_from_strategic_plan'
+                    ? 'Select a goal to bring into Action Plan (from Strategic Planning)'
+                    : 'Select a goal to bring into Action Plan';
+
+                const selected = await window.Guide.promptSelectGoal(candidates, { title: promptTitle });
                 if (!selected) return;
 
                 const current = getCurrentGoal();
@@ -2886,9 +2900,12 @@
                 }
 
                 if (current) {
-                    current.goal = selected.title || selected.goal || '';
+                    // Strategic Planning goal shape: {title, strategicIntent, drivers, enablers}
+                    // Goal Template shape: {goal, importance, blockers, actionPlan}
+                    const goalText = selected.title || selected.goal || '';
+                    current.goal = goalText;
                     if (!current.name || String(current.name).indexOf('Goal ') === 0) {
-                        current.name = (selected.title || selected.goal || 'Goal').slice(0, 32);
+                        current.name = (goalText || 'Goal').slice(0, 32);
                     }
                     saveData();
                     renderGoals();
