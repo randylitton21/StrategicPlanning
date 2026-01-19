@@ -2263,6 +2263,18 @@ function init() {
     ensureAtLeastOneGoal();
     renderGoalTabs();
     renderCurrentGoalForm();
+
+    // If linked in with a step param, jump there
+    try {
+        var urlParams = new URLSearchParams(window.location.search);
+        var stepParam = parseInt(urlParams.get('step'), 10);
+        if (stepParam && stepParam >= 1 && stepParam <= totalSteps) {
+            goToStep(stepParam);
+        }
+    } catch (e) { /* ignore */ }
+
+    // Consume cross-tool handoffs (e.g., Action Plan -> Step 5)
+    handleIncomingHandoff();
     
     // Save data before page unload (important for iPhone Safari)
     window.addEventListener('beforeunload', function() {
@@ -2301,6 +2313,70 @@ function init() {
     } catch (e) {
         // ignore
     }
+}
+
+function handleIncomingHandoff() {
+    try {
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('handoff') !== '1') return;
+
+        var handoff = null;
+        if (window.Guide && typeof window.Guide.consumeHandoff === 'function') {
+            handoff = window.Guide.consumeHandoff();
+        } else {
+            var raw = sessionStorage.getItem('prototype_handoff');
+            if (raw) {
+                sessionStorage.removeItem('prototype_handoff');
+                handoff = JSON.parse(raw);
+            }
+        }
+
+        if (!handoff || !handoff.type) return;
+
+        if (handoff.type === 'import_goal_from_action_plan_to_step5' && handoff.goal) {
+            importGoalIntoStep5FromActionPlan(handoff.goal);
+        }
+    } catch (e) {
+        // ignore
+    }
+}
+
+function importGoalIntoStep5FromActionPlan(incoming) {
+    if (!incoming) return;
+
+    ensureAtLeastOneGoal();
+
+    var goalText = (incoming.title || '').trim();
+    if (!goalText) return;
+
+    // If we have a goalSettingData id, update that existing goal if present; otherwise create new.
+    var incomingId = incoming.goalSettingData && incoming.goalSettingData.id ? incoming.goalSettingData.id : null;
+    var match = null;
+    if (incomingId) {
+        match = planData.goals.find(function(g) {
+            return g && g.goalSettingData && g.goalSettingData.id === incomingId;
+        }) || null;
+    }
+
+    var target = match || createNewStrategicGoal();
+    target.title = goalText;
+    target.goalSettingData = incoming.goalSettingData || target.goalSettingData || null;
+
+    // Carry strategy context back if provided
+    target.timeline = incoming.timeline || target.timeline || '';
+    target.strategicIntent = incoming.strategicIntent || target.strategicIntent || '';
+    target.drivers = incoming.drivers || target.drivers || '';
+    target.enablers = incoming.enablers || target.enablers || '';
+
+    if (!match) {
+        planData.goals.push(target);
+    }
+
+    planData.currentGoalId = target.id;
+    renderGoalTabs();
+    renderCurrentGoalForm();
+    saveData();
+    updateStepCompletion();
 }
 
 // Goal Setting Modal Functions

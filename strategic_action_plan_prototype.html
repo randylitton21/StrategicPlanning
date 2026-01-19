@@ -1872,6 +1872,7 @@
                 controls.innerHTML = `
                     <button class="btn-control" onclick="addActionStepForGoal('${goal.id}')">+ Add Action Step</button>
                     <button class="btn-control btn-remove" onclick="removeActionStepForGoal('${goal.id}')">- Remove Last Step</button>
+                    <button class="btn-control" onclick="sendGoalToStrategicPlanStep5('${goal.id}')" style="background:#2563EB;">↩ Send to Step 5</button>
                 `;
 
                 goalContent.appendChild(goalSection);
@@ -1890,6 +1891,49 @@
             if (goal) {
                 goal.goal = value;
                 saveData();
+            }
+        }
+
+        // Send an Action Plan goal back to Strategic Planning Step 5 (creates/updates a goal tab there)
+        function sendGoalToStrategicPlanStep5(goalId) {
+            try {
+                const goal = actionPlanData.goals.find(g => g.id === goalId);
+                if (!goal) return;
+
+                const goalText = (goal.goal || '').trim();
+                if (!goalText) {
+                    alert('Please create a goal first (click the goal field), then send it to Step 5.');
+                    return;
+                }
+
+                const payload = {
+                    title: goalText,
+                    // Carry the original Goal Setting Template record so reopening restores all fields
+                    goalSettingData: goal.goalSettingData || null,
+                    // Carry any Step 5 strategy context if present
+                    timeline: (goal.strategyContext && goal.strategyContext.timeline) || '',
+                    strategicIntent: (goal.strategyContext && goal.strategyContext.strategicIntent) || '',
+                    drivers: (goal.strategyContext && goal.strategyContext.drivers) || '',
+                    enablers: (goal.strategyContext && goal.strategyContext.enablers) || ''
+                };
+
+                if (window.Guide && typeof window.Guide.startHandoff === 'function') {
+                    window.Guide.startHandoff({
+                        type: 'import_goal_from_action_plan_to_step5',
+                        goal: payload
+                    });
+                } else {
+                    sessionStorage.setItem('prototype_handoff', JSON.stringify({
+                        type: 'import_goal_from_action_plan_to_step5',
+                        goal: payload,
+                        ts: new Date().toISOString()
+                    }));
+                }
+
+                // Open Strategic Planning directly to Step 5 and let it consume the handoff
+                window.location.href = 'main_app_prototype.html?step=5&handoff=1';
+            } catch (e) {
+                // ignore
             }
         }
 
