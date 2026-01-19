@@ -1086,16 +1086,16 @@
                 padding-right: calc(12px + env(safe-area-inset-right));
             }
 
-            /* Prevent any inner elements from rendering past the rounded container border on iOS */
-            .container {
-                overflow: hidden;
+            /* Don’t clip; instead, inset the tools area so cards render fully inside the container border */
+            .tools-grid {
+                padding-left: 10px;
+                padding-right: 10px;
+                box-sizing: border-box;
             }
 
-            /* Keep the tools area inset so cards match the intro/workflow widths */
-            .tools-grid {
-                padding-left: 2px;
-                padding-right: 2px;
-                box-sizing: border-box;
+            /* Reduce card shadow on mobile so it doesn’t visually exceed the container border */
+            .tool-card {
+                box-shadow: var(--shadow-md);
             }
 
             /* Prototype buttons: match container width (same as workflow section) */
