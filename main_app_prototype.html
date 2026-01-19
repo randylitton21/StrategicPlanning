@@ -441,43 +441,9 @@
                 </div>
                 
                 <div class="form-section">
-                    <div id="goalsContainer">
-                        <div class="goal-item">
-                            <div class="form-group">
-                                <label>Goal <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label>
-                                <p class="field-help">Set goals for different time horizons: 6 Month, 1 Year, 10 Year, etc. What do you want to achieve in each timeframe?</p>
-                                <input type="text" class="goal-title" placeholder="Enter a strategic goal...">
-                            </div>
-                            <div class="form-group">
-                                <label>Time Horizon <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label>
-                                <p class="field-help">Select the timeframe for achieving this goal. Different goals may have different time horizons - some are short-term (6 months), others are long-term (10 years).</p>
-                                <select class="goal-timeline">
-                                    <option value="">Select timeframe...</option>
-                                    <option value="6-month">6 Months</option>
-                                    <option value="1-year">1 Year</option>
-                                    <option value="3-year">3 Years</option>
-                                    <option value="5-year">5 Years</option>
-                                    <option value="10-year">10 Years</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Strategic Intent <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label>
-                                <p class="field-help">How will you get there? Refer to your SWOT analysis when formulating this.</p>
-                                <textarea class="goal-strategic-intent" placeholder="Describe how you will achieve this goal..."></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Drivers (Elephant Projects) <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label>
-                                <p class="field-help">What will you focus on? These are your major initiatives or "elephant projects" that drive progress.</p>
-                                <textarea class="goal-drivers" placeholder="List the key focus areas or major projects..."></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Enablers <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label>
-                                <p class="field-help">What frameworks, resources, and skills will you use? What capabilities do you need to develop?</p>
-                                <textarea class="goal-enablers" placeholder="List frameworks, resources, and skills needed..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <button class="btn-add" onclick="addGoal()">+ Add Another Goal</button>
+                    <div class="goals-tabs" id="strategyGoalsTabs"></div>
+                    <div id="goalsContainer"></div>
+                    <button class="btn-add" onclick="addGoal()">+ Add Goal</button>
                 </div>
                 <div class="button-group">
                     <button class="btn-prev" onclick="prevStep()">Previous</button>
@@ -1448,6 +1414,64 @@ main {
     border-left: 4px solid #0f4c75;
 }
 
+/* Step 5 Goal Tabs (like Strategic Action Plan) */
+.goals-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.goal-tab {
+    background: #f8f9fa;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95em;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.goal-tab:hover {
+    background: #e9ecef;
+    border-color: #0f4c75;
+}
+
+.goal-tab.active {
+    background: #0f4c75;
+    color: white;
+    border-color: #0f4c75;
+}
+
+.goal-tab-close {
+    background: rgba(0, 0, 0, 0.2);
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    line-height: 1;
+    color: inherit;
+    transition: all 0.2s ease;
+}
+
+.goal-tab.active .goal-tab-close {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.goal-tab-close:hover {
+    background: rgba(255, 0, 0, 0.6);
+    transform: scale(1.1);
+}
+
 .proponents-education {
     margin-top: 30px;
 }
@@ -2158,6 +2182,7 @@ var planData = {
         opportunities: '',
         threats: '',
         goals: [],
+        currentGoalId: null,
         targetsInitiatives: '',
         kpis: '',
         strategyMap: '',
@@ -2188,6 +2213,7 @@ function clearForm() {
         opportunities: '',
         threats: '',
         goals: [],
+        currentGoalId: null,
         targetsInitiatives: '',
         kpis: '',
         strategyMap: '',
@@ -2204,12 +2230,14 @@ function clearForm() {
     // Clear all form fields
     populateForm();
     
-    // Clear goals container
+    // Reset goals UI
+    var tabs = document.getElementById('strategyGoalsTabs');
+    if (tabs) tabs.innerHTML = '';
     var container = document.getElementById('goalsContainer');
-    if (container) {
-        container.innerHTML = '<div class="goal-item"><div class="form-group"><label>Goal <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label><p class="field-help">Set goals for different time horizons: 6 Month, 1 Year, 10 Year, etc. What do you want to achieve in each timeframe?</p><input type="text" class="goal-title" placeholder="Enter a strategic goal..."></div><div class="form-group"><label>Time Horizon <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label><p class="field-help">Select the timeframe for achieving this goal. Different goals may have different time horizons - some are short-term (6 months), others are long-term (10 years).</p><select class="goal-timeline"><option value="">Select timeframe...</option><option value="6-month">6 Months</option><option value="1-year">1 Year</option><option value="3-year">3 Years</option><option value="5-year">5 Years</option><option value="10-year">10 Years</option></select></div><div class="form-group"><label>Strategic Intent <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label><p class="field-help">How will you get there? Refer to your SWOT analysis when formulating this.</p><textarea class="goal-strategic-intent" placeholder="Describe how you will achieve this goal..."></textarea></div><div class="form-group"><label>Drivers (Elephant Projects) <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label><p class="field-help">What will you focus on? These are your major initiatives or "elephant projects" that drive progress.</p><textarea class="goal-drivers" placeholder="List the key focus areas or major projects..."></textarea></div><div class="form-group"><label>Enablers <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label><p class="field-help">What frameworks, resources, and skills will you use? What capabilities do you need to develop?</p><textarea class="goal-enablers" placeholder="List frameworks, resources, and skills needed..."></textarea></div></div>';
-        setupEventListeners();
-    }
+    if (container) container.innerHTML = '';
+    ensureAtLeastOneGoal();
+    renderGoalTabs();
+    renderCurrentGoalForm();
     
     // Update UI
     setupCharacterCounts();
@@ -2227,6 +2255,11 @@ function init() {
     setupCharacterCounts();
     setupKeyboardNavigation();
     updateStepCompletion();
+
+    // Step 5 goals: ensure at least one goal exists and render tabs/form.
+    ensureAtLeastOneGoal();
+    renderGoalTabs();
+    renderCurrentGoalForm();
     
     // Save data before page unload (important for iPhone Safari)
     window.addEventListener('beforeunload', function() {
@@ -2362,9 +2395,206 @@ function handleGoalSettingMessage(event) {
             
             saveData();
             updateStepCompletion();
+            renderGoalTabs(); // keep tab label in sync
         }
         closeGoalSettingModal();
     }
+}
+
+// ============================
+// Step 5: Goals Tabs + Editor
+// ============================
+function createNewStrategicGoal() {
+    return {
+        id: Date.now().toString() + Math.random().toString(16).slice(2),
+        name: 'Goal ' + ((planData.goals ? planData.goals.length : 0) + 1),
+        title: '',
+        timeline: '',
+        strategicIntent: '',
+        drivers: '',
+        enablers: ''
+    };
+}
+
+function ensureAtLeastOneGoal() {
+    if (!planData.goals) planData.goals = [];
+    if (!planData.goals.length) {
+        var g = createNewStrategicGoal();
+        planData.goals.push(g);
+        planData.currentGoalId = g.id;
+    }
+    if (!planData.currentGoalId) {
+        planData.currentGoalId = planData.goals[0].id;
+    }
+}
+
+function getCurrentStrategicGoal() {
+    ensureAtLeastOneGoal();
+    return planData.goals.find(function(g) { return g.id === planData.currentGoalId; }) || planData.goals[0];
+}
+
+function syncCurrentGoalFromForm() {
+    var goal = getCurrentStrategicGoal();
+    if (!goal) return;
+    var container = document.getElementById('goalsContainer');
+    if (!container) return;
+    var title = container.querySelector('.goal-title');
+    var timeline = container.querySelector('.goal-timeline');
+    var strategicIntent = container.querySelector('.goal-strategic-intent');
+    var drivers = container.querySelector('.goal-drivers');
+    var enablers = container.querySelector('.goal-enablers');
+
+    goal.title = title ? title.value : '';
+    goal.timeline = timeline ? timeline.value : '';
+    goal.strategicIntent = strategicIntent ? strategicIntent.value : '';
+    goal.drivers = drivers ? drivers.value : '';
+    goal.enablers = enablers ? enablers.value : '';
+}
+
+function renderGoalTabs() {
+    var tabsEl = document.getElementById('strategyGoalsTabs');
+    if (!tabsEl) return;
+    ensureAtLeastOneGoal();
+
+    tabsEl.innerHTML = '';
+    planData.goals.forEach(function(goal) {
+        var tab = document.createElement('button');
+        tab.type = 'button';
+        tab.className = 'goal-tab' + (goal.id === planData.currentGoalId ? ' active' : '');
+        tab.setAttribute('data-goal-id', goal.id);
+
+        var label = (goal.title && goal.title.trim()) ? goal.title.trim() : (goal.name || 'Goal');
+        tab.textContent = label;
+
+        // Close button (don’t allow deleting the last goal)
+        if (planData.goals.length > 1) {
+            var closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'goal-tab-close';
+            closeBtn.setAttribute('aria-label', 'Remove goal');
+            closeBtn.textContent = '×';
+            closeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                deleteGoal(goal.id);
+            });
+            tab.appendChild(closeBtn);
+        }
+
+        tab.addEventListener('click', function() {
+            selectGoal(goal.id);
+        });
+
+        tabsEl.appendChild(tab);
+    });
+}
+
+function renderCurrentGoalForm() {
+    var container = document.getElementById('goalsContainer');
+    if (!container) return;
+    ensureAtLeastOneGoal();
+
+    var goal = getCurrentStrategicGoal();
+    container.innerHTML =
+        '<div class="goal-item">' +
+        '  <div class="form-group">' +
+        '    <label>Goal <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label>' +
+        '    <p class="field-help">Set goals for different time horizons: 6 Month, 1 Year, 10 Year, etc. What do you want to achieve in each timeframe?</p>' +
+        '    <input type="text" class="goal-title" placeholder="Enter a strategic goal..." value="' + escapeHtml(goal.title || '') + '">' +
+        '  </div>' +
+        '  <div class="form-group">' +
+        '    <label>Time Horizon <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label>' +
+        '    <p class="field-help">Select the timeframe for achieving this goal. Different goals may have different time horizons - some are short-term (6 months), others are long-term (10 years).</p>' +
+        '    <select class="goal-timeline">' +
+        '      <option value="">Select timeframe...</option>' +
+        '      <option value="6-month"' + (goal.timeline === '6-month' ? ' selected' : '') + '>6 Months</option>' +
+        '      <option value="1-year"' + (goal.timeline === '1-year' ? ' selected' : '') + '>1 Year</option>' +
+        '      <option value="3-year"' + (goal.timeline === '3-year' ? ' selected' : '') + '>3 Years</option>' +
+        '      <option value="5-year"' + (goal.timeline === '5-year' ? ' selected' : '') + '>5 Years</option>' +
+        '      <option value="10-year"' + (goal.timeline === '10-year' ? ' selected' : '') + '>10 Years</option>' +
+        '    </select>' +
+        '  </div>' +
+        '  <div class="form-group">' +
+        '    <label>Strategic Intent <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label>' +
+        '    <p class="field-help">How will you get there? Refer to your SWOT analysis when formulating this.</p>' +
+        '    <textarea class="goal-strategic-intent" placeholder="Describe how you will achieve this goal...">' + escapeHtml(goal.strategicIntent || '') + '</textarea>' +
+        '  </div>' +
+        '  <div class="form-group">' +
+        '    <label>Drivers (Elephant Projects) <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label>' +
+        '    <p class="field-help">What will you focus on? These are your major initiatives or "elephant projects" that drive progress.</p>' +
+        '    <textarea class="goal-drivers" placeholder="List the key focus areas or major projects...">' + escapeHtml(goal.drivers || '') + '</textarea>' +
+        '  </div>' +
+        '  <div class="form-group">' +
+        '    <label>Enablers <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label>' +
+        '    <p class="field-help">What frameworks, resources, and skills will you use? What capabilities do you need to develop?</p>' +
+        '    <textarea class="goal-enablers" placeholder="List frameworks, resources, and skills needed...">' + escapeHtml(goal.enablers || '') + '</textarea>' +
+        '  </div>' +
+        '</div>';
+
+    // Make goal title click open the Goal Setting Template (same UX as before)
+    var goalTitleInput = container.querySelector('.goal-title');
+    if (goalTitleInput) {
+        goalTitleInput.readOnly = true;
+        goalTitleInput.style.cursor = 'pointer';
+        goalTitleInput.title = 'Click to create goal using Goal Setting Template';
+        goalTitleInput.addEventListener('click', function(e) {
+            openGoalSettingModal(e.target, e.target.closest('.goal-item'));
+        });
+    }
+
+    // Bind save behavior for the dynamic form
+    var inputs = container.querySelectorAll('input, textarea, select');
+    inputs.forEach(function(el) {
+        el.addEventListener('input', function() {
+            syncCurrentGoalFromForm();
+            renderGoalTabs();
+            saveData();
+            updateStepCompletion();
+        });
+        el.addEventListener('change', function() {
+            syncCurrentGoalFromForm();
+            renderGoalTabs();
+            saveData();
+            updateStepCompletion();
+        });
+    });
+}
+
+function selectGoal(goalId) {
+    syncCurrentGoalFromForm();
+    planData.currentGoalId = goalId;
+    renderGoalTabs();
+    renderCurrentGoalForm();
+    saveData();
+}
+
+function addGoal() {
+    syncCurrentGoalFromForm();
+    var newGoal = createNewStrategicGoal();
+    planData.goals.push(newGoal);
+    planData.currentGoalId = newGoal.id;
+    renderGoalTabs();
+    renderCurrentGoalForm();
+    saveData();
+    updateStepCompletion();
+    // Scroll into view for better UX
+    var tabsEl = document.getElementById('strategyGoalsTabs');
+    if (tabsEl) tabsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function deleteGoal(goalId) {
+    if (!planData.goals || planData.goals.length <= 1) return;
+    syncCurrentGoalFromForm();
+    planData.goals = planData.goals.filter(function(g) { return g.id !== goalId; });
+    if (!planData.goals.length) {
+        ensureAtLeastOneGoal();
+    }
+    if (!planData.goals.find(function(g) { return g.id === planData.currentGoalId; })) {
+        planData.currentGoalId = planData.goals[0].id;
+    }
+    renderGoalTabs();
+    renderCurrentGoalForm();
+    saveData();
+    updateStepCompletion();
 }
 
 // Setup event listeners for auto-save
@@ -2709,7 +2939,7 @@ function isStepComplete(step) {
             return (strengths && strengths.value.trim()) || (weaknesses && weaknesses.value.trim()) || 
                    (opportunities && opportunities.value.trim()) || (threats && threats.value.trim());
         case 5:
-            return planData.goals && planData.goals.length > 0;
+            return !!(planData.goals && planData.goals.some(function(g) { return g && g.title && String(g.title).trim(); }));
         case 6:
             var targets = document.getElementById('targets-initiatives');
             var kpis = document.getElementById('kpis');
@@ -2867,8 +3097,8 @@ function closeProponentPopup(event) {
     }
 }
 
-// Add goal
-function addGoal() {
+// Add goal (legacy - replaced by tabbed goals earlier in this file)
+function addGoalLegacy() {
     var container = document.getElementById('goalsContainer');
     if (!container) return;
     
@@ -2886,8 +3116,8 @@ function addGoal() {
     updateStepCompletion();
 }
 
-// Remove goal
-function removeGoal(button) {
+// Remove goal (legacy - replaced by tabbed goals earlier in this file)
+function removeGoalLegacy(button) {
     var goalItem = button.parentElement;
     goalItem.parentElement.removeChild(goalItem);
     saveGoals();
@@ -2895,47 +3125,32 @@ function removeGoal(button) {
 
 // Save goals
 function saveGoals() {
-    planData.goals = [];
-    var goalItems = document.querySelectorAll('.goal-item');
-    for (var i = 0; i < goalItems.length; i++) {
-        var title = goalItems[i].querySelector('.goal-title');
-        var timeline = goalItems[i].querySelector('.goal-timeline');
-        var strategicIntent = goalItems[i].querySelector('.goal-strategic-intent');
-        var drivers = goalItems[i].querySelector('.goal-drivers');
-        var enablers = goalItems[i].querySelector('.goal-enablers');
-        
-        if (title && title.value.trim()) {
-            planData.goals.push({
-                title: title.value,
-                timeline: timeline ? timeline.value : '',
-                strategicIntent: strategicIntent ? strategicIntent.value : '',
-                drivers: drivers ? drivers.value : '',
-                enablers: enablers ? enablers.value : ''
-            });
-        }
+    // With tabs, we keep goals in planData and just sync the active one from the form.
+    ensureAtLeastOneGoal();
+    syncCurrentGoalFromForm();
+    // Backwards compat for old saves/templates that didn't include ids/names
+    if (planData.goals && planData.goals.length) {
+        planData.goals.forEach(function(g, idx) {
+            if (!g.id) g.id = Date.now().toString() + idx + Math.random().toString(16).slice(2);
+            if (!g.name) g.name = 'Goal ' + (idx + 1);
+        });
+        if (!planData.currentGoalId) planData.currentGoalId = planData.goals[0].id;
     }
 }
 
 // Load goals
 function loadGoals() {
-    var container = document.getElementById('goalsContainer');
-    if (!container || !planData.goals || planData.goals.length === 0) return;
-    
-    container.innerHTML = '';
-    for (var i = 0; i < planData.goals.length; i++) {
-        var goal = planData.goals[i];
-        var goalDiv = document.createElement('div');
-        goalDiv.className = 'goal-item';
-        goalDiv.innerHTML = '<div class="form-group"><label>Goal <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label><p class="field-help">Set goals for different time horizons: 6 Month, 1 Year, 10 Year, etc. What do you want to achieve in each timeframe?</p><input type="text" class="goal-title" value="' + escapeHtml(goal.title) + '" placeholder="Enter a strategic goal..."></div>' +
-            '<div class="form-group"><label>Time Horizon <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label><p class="field-help">Select the timeframe for achieving this goal. Different goals may have different time horizons - some are short-term (6 months), others are long-term (10 years).</p><select class="goal-timeline"><option value="">Select timeframe...</option><option value="6-month"' + (goal.timeline === '6-month' ? ' selected' : '') + '>6 Months</option><option value="1-year"' + (goal.timeline === '1-year' ? ' selected' : '') + '>1 Year</option><option value="3-year"' + (goal.timeline === '3-year' ? ' selected' : '') + '>3 Years</option><option value="5-year"' + (goal.timeline === '5-year' ? ' selected' : '') + '>5 Years</option><option value="10-year"' + (goal.timeline === '10-year' ? ' selected' : '') + '>10 Years</option></select></div>' +
-            '<div class="form-group"><label>Strategic Intent <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label><p class="field-help">How will you get there? Refer to your SWOT analysis when formulating this.</p><textarea class="goal-strategic-intent" placeholder="Describe how you will achieve this goal...">' + escapeHtml(goal.strategicIntent || '') + '</textarea></div>' +
-            '<div class="form-group"><label>Drivers (Elephant Projects) <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label><p class="field-help">What will you focus on? These are your major initiatives or "elephant projects" that drive progress.</p><textarea class="goal-drivers" placeholder="List the key focus areas or major projects...">' + escapeHtml(goal.drivers || '') + '</textarea></div>' +
-            '<div class="form-group"><label>Enablers <button class="help-toggle" onclick="toggleHelp(this)" aria-label="Toggle help">?</button></label><p class="field-help">What frameworks, resources, and skills will you use? What capabilities do you need to develop?</p><textarea class="goal-enablers" placeholder="List frameworks, resources, and skills needed...">' + escapeHtml(goal.enablers || '') + '</textarea></div>' +
-            '<button class="btn-remove" onclick="removeGoal(this)" style="background: #dc3545; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">Remove</button>';
-        container.appendChild(goalDiv);
+    ensureAtLeastOneGoal();
+    // Backwards compat: add ids/names if missing (older saves/templates)
+    if (planData.goals && planData.goals.length) {
+        planData.goals.forEach(function(g, idx) {
+            if (!g.id) g.id = Date.now().toString() + idx + Math.random().toString(16).slice(2);
+            if (!g.name) g.name = 'Goal ' + (idx + 1);
+        });
     }
-    setupEventListeners();
-    setupCharacterCounts();
+    if (!planData.currentGoalId) planData.currentGoalId = planData.goals[0].id;
+    renderGoalTabs();
+    renderCurrentGoalForm();
     updateStepCompletion();
 }
 
@@ -3027,6 +3242,13 @@ function exportPlan(format) {
         // Standard download for desktop
         downloadFile(blob, filename);
     }
+}
+
+function getNonEmptyGoals() {
+    if (!planData.goals || !planData.goals.length) return [];
+    return planData.goals.filter(function(g) {
+        return g && g.title && String(g.title).trim();
+    });
 }
 
 // Share file on mobile using Web Share API
@@ -3413,14 +3635,15 @@ function generatePlanDocument() {
     doc += 'Opportunities:\n' + planData.opportunities + '\n\n';
     doc += 'Threats:\n' + planData.threats + '\n\n';
     
+    var goals = getNonEmptyGoals();
     doc += 'STRATEGY - GOALS\n';
     doc += '-'.repeat(50) + '\n';
-    for (var i = 0; i < planData.goals.length; i++) {
-        doc += (i + 1) + '. ' + planData.goals[i].title + '\n';
-        doc += '   Time Horizon: ' + planData.goals[i].timeline + '\n';
-        doc += '   Strategic Intent: ' + planData.goals[i].strategicIntent + '\n';
-        doc += '   Drivers: ' + planData.goals[i].drivers + '\n';
-        doc += '   Enablers: ' + planData.goals[i].enablers + '\n\n';
+    for (var i = 0; i < goals.length; i++) {
+        doc += (i + 1) + '. ' + goals[i].title + '\n';
+        doc += '   Time Horizon: ' + (goals[i].timeline || '') + '\n';
+        doc += '   Strategic Intent: ' + (goals[i].strategicIntent || '') + '\n';
+        doc += '   Drivers: ' + (goals[i].drivers || '') + '\n';
+        doc += '   Enablers: ' + (goals[i].enablers || '') + '\n\n';
     }
     
     doc += 'EXECUTION\n';
@@ -3620,12 +3843,13 @@ function generateWordDocument() {
     }
     
     // Strategy - Goals
-    if (planData.goals && planData.goals.length > 0) {
+    var goals = getNonEmptyGoals();
+    if (goals.length > 0) {
         html += '<div class="section">\n';
         html += '<div class="section-title">STRATEGY - GOALS</div>\n';
         
-        for (var i = 0; i < planData.goals.length; i++) {
-            var goal = planData.goals[i];
+        for (var i = 0; i < goals.length; i++) {
+            var goal = goals[i];
             html += '<div class="goal-item">\n';
             html += '<div class="goal-title">' + (i + 1) + '. ' + escapeHtml(goal.title) + '</div>\n';
             
@@ -3900,13 +4124,14 @@ function generateExcelDocument() {
     }
     
     // Strategy - Goals Section
-    if (planData.goals && planData.goals.length > 0) {
+    var goals = getNonEmptyGoals();
+    if (goals.length > 0) {
         html += '<tr>\n';
         html += '<td colspan="2" class="section-header">STRATEGY - GOALS</td>\n';
         html += '</tr>\n';
         
-        for (var i = 0; i < planData.goals.length; i++) {
-            var goal = planData.goals[i];
+        for (var i = 0; i < goals.length; i++) {
+            var goal = goals[i];
             html += '<tr class="goal-row">\n';
             html += '<td colspan="2" style="font-weight: bold; color: #667eea; font-size: 12pt; padding: 10px;">Goal ' + (i + 1) + ': ' + escapeHtml(goal.title) + '</td>\n';
             html += '</tr>\n';
