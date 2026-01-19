@@ -2312,11 +2312,18 @@ function openGoalSettingModal(goalInput, goalItem) {
     currentGoalItem = goalItem;
     var modal = document.getElementById('goalSettingModal');
     var iframe = document.getElementById('goalSettingIframe');
+    var currentStrategicGoal = null;
+    try { currentStrategicGoal = getCurrentStrategicGoal(); } catch (e) { /* ignore */ }
     
     // Check if there's existing goal text
     var existingGoalText = goalInput.value.trim();
     var goalToLoad = null;
     
+    // Prefer the full saved goal object if we already have it on this Step 5 goal
+    if (currentStrategicGoal && currentStrategicGoal.goalSettingData) {
+        goalToLoad = currentStrategicGoal.goalSettingData;
+    }
+
     if (existingGoalText) {
         // Try to find the goal in saved goals library (user-specific)
         try {
@@ -2330,6 +2337,9 @@ function openGoalSettingModal(goalInput, goalItem) {
             // If goal found, ensure it has all required fields
             if (goalToLoad) {
                 goalToLoad = {
+                    id: goalToLoad.id || null,
+                    createdAt: goalToLoad.createdAt || null,
+                    updatedAt: goalToLoad.updatedAt || null,
                     goal: goalToLoad.goal || existingGoalText,
                     importance: goalToLoad.importance || '',
                     smart: goalToLoad.smart || {
@@ -2350,6 +2360,9 @@ function openGoalSettingModal(goalInput, goalItem) {
         // If goal not found in saved goals, create a basic goal object with just the text
         if (!goalToLoad) {
             goalToLoad = {
+                id: null,
+                createdAt: null,
+                updatedAt: null,
                 goal: existingGoalText,
                 importance: '',
                 smart: {
@@ -2395,6 +2408,15 @@ function handleGoalSettingMessage(event) {
         if (currentGoalInput && goal) {
             // Only populate the goal name - don't populate other fields
             currentGoalInput.value = goal.goal;
+
+            // Persist full goal details on the current Step 5 goal so reopening restores everything
+            try {
+                var g = getCurrentStrategicGoal();
+                if (g) {
+                    g.title = goal.goal;
+                    g.goalSettingData = goal;
+                }
+            } catch (e) { /* ignore */ }
             
             saveData();
             updateStepCompletion();
@@ -2619,7 +2641,8 @@ function openCurrentGoalInActionPlan() {
         timeline: goal.timeline || '',
         strategicIntent: goal.strategicIntent || '',
         drivers: goal.drivers || '',
-        enablers: goal.enablers || ''
+        enablers: goal.enablers || '',
+        goalSettingData: goal.goalSettingData || null
     };
 
     if (window.Guide && typeof window.Guide.startHandoff === 'function') {

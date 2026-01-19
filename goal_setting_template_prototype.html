@@ -1468,8 +1468,11 @@
             }
         })();
 
-        // Data structure
+        // Data structure (supports editing an existing saved goal)
         let goalData = {
+            id: null,
+            createdAt: null,
+            updatedAt: null,
             goal: '',
             importance: '',
             smart: {
@@ -2663,6 +2666,19 @@
             goals.push(goal);
             return saveSavedGoals(goals);
         }
+
+        // Insert or update a goal in saved goals (by id)
+        function upsertSavedGoal(goal) {
+            if (!goal || !goal.id) return false;
+            var goals = getSavedGoals();
+            var idx = goals.findIndex(function(g) { return g && g.id === goal.id; });
+            if (idx >= 0) {
+                goals[idx] = Object.assign({}, goals[idx], goal);
+            } else {
+                goals.push(goal);
+            }
+            return saveSavedGoals(goals);
+        }
         
         // Internal function to delete a goal by ID (used by deleteSavedGoal)
         function deleteSavedGoalById(goalId) {
@@ -2705,23 +2721,40 @@
             }
         }
         
-        // Use goal in modal mode - sends goal back to parent without saving
+        // Use goal in modal mode - saves/updates goal, then sends it back to parent
         function useGoalInModal() {
             if (!isModalMode) {
                 return;
             }
             
+            if (!validateGoal()) {
+                return;
+            }
+
             // Update goalData with current form values
             saveData();
             
-            // Create goal object from current form data
+            // Create/update saved goal object from current form data
+            const now = new Date().toISOString();
             const goalToSend = {
+                id: goalData.id || Date.now().toString(),
+                createdAt: goalData.createdAt || now,
+                updatedAt: now,
                 goal: goalData.goal || '',
                 importance: goalData.importance || '',
                 smart: JSON.parse(JSON.stringify(goalData.smart)),
                 blockers: goalData.blockers || '',
                 actionPlan: goalData.actionPlan || ''
             };
+            
+            // Persist to library (update if existing)
+            if (!upsertSavedGoal(goalToSend)) {
+                // fallback for older flows
+                if (!addSavedGoal(goalToSend)) return;
+            }
+            goalData.id = goalToSend.id;
+            goalData.createdAt = goalToSend.createdAt;
+            goalData.updatedAt = goalToSend.updatedAt;
             
             // Send message to parent window
             if (window.parent && window.parent !== window) {
@@ -2746,6 +2779,9 @@
             
             // Ensure we have a proper goal object with all fields
             goalData = {
+                id: goal.id || goalData.id || null,
+                createdAt: goal.createdAt || goalData.createdAt || null,
+                updatedAt: goal.updatedAt || goalData.updatedAt || null,
                 goal: goal.goal || '',
                 importance: goal.importance || '',
                 smart: goal.smart || {
@@ -2842,10 +2878,11 @@
             // Update goalData with current form values
             saveData();
 
-            // Create goal object with timestamp
+            const now = new Date().toISOString();
             const newGoal = {
-                id: Date.now().toString(),
-                createdAt: new Date().toISOString(),
+                id: goalData.id || Date.now().toString(),
+                createdAt: goalData.createdAt || now,
+                updatedAt: now,
                 goal: goalData.goal,
                 importance: goalData.importance,
                 smart: JSON.parse(JSON.stringify(goalData.smart)),
@@ -2853,13 +2890,18 @@
                 actionPlan: goalData.actionPlan
             };
 
-            // Save to library
-            if (addSavedGoal(newGoal)) {
+            // Save/update in library
+            if (upsertSavedGoal(newGoal)) {
                 console.log('Goal saved successfully');
+            } else if (addSavedGoal(newGoal)) {
+                console.log('Goal saved successfully (fallback)');
             } else {
                 console.error('Failed to save goal');
-                return; // Don't continue if save failed
+                return;
             }
+            goalData.id = newGoal.id;
+            goalData.createdAt = newGoal.createdAt;
+            goalData.updatedAt = newGoal.updatedAt;
 
             // Show success message
             alert('Goal created and saved successfully!');
@@ -2882,6 +2924,9 @@
         // Clear goal form
         function clearGoalForm() {
             goalData = {
+                id: null,
+                createdAt: null,
+                updatedAt: null,
                 goal: '',
                 importance: '',
                 smart: {

@@ -1328,6 +1328,14 @@
             // Check if there's existing goal text
             const existingGoalText = goalTextarea.value.trim();
             let goalToLoad = null;
+
+            // Prefer stored goalSettingData (restores original template fields)
+            try {
+                const actionGoal = actionPlanData.goals.find(g => g.id === goalId);
+                if (actionGoal && actionGoal.goalSettingData) {
+                    goalToLoad = actionGoal.goalSettingData;
+                }
+            } catch (e) { /* ignore */ }
             
             if (existingGoalText) {
                 // Try to find the goal in saved goals library (user-specific)
@@ -1342,6 +1350,9 @@
                     // If goal found, ensure it has all required fields
                     if (goalToLoad) {
                         goalToLoad = {
+                            id: goalToLoad.id || null,
+                            createdAt: goalToLoad.createdAt || null,
+                            updatedAt: goalToLoad.updatedAt || null,
                             goal: goalToLoad.goal || existingGoalText,
                             importance: goalToLoad.importance || '',
                             smart: goalToLoad.smart || {
@@ -1362,6 +1373,9 @@
                 // If goal not found in saved goals, create a basic goal object with just the text
                 if (!goalToLoad) {
                     goalToLoad = {
+                        id: null,
+                        createdAt: null,
+                        updatedAt: null,
                         goal: existingGoalText,
                         importance: '',
                         smart: {
@@ -1414,6 +1428,10 @@
                     const actionGoal = actionPlanData.goals.find(g => g.id === currentGoalId);
                     if (actionGoal) {
                         actionGoal.goal = goal.goal;
+                        actionGoal.goalSettingData = goal; // keep full template data for future opens
+                        if (!actionGoal.name || String(actionGoal.name).indexOf('Goal ') === 0) {
+                            actionGoal.name = (goal.goal || 'Goal').slice(0, 32);
+                        }
                         saveData();
                     }
                 }
@@ -2906,6 +2924,9 @@
                         drivers: incoming.drivers || '',
                         enablers: incoming.enablers || ''
                     };
+                    if (incoming.goalSettingData) {
+                        newGoal.goalSettingData = incoming.goalSettingData;
+                    }
 
                     actionPlanData.goals.push(newGoal);
                     actionPlanData.currentGoalId = newGoal.id;
