@@ -850,21 +850,36 @@
 
         // Get current username from session
         function getCurrentUsername() {
-            const sessionData = sessionStorage.getItem('prototype_userSession');
-            if (sessionData) {
-                try {
-                    const session = JSON.parse(sessionData);
-                    return session.username || 'default';
-                } catch (e) {
-                    return 'default';
+            try {
+                var session = sessionStorage.getItem('prototype_userSession');
+                if (session) {
+                    var sessionData = JSON.parse(session);
+                    var username = (sessionData && sessionData.user && sessionData.user.username) || sessionData.username || null;
+                    console.log('Product Canvas getCurrentUsername result:', username, 'from session:', sessionData);
+                    return username;
+                } else {
+                    console.log('Product Canvas: No session found in sessionStorage');
                 }
+            } catch (e) {
+                console.log('Product Canvas: Could not get username from session:', e);
             }
-            return 'default';
+            return null;
         }
 
-        // Save data to local storage
+        // Save data to localStorage with iPhone Safari compatibility (user-specific ONLY)
         function saveData() {
-            const username = getCurrentUsername();
+            // If we're in the middle of a logout/reset flow, don't overwrite saved data with blanks
+            if (window.__suppressStrategicPlanAutosave) return;
+
+            var username = getCurrentUsername();
+            console.log('Product Canvas saveData called, username:', username);
+
+            // ONLY save data if user is logged in
+            if (!username) {
+                console.log('Product Canvas: No user logged in - not saving data');
+                return;
+            }
+
             const canvasData = {
                 targetMarkets: document.getElementById('targetMarkets').value,
                 salesChannels: document.getElementById('salesChannels').value,
@@ -881,25 +896,62 @@
                 marketTrends: document.getElementById('marketTrends').value,
                 risks: document.getElementById('risks').value
             };
-            
-            localStorage.setItem(`productCanvasData_${username}`, JSON.stringify(canvasData));
-            
-            // Show save indicator
-            const indicator = document.getElementById('saveIndicator');
-            indicator.classList.add('show');
-            setTimeout(() => {
-                indicator.classList.remove('show');
-            }, 2000);
+
+            // Add timestamp for conflict resolution
+            canvasData._lastSavedISO = new Date().toISOString();
+
+            // Save to user-specific key ONLY
+            var dataString = JSON.stringify(canvasData);
+            var saved = false;
+            var storageKey = 'productCanvasData_' + username;
+
+            if (isStorageAvailable('localStorage')) {
+                try {
+                    localStorage.setItem(storageKey, dataString);
+                    saved = true;
+                } catch (e) {
+                    console.log('localStorage setItem failed for user:', username);
+                }
+            }
+
+            if (saved) {
+                // Show save indicator
+                const indicator = document.getElementById('saveIndicator');
+                indicator.classList.add('show');
+                setTimeout(() => {
+                    indicator.classList.remove('show');
+                }, 2000);
+            }
         }
 
-        // Load data from local storage
+        // Load saved data from localStorage (user-specific ONLY - no guest fallback)
         function loadData() {
-            const username = getCurrentUsername();
-            const savedData = localStorage.getItem(`productCanvasData_${username}`);
-            
-            if (savedData) {
+            console.log('Product Canvas loadData called');
+            var username = getCurrentUsername();
+            console.log('Product Canvas loadData username result:', username);
+
+            // ONLY load data if user is logged in - never load guest data
+            if (!username) {
+                console.log('Product Canvas: No user logged in - starting with blank form');
+                return;
+            }
+
+            var saved = null;
+            var userKey = 'productCanvasData_' + username;
+            console.log('Product Canvas: Looking for data with key:', userKey);
+
+            if (isStorageAvailable('localStorage')) {
                 try {
-                    const canvasData = JSON.parse(savedData);
+                    saved = localStorage.getItem(userKey);
+                    console.log('Product Canvas: Found saved data?', !!saved);
+                } catch (e) {
+                    console.log('Product Canvas: localStorage getItem failed:', e);
+                }
+            }
+
+            if (saved) {
+                try {
+                    const canvasData = JSON.parse(saved);
                     document.getElementById('targetMarkets').value = canvasData.targetMarkets || '';
                     document.getElementById('salesChannels').value = canvasData.salesChannels || '';
                     document.getElementById('marketingChannels').value = canvasData.marketingChannels || '';
@@ -914,9 +966,12 @@
                     document.getElementById('sustainableAdvantage').value = canvasData.sustainableAdvantage || '';
                     document.getElementById('marketTrends').value = canvasData.marketTrends || '';
                     document.getElementById('risks').value = canvasData.risks || '';
+                    console.log('Product Canvas: Successfully loaded user-specific data for:', username);
                 } catch (e) {
-                    console.error('Error loading data:', e);
+                    console.log('Product Canvas: Could not parse saved data for user:', username, 'error:', e);
                 }
+            } else {
+                console.log('Product Canvas: No saved data found for user:', username, 'with key:', userKey);
             }
         }
 
@@ -1470,10 +1525,36 @@
             URL.revokeObjectURL(url);
         }
 
+        // Initialize authentication and data loading on page load
+        function initAuthAndData() {
+            console.log('Product Canvas: initAuthAndData called');
+
+            // Check if user is logged in (sessionStorage)
+            var session = sessionStorage.getItem('prototype_userSession');
+            console.log('Product Canvas: Raw session from sessionStorage:', session);
+
+            if (session) {
+                try {
+                    var sessionData = JSON.parse(session);
+                    console.log('Product Canvas: Parsed session data:', sessionData);
+                    console.log('Product Canvas: User session found for:', sessionData.user ? sessionData.user.username : 'unknown');
+                    loadData(); // Load user's data
+                } catch (e) {
+                    console.log('Product Canvas: Invalid session, starting with blank form. Error:', e);
+                    loadData(); // This will detect no user and show blank form
+                }
+            } else {
+                console.log('Product Canvas: No user session found in sessionStorage');
+                loadData(); // This will detect no user and show blank form
+            }
+        }
+
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            loadData();
-        });
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAuthAndData);
+        } else {
+            initAuthAndData();
+        }
     </script>
 </body>
 </html>
