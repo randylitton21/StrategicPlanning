@@ -2839,6 +2839,9 @@ function getCurrentUsername() {
 
 // Save data to localStorage with iPhone Safari compatibility (user-specific or guest)
 function saveData() {
+    // If we're in the middle of a logout/reset flow, don't overwrite saved data with blanks
+    if (window.__suppressStrategicPlanAutosave) return;
+
     var username = getCurrentUsername();
     // Save step 1 data (Purpose)
     planData.businessName = document.getElementById('business-name') ? document.getElementById('business-name').value : '';
@@ -2878,18 +2881,36 @@ function saveData() {
     planData.successCriteria = document.getElementById('success-criteria') ? document.getElementById('success-criteria').value : '';
     planData.notes = document.getElementById('notes') ? document.getElementById('notes').value : '';
     
-    // Save to user-specific key (or guest key if not logged in)
+    // Stamp last-saved time so we can reliably choose the newest save (guest vs user)
+    planData._lastSavedISO = new Date().toISOString();
+
+    // Save to user-specific key (and always keep a guest backup)
     var dataString = JSON.stringify(planData);
     var saved = false;
-    var storageKey = username ? ('prototype_strategicPlan_' + username) : 'prototype_strategicPlan';
+    var userKey = username ? ('prototype_strategicPlan_' + username) : null;
+    var guestKey = 'prototype_strategicPlan';
     
     if (isStorageAvailable('localStorage')) {
     try {
-            localStorage.setItem(storageKey, dataString);
+            // Always write guest backup
+            localStorage.setItem(guestKey, dataString);
             saved = true;
+
+            // Also write to user key if logged in
+            if (userKey) {
+                localStorage.setItem(userKey, dataString);
+            }
     } catch (e) {
             console.log('localStorage setItem failed');
         }
+    } else {
+        // Surface this (once) because without localStorage nothing will persist after closing the browser.
+        try {
+            if (!window.__warnedNoLocalStorage) {
+                window.__warnedNoLocalStorage = true;
+                alert('Local saving is blocked in this browser/session (localStorage unavailable). Try disabling Private/Incognito mode or opening the app via http(s) instead of a local file.');
+            }
+        } catch (e) { /* ignore */ }
     }
     
     if (saved) {
@@ -2915,33 +2936,47 @@ function loadSavedData() {
     var saved = null;
     var userKey = username ? ('prototype_strategicPlan_' + username) : null;
     var guestKey = 'prototype_strategicPlan';
+    var rawUser = null;
+    var rawGuest = null;
     
     if (isStorageAvailable('localStorage')) {
         try {
             if (userKey) {
-                saved = localStorage.getItem(userKey);
-                // If user has no saved plan yet, migrate guest plan (if present)
-                if (!saved) {
-                    var guestSaved = localStorage.getItem(guestKey);
-                    if (guestSaved) {
-                        localStorage.setItem(userKey, guestSaved);
-                        saved = guestSaved;
-                    }
-                }
+                rawUser = localStorage.getItem(userKey);
             } else {
-                saved = localStorage.getItem(guestKey);
+                rawGuest = localStorage.getItem(guestKey);
             }
+            // Always read guest too (we may need it as a fallback or to migrate)
+            if (!rawGuest) rawGuest = localStorage.getItem(guestKey);
         } catch (e) {
             console.log('localStorage getItem failed');
         }
     }
     
-        if (saved) {
-        try {
-            planData = JSON.parse(saved);
-            populateForm();
-    } catch (e) {
-            console.log('Could not parse saved data');
+    // Pick newest valid save between user + guest (prevents blank/old overwriting)
+    function parseMaybe(raw) {
+        if (!raw) return null;
+        try { return JSON.parse(raw); } catch (e) { return null; }
+    }
+    var userObj = parseMaybe(rawUser);
+    var guestObj = parseMaybe(rawGuest);
+    var userTs = userObj && userObj._lastSavedISO ? Date.parse(userObj._lastSavedISO) : 0;
+    var guestTs = guestObj && guestObj._lastSavedISO ? Date.parse(guestObj._lastSavedISO) : 0;
+
+    var chosen = null;
+    if (userObj && guestObj) {
+        chosen = (guestTs > userTs) ? guestObj : userObj;
+    } else {
+        chosen = userObj || guestObj || null;
+    }
+
+    if (chosen) {
+        planData = chosen;
+        populateForm();
+
+        // If logged in and user key is missing but guest exists, migrate guest -> user
+        if (userKey && !rawUser && rawGuest) {
+            try { localStorage.setItem(userKey, rawGuest); } catch (e) { /* ignore */ }
         }
     }
 }
@@ -5156,7 +5191,10 @@ function logout() {
     isLoggedIn = false;
     sessionStorage.removeItem('prototype_userSession');
     // Clear form when logged out
+    window.__suppressStrategicPlanAutosave = true;
     clearForm();
+    // Re-enable autosave after the clear has completed
+    setTimeout(function() { window.__suppressStrategicPlanAutosave = false; }, 0);
 }
 
 // Collect all prototype data into unified structure
