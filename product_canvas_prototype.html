@@ -1549,11 +1549,53 @@
             }
         }
 
+        // Setup event listeners for auto-save
+        function setupEventListeners() {
+            console.log('Product Canvas: Setting up autosave event listeners');
+            var inputs = document.querySelectorAll('input, textarea, select');
+            for (var i = 0; i < inputs.length; i++) {
+                inputs[i].addEventListener('input', function() {
+                    console.log('Product Canvas: Input event triggered, calling saveData()');
+                    saveData();
+                });
+                inputs[i].addEventListener('change', function() {
+                    console.log('Product Canvas: Change event triggered, calling saveData()');
+                    saveData();
+                });
+            }
+        }
+
         // Initialize on page load
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initAuthAndData);
+            document.addEventListener('DOMContentLoaded', function() {
+                initAuthAndData();
+                setupEventListeners();
+
+                // Save data before page unload (important for iPhone Safari)
+                window.addEventListener('beforeunload', function() {
+                    saveData();
+                });
+
+                // Also save on page visibility change (when user switches tabs/apps on mobile)
+                document.addEventListener('visibilitychange', function() {
+                    if (document.hidden) {
+                        saveData();
+                    }
+                });
+            });
         } else {
             initAuthAndData();
+            setupEventListeners();
+
+            // Save data before page unload (important for iPhone Safari)
+            window.addEventListener('beforeunload', function() {
+                saveData();
+            });
+
+            // Also save on page visibility change (when user switches tabs/apps on mobile)
+            document.addEventListener('visibilitychange', function() {
+                saveData();
+            });
         }
     </script>
 </body>
