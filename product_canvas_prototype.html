@@ -882,7 +882,7 @@
                 risks: document.getElementById('risks').value
             };
             
-            localStorage.setItem(`productCanvas_${username}`, JSON.stringify(canvasData));
+            localStorage.setItem(`productCanvasData_${username}`, JSON.stringify(canvasData));
             
             // Show save indicator
             const indicator = document.getElementById('saveIndicator');
@@ -895,7 +895,7 @@
         // Load data from local storage
         function loadData() {
             const username = getCurrentUsername();
-            const savedData = localStorage.getItem(`productCanvas_${username}`);
+            const savedData = localStorage.getItem(`productCanvasData_${username}`);
             
             if (savedData) {
                 try {
