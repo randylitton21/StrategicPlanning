@@ -2242,8 +2242,8 @@ function clearForm() {
 function init() {
     // Authentication has been moved to prototypes_home.html
     
-    // Don't load saved data on initial load - start with blank form
-    // loadSavedData(); // Removed - app starts blank
+    // Load any saved data (user-specific if logged in; otherwise guest save)
+    loadSavedData();
     updateProgress();
     setupEventListeners();
     setupCharacterCounts();
@@ -2829,7 +2829,7 @@ function getCurrentUsername() {
         var session = sessionStorage.getItem('prototype_userSession');
         if (session) {
             var sessionData = JSON.parse(session);
-            return sessionData.user ? sessionData.user.username : null;
+            return (sessionData && sessionData.user && sessionData.user.username) || sessionData.username || null;
         }
     } catch (e) {
         console.log('Could not get username from session');
@@ -2837,13 +2837,9 @@ function getCurrentUsername() {
     return null;
 }
 
-// Save data to localStorage with iPhone Safari compatibility (user-specific)
+// Save data to localStorage with iPhone Safari compatibility (user-specific or guest)
 function saveData() {
     var username = getCurrentUsername();
-    if (!username) {
-        // Not logged in - don't save
-        return;
-    }
     // Save step 1 data (Purpose)
     planData.businessName = document.getElementById('business-name') ? document.getElementById('business-name').value : '';
     planData.userName = document.getElementById('user-name') ? document.getElementById('user-name').value : '';
@@ -2882,10 +2878,10 @@ function saveData() {
     planData.successCriteria = document.getElementById('success-criteria') ? document.getElementById('success-criteria').value : '';
     planData.notes = document.getElementById('notes') ? document.getElementById('notes').value : '';
     
-    // Save to user-specific key
+    // Save to user-specific key (or guest key if not logged in)
     var dataString = JSON.stringify(planData);
     var saved = false;
-    var storageKey = 'prototype_strategicPlan_' + username;
+    var storageKey = username ? ('prototype_strategicPlan_' + username) : 'prototype_strategicPlan';
     
     if (isStorageAvailable('localStorage')) {
     try {
@@ -2912,20 +2908,29 @@ function showSaveIndicator() {
     }
 }
 
-// Load saved data from localStorage (user-specific)
+// Load saved data from localStorage (user-specific; falls back to guest and can migrate guest -> user)
 function loadSavedData() {
     var username = getCurrentUsername();
-    if (!username) {
-        // Not logged in - don't load
-        return;
-    }
     
     var saved = null;
-    var storageKey = 'prototype_strategicPlan_' + username;
+    var userKey = username ? ('prototype_strategicPlan_' + username) : null;
+    var guestKey = 'prototype_strategicPlan';
     
     if (isStorageAvailable('localStorage')) {
         try {
-            saved = localStorage.getItem(storageKey);
+            if (userKey) {
+                saved = localStorage.getItem(userKey);
+                // If user has no saved plan yet, migrate guest plan (if present)
+                if (!saved) {
+                    var guestSaved = localStorage.getItem(guestKey);
+                    if (guestSaved) {
+                        localStorage.setItem(userKey, guestSaved);
+                        saved = guestSaved;
+                    }
+                }
+            } else {
+                saved = localStorage.getItem(guestKey);
+            }
         } catch (e) {
             console.log('localStorage getItem failed');
         }
@@ -5145,6 +5150,8 @@ function initAuth() {
 
 // Logout user
 function logout() {
+    // Persist latest edits before clearing session (so data survives log out / browser close)
+    try { saveData(); } catch (e) { /* ignore */ }
     currentUser = null;
     isLoggedIn = false;
     sessionStorage.removeItem('prototype_userSession');
