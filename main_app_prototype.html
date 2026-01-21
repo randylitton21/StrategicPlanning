@@ -2935,55 +2935,37 @@ function showSaveIndicator() {
     }
 }
 
-// Load saved data from localStorage (user-specific; falls back to guest and can migrate guest -> user)
+// Load saved data from localStorage (user-specific ONLY - no guest fallback)
 function loadSavedData() {
     var username = getCurrentUsername();
-    
+
+    // ONLY load data if user is logged in - never load guest data
+    if (!username) {
+        console.log('No user logged in - starting with blank form');
+        return;
+    }
+
     var saved = null;
-    var userKey = username ? ('prototype_strategicPlan_' + username) : null;
-    var guestKey = 'prototype_strategicPlan';
-    var rawUser = null;
-    var rawGuest = null;
-    
+    var userKey = 'prototype_strategicPlan_' + username;
+
     if (isStorageAvailable('localStorage')) {
         try {
-            if (userKey) {
-                rawUser = localStorage.getItem(userKey);
-            } else {
-                rawGuest = localStorage.getItem(guestKey);
-            }
-            // Always read guest too (we may need it as a fallback or to migrate)
-            if (!rawGuest) rawGuest = localStorage.getItem(guestKey);
+            saved = localStorage.getItem(userKey);
         } catch (e) {
             console.log('localStorage getItem failed');
         }
     }
-    
-    // Pick newest valid save between user + guest (prevents blank/old overwriting)
-    function parseMaybe(raw) {
-        if (!raw) return null;
-        try { return JSON.parse(raw); } catch (e) { return null; }
-    }
-    var userObj = parseMaybe(rawUser);
-    var guestObj = parseMaybe(rawGuest);
-    var userTs = userObj && userObj._lastSavedISO ? Date.parse(userObj._lastSavedISO) : 0;
-    var guestTs = guestObj && guestObj._lastSavedISO ? Date.parse(guestObj._lastSavedISO) : 0;
 
-    var chosen = null;
-    if (userObj && guestObj) {
-        chosen = (guestTs > userTs) ? guestObj : userObj;
-    } else {
-        chosen = userObj || guestObj || null;
-    }
-
-    if (chosen) {
-        planData = chosen;
-        populateForm();
-
-        // If logged in and user key is missing but guest exists, migrate guest -> user
-        if (userKey && !rawUser && rawGuest) {
-            try { localStorage.setItem(userKey, rawGuest); } catch (e) { /* ignore */ }
+    if (saved) {
+        try {
+            planData = JSON.parse(saved);
+            populateForm();
+            console.log('Loaded user-specific data for:', username);
+        } catch (e) {
+            console.log('Could not parse saved data for user:', username);
         }
+    } else {
+        console.log('No saved data found for user:', username);
     }
 }
 
@@ -5458,12 +5440,16 @@ function initAuth() {
             var sessionData = JSON.parse(session);
             currentUser = sessionData.user;
             isLoggedIn = true;
-            // Auto-load user's data
+            // Auto-load user's data ONLY after confirming login
             loadSavedData();
         } catch (e) {
             console.log('Session invalid');
             logout();
         }
+    } else {
+        // No session - ensure we're in a clean state
+        currentUser = null;
+        isLoggedIn = false;
     }
 }
 
