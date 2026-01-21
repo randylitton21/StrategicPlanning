@@ -864,7 +864,7 @@
 
         // Save data to localStorage with iPhone Safari compatibility (user-specific ONLY)
         function saveData() {
-            console.log('Product Canvas saveData() called');
+            console.log('Product Canvas saveData() called from:', new Error().stack.split('\n')[2]);
 
             // If we're in the middle of a logout/reset flow, don't overwrite saved data with blanks
             if (window.__suppressStrategicPlanAutosave) {
@@ -1551,18 +1551,19 @@
 
         // Setup event listeners for auto-save
         function setupEventListeners() {
-            console.log('Setting up Product Canvas autosave listeners...');
+            console.log('Product Canvas: Checking existing inline save handlers...');
             var inputs = document.querySelectorAll('input, textarea, select');
-            console.log('Found', inputs.length, 'form elements to attach listeners to');
+            console.log('Found', inputs.length, 'form elements with potential inline handlers');
+
+            // Check if elements already have inline oninput handlers
             for (var i = 0; i < inputs.length; i++) {
-                inputs[i].addEventListener('input', function() {
-                    console.log('Product Canvas input event fired, calling saveData()');
-                    saveData();
-                });
-                inputs[i].addEventListener('change', function() {
-                    console.log('Product Canvas change event fired, calling saveData()');
-                    saveData();
-                });
+                if (inputs[i].hasAttribute('oninput')) {
+                    console.log('Element', inputs[i].id, 'has inline oninput handler:', inputs[i].getAttribute('oninput'));
+                } else {
+                    console.log('Element', inputs[i].id, 'missing inline oninput handler - adding one');
+                    // Add missing handler if not present
+                    inputs[i].setAttribute('oninput', 'saveData()');
+                }
             }
         }
 
@@ -1592,12 +1593,16 @@
 
             // Save data before page unload (important for iPhone Safari)
             window.addEventListener('beforeunload', function() {
+                console.log('Product Canvas: beforeunload event, saving data');
                 saveData();
             });
 
             // Also save on page visibility change (when user switches tabs/apps on mobile)
             document.addEventListener('visibilitychange', function() {
-                saveData();
+                if (document.hidden) {
+                    console.log('Product Canvas: visibilitychange (hidden), saving data');
+                    saveData();
+                }
             });
         }
     </script>
