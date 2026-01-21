@@ -2572,96 +2572,62 @@ function restoreAllPrototypeData(allData) {
     }
     
     var username = currentUser.username;
+
+    // IMPORTANT: Don't overwrite newer local data with older profile data.
+    function parseJsonSafe(raw) {
+        try { return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
+    }
+    function getTs(obj, fallbackIso) {
+        if (!obj) return 0;
+        var iso = obj._lastSavedISO || obj.lastSaved || obj.updatedAt || obj.createdAt || fallbackIso || null;
+        var t = iso ? Date.parse(iso) : 0;
+        return isNaN(t) ? 0 : t;
+    }
+    function upsertIfNewer(storageKey, incomingObj) {
+        if (!incomingObj) return;
+        try {
+            var existingRaw = localStorage.getItem(storageKey);
+            var existingObj = parseJsonSafe(existingRaw);
+            var incomingTs = getTs(incomingObj, allData.lastSaved);
+            var existingTs = getTs(existingObj, null);
+            // Only overwrite if incoming is newer, or existing is missing/invalid.
+            if (!existingObj || incomingTs >= existingTs) {
+                localStorage.setItem(storageKey, JSON.stringify(incomingObj));
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
     
     // Restore strategic plan
-    if (allData.strategicPlan) {
-        try {
-            localStorage.setItem('prototype_strategicPlan_' + username, JSON.stringify(allData.strategicPlan));
-        } catch (e) {
-            console.log('Could not restore strategic plan data');
-        }
-    }
+    upsertIfNewer('prototype_strategicPlan_' + username, allData.strategicPlan);
     
     // Restore saved goals
-    if (allData.savedGoals) {
-        try {
-            localStorage.setItem('prototype_savedGoals_' + username, JSON.stringify(allData.savedGoals));
-        } catch (e) {
-            console.log('Could not restore saved goals');
-        }
-    }
+    upsertIfNewer('prototype_savedGoals_' + username, allData.savedGoals);
     
     // Restore strategic canvas
-    if (allData.strategicCanvas) {
-        try {
-            localStorage.setItem('strategicCanvasData_' + username, JSON.stringify(allData.strategicCanvas));
-        } catch (e) {
-            console.log('Could not restore strategic canvas data');
-        }
-    }
+    upsertIfNewer('strategicCanvasData_' + username, allData.strategicCanvas);
     
     // Restore goal setting template
-    if (allData.goalSettingTemplate) {
-        try {
-            localStorage.setItem('goalSettingTemplateData_' + username, JSON.stringify(allData.goalSettingTemplate));
-        } catch (e) {
-            console.log('Could not restore goal setting template data');
-        }
-    }
+    upsertIfNewer('goalSettingTemplateData_' + username, allData.goalSettingTemplate);
     
     // Restore strategic action plan
-    if (allData.strategicActionPlan) {
-        try {
-            localStorage.setItem('strategicActionPlanData_' + username, JSON.stringify(allData.strategicActionPlan));
-        } catch (e) {
-            console.log('Could not restore strategic action plan data');
-        }
-    }
+    upsertIfNewer('strategicActionPlanData_' + username, allData.strategicActionPlan);
     
     // Restore Porter's Five Forces
-    if (allData.portersFiveForces) {
-        try {
-            localStorage.setItem('portersFiveForcesData_' + username, JSON.stringify(allData.portersFiveForces));
-        } catch (e) {
-            console.log('Could not restore Porter\'s Five Forces data');
-        }
-    }
+    upsertIfNewer('portersFiveForcesData_' + username, allData.portersFiveForces);
     
     // Restore Contingency Plan data
-    if (allData.contingencyPlan) {
-        try {
-            localStorage.setItem('contingencyPlanData_' + username, JSON.stringify(allData.contingencyPlan));
-        } catch (e) {
-            console.log('Could not restore contingency plan data');
-        }
-    }
+    upsertIfNewer('contingencyPlanData_' + username, allData.contingencyPlan);
     
     // Restore Contingency Plan metadata
-    if (allData.contingencyPlanMetadata) {
-        try {
-            localStorage.setItem('contingencyPlanMetadata_' + username, JSON.stringify(allData.contingencyPlanMetadata));
-        } catch (e) {
-            console.log('Could not restore contingency plan metadata');
-        }
-    }
+    upsertIfNewer('contingencyPlanMetadata_' + username, allData.contingencyPlanMetadata);
     
     // Restore Contingency Plan category data
-    if (allData.contingencyCategoryData) {
-        try {
-            localStorage.setItem('contingencyCategoryData_' + username, JSON.stringify(allData.contingencyCategoryData));
-        } catch (e) {
-            console.log('Could not restore contingency category data');
-        }
-    }
+    upsertIfNewer('contingencyCategoryData_' + username, allData.contingencyCategoryData);
     
     // Restore Product Canvas data
-    if (allData.productCanvas) {
-        try {
-            localStorage.setItem('productCanvas_' + username, JSON.stringify(allData.productCanvas));
-        } catch (e) {
-            console.log('Could not restore product canvas data');
-        }
-    }
+    upsertIfNewer('productCanvas_' + username, allData.productCanvas);
     
     // Trigger page reload to show loaded data (if on a prototype page)
     if (window.location.pathname.includes('prototype')) {
