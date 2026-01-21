@@ -656,6 +656,7 @@
 
         <!-- Control Buttons -->
         <div class="control-buttons">
+            <button class="btn-control success" onclick="saveData()" style="background: #28a745;">💾 Save Data</button>
             <button class="btn-control info" onclick="showLearnMenu()">📖 Learn</button>
             <button class="btn-control success" onclick="toggleExamplesMode()" id="examplesModeBtn">👁️ View Examples</button>
             <div class="export-options">
@@ -862,21 +863,13 @@
             return null;
         }
 
-        // Save data to localStorage with iPhone Safari compatibility (user-specific ONLY)
+        // Save data to localStorage (user-specific)
         function saveData() {
-            console.log('Product Canvas saveData() called from:', new Error().stack.split('\n')[2]);
-
-            // If we're in the middle of a logout/reset flow, don't overwrite saved data with blanks
-            if (window.__suppressStrategicPlanAutosave) {
-                console.log('Product Canvas: Suppressing save due to logout/reset flow');
-                return;
-            }
-
             var username = getCurrentUsername();
-            console.log('Product Canvas saveData username:', username);
 
-            // ONLY save data if user is logged in
+            // Only save if user is logged in
             if (!username) {
+                alert('Please log in to save your Product Canvas data.');
                 return;
             }
 
@@ -894,73 +887,46 @@
                 ourWeaknesses: document.getElementById('ourWeaknesses').value,
                 sustainableAdvantage: document.getElementById('sustainableAdvantage').value,
                 marketTrends: document.getElementById('marketTrends').value,
-                risks: document.getElementById('risks').value
+                risks: document.getElementById('risks').value,
+                _lastSavedISO: new Date().toISOString()
             };
 
-            // Add timestamp for conflict resolution
-            canvasData._lastSavedISO = new Date().toISOString();
+            try {
+                const storageKey = 'productCanvasData_' + username;
+                localStorage.setItem(storageKey, JSON.stringify(canvasData));
 
-            // Save to user-specific key ONLY
-            var dataString = JSON.stringify(canvasData);
-            var saved = false;
-            var storageKey = 'productCanvasData_' + username;
-
-            if (isStorageAvailable('localStorage')) {
-                try {
-                    localStorage.setItem(storageKey, dataString);
-                    saved = true;
-                    console.log('Product Canvas: Successfully saved data to key:', storageKey);
-                } catch (e) {
-                    console.log('Product Canvas: localStorage setItem failed for user:', username, 'error:', e);
-                }
-            } else {
-                console.log('Product Canvas: localStorage not available');
-            }
-
-            if (saved) {
-                console.log('Product Canvas: Showing save indicator');
                 // Show save indicator
                 const indicator = document.getElementById('saveIndicator');
                 if (indicator) {
+                    indicator.textContent = 'Data Saved!';
                     indicator.classList.add('show');
                     setTimeout(() => {
                         indicator.classList.remove('show');
                     }, 2000);
                 }
+
+                console.log('Product Canvas saved for user:', username);
+            } catch (e) {
+                alert('Failed to save data: ' + e.message);
+                console.error('Save failed:', e);
             }
         }
 
-        // Load saved data from localStorage (user-specific ONLY - no guest fallback)
+        // Load saved data from localStorage (user-specific ONLY)
         function loadData() {
-            console.log('Product Canvas loadData() called');
             var username = getCurrentUsername();
-            console.log('Product Canvas loadData username:', username);
 
             // ONLY load data if user is logged in - never load guest data
             if (!username) {
-                console.log('Product Canvas: No user logged in, skipping load');
                 return;
             }
 
-            var saved = null;
-            var userKey = 'productCanvasData_' + username;
-            console.log('Product Canvas: Looking for data with key:', userKey);
+            try {
+                const userKey = 'productCanvasData_' + username;
+                const saved = localStorage.getItem(userKey);
 
-            if (isStorageAvailable('localStorage')) {
-                try {
-                    saved = localStorage.getItem(userKey);
-                    console.log('Product Canvas: Retrieved data from localStorage:', saved ? 'found' : 'not found');
-                } catch (e) {
-                    console.log('Product Canvas: localStorage getItem failed:', e);
-                }
-            } else {
-                console.log('Product Canvas: localStorage not available');
-            }
-
-            if (saved) {
-                try {
+                if (saved) {
                     const canvasData = JSON.parse(saved);
-                    console.log('Product Canvas: Successfully parsed saved data, populating form fields');
                     document.getElementById('targetMarkets').value = canvasData.targetMarkets || '';
                     document.getElementById('salesChannels').value = canvasData.salesChannels || '';
                     document.getElementById('marketingChannels').value = canvasData.marketingChannels || '';
@@ -975,11 +941,10 @@
                     document.getElementById('sustainableAdvantage').value = canvasData.sustainableAdvantage || '';
                     document.getElementById('marketTrends').value = canvasData.marketTrends || '';
                     document.getElementById('risks').value = canvasData.risks || '';
-                } catch (e) {
-                    console.log('Product Canvas: Could not parse saved data:', e);
+                    console.log('Product Canvas loaded for user:', username);
                 }
-            } else {
-                console.log('Product Canvas: No saved data found for user');
+            } catch (e) {
+                console.error('Failed to load Product Canvas data:', e);
             }
         }
 
@@ -1549,61 +1514,13 @@
             }
         }
 
-        // Setup event listeners for auto-save
-        function setupEventListeners() {
-            console.log('Product Canvas: Checking existing inline save handlers...');
-            var inputs = document.querySelectorAll('input, textarea, select');
-            console.log('Found', inputs.length, 'form elements with potential inline handlers');
-
-            // Check if elements already have inline oninput handlers
-            for (var i = 0; i < inputs.length; i++) {
-                if (inputs[i].hasAttribute('oninput')) {
-                    console.log('Element', inputs[i].id, 'has inline oninput handler:', inputs[i].getAttribute('oninput'));
-                } else {
-                    console.log('Element', inputs[i].id, 'missing inline oninput handler - adding one');
-                    // Add missing handler if not present
-                    inputs[i].setAttribute('oninput', 'saveData()');
-                }
-            }
-        }
+        // Product Canvas relies on inline oninput="saveData()" handlers in HTML
 
         // Initialize on page load
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                initAuthAndData();
-                setupEventListeners();
-
-                // Save data before page unload (important for iPhone Safari)
-                window.addEventListener('beforeunload', function() {
-                    console.log('Product Canvas: beforeunload event, saving data');
-                    saveData();
-                });
-
-                // Also save on page visibility change (when user switches tabs/apps on mobile)
-                document.addEventListener('visibilitychange', function() {
-                    if (document.hidden) {
-                        console.log('Product Canvas: visibilitychange (hidden), saving data');
-                        saveData();
-                    }
-                });
-            });
+            document.addEventListener('DOMContentLoaded', initAuthAndData);
         } else {
             initAuthAndData();
-            setupEventListeners();
-
-            // Save data before page unload (important for iPhone Safari)
-            window.addEventListener('beforeunload', function() {
-                console.log('Product Canvas: beforeunload event, saving data');
-                saveData();
-            });
-
-            // Also save on page visibility change (when user switches tabs/apps on mobile)
-            document.addEventListener('visibilitychange', function() {
-                if (document.hidden) {
-                    console.log('Product Canvas: visibilitychange (hidden), saving data');
-                    saveData();
-                }
-            });
         }
     </script>
 </body>
