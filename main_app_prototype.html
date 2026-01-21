@@ -67,6 +67,9 @@
                 <button class="btn-control" onclick="showLearnMenu()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
                     📖 Learn
                 </button>
+                <button class="btn-control" onclick="triggerImportWordExport()" style="background: #9c27b0; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                    📥 Import Plan
+                </button>
                 <button class="btn-control" onclick="toggleExamplesMode()" id="examplesModeBtn" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
                     👁️ View Examples
                 </button>
@@ -536,8 +539,6 @@
                             <button class="export-option" onclick="exportPlan('txt')">Export as Text (.txt)</button>
                             <button class="export-option" onclick="exportPlan('docx')">Export as Word (.docx)</button>
                             <button class="export-option" onclick="exportPlan('xlsx')">Export as Excel (.xlsx)</button>
-                            <div style="height: 1px; background: rgba(0,0,0,0.08); margin: 6px 0;"></div>
-                            <button class="export-option" onclick="triggerImportWordExport()">Import from Word Export (.doc/.docx)</button>
                         </div>
                     </div>
                 </div>
