@@ -994,25 +994,25 @@
         const videoLinks = {
             'what-is-product-canvas': {
                 url: 'https://www.youtube.com/watch?v=iuYlGRnC7J8',
-                description: 'Harvard Business Review: "A Plan Is Not a Strategy" - Learn strategic thinking principles that apply to product canvas development.',
+                description: '"A Plan Is Not a Strategy" - Learn strategic thinking principles that apply to product canvas development.',
                 basicUrl: 'https://www.youtube.com/watch?v=HQ6348u6o08',
                 basicDescription: 'Basic Tutorial: Learn how to use product canvas frameworks to visualize and organize your product strategy effectively - perfect for beginners.'
             },
             'how-to-use': {
                 url: 'https://www.youtube.com/watch?v=iuYlGRnC7J8',
-                description: 'Harvard Business Review: Strategic insights on developing comprehensive product strategies and execution plans.',
+                description: 'Strategic insights on developing comprehensive product strategies and execution plans.',
                 basicUrl: 'https://www.youtube.com/watch?v=HQ6348u6o08',
                 basicDescription: 'Basic Tutorial: Watch this step-by-step guide on how to use the Product Canvas to develop comprehensive product strategies.'
             },
             'competitive-analysis': {
                 url: 'https://www.youtube.com/watch?v=iuYlGRnC7J8',
-                description: 'Harvard Business Review: Learn strategic approaches to competitive analysis and market positioning.',
+                description: 'Learn strategic approaches to competitive analysis and market positioning.',
                 basicUrl: 'https://www.youtube.com/watch?v=HJJ5I8P2qWA',
                 basicDescription: 'Basic Tutorial: Learn how to conduct thorough competitive analysis to position your product effectively in the market.'
             },
             'target-markets': {
                 url: 'https://www.youtube.com/watch?v=dbiNhAZlXZk',
-                description: 'Harvard Business Review: Strategic thinking on identifying and understanding target markets and customer segments.',
+                description: 'Strategic thinking on identifying and understanding target markets and customer segments.',
                 basicUrl: 'https://www.youtube.com/watch?v=HQ6348u6o08',
                 basicDescription: 'Basic Tutorial: Discover how to identify and analyze target markets to better understand your customers and their needs.'
             }
@@ -1022,6 +1022,12 @@
         function renderVideoLink(contentKey) {
             const video = videoLinks[contentKey];
             if (!video) return '';
+
+            const creator = (video.hbrCreator || video.creator || '').toString();
+            const isHbr = creator.toLowerCase().includes('harvard business review');
+            const headerLabel = isHbr ? '🎓 Harvard Business Review (Recommended):' : '🎓 Recommended Video:';
+            const buttonLabel = isHbr ? 'Watch HBR Video' : 'Watch Video';
+            const desc = isHbr ? (video.description || '') : String(video.description || '').replace(/^Harvard Business Review:\s*/i, '');
             
             let html = `
                 <div class="video-link-section" style="margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--primary-color);">
@@ -1029,12 +1035,12 @@
                         <span>📹</span> Video Tutorials
                     </h4>
                     <div style="margin-bottom: 15px;">
-                        <p style="color: var(--text-secondary); margin-bottom: 8px; font-size: 0.95em; font-weight: 600;">🎓 Harvard Business Review (Recommended):</p>
-                        <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 0.9em;">${video.description}</p>
+                        <p style="color: var(--text-secondary); margin-bottom: 8px; font-size: 0.95em; font-weight: 600;">${headerLabel}</p>
+                        <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 0.9em;">${desc}</p>
                         <a href="${video.url}" target="_blank" rel="noopener noreferrer" 
                            class="video-link-btn" 
                            style="display: inline-flex; align-items: center; gap: 8px; background: #FF0000; color: white; padding: 12px 20px; border-radius: var(--radius-full); text-decoration: none; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(255, 0, 0, 0.3); margin-bottom: 15px;">
-                            <span>▶️</span> Watch HBR Video
+                            <span>▶️</span> ${buttonLabel}
                         </a>
                     </div>`;
             

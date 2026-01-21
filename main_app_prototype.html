@@ -109,14 +109,14 @@
                                 </div>
                                 <div style="padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.1);">
                                     <p style="color: var(--text-secondary); margin-bottom: 8px; font-size: 0.95em; font-weight: 600;">📚 Basic Tutorial (For Beginners):</p>
-                                    <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 0.9em;">Simon Sinek's "Start With Why" - A simple introduction to understanding vision, mission, and values.</p>
-                                    <a href="https://www.youtube.com/watch?v=IPYeCltXpxw" target="_blank" rel="noopener noreferrer" 
+                                    <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 0.9em;">Basic tutorial on defining your purpose (vision, mission, and values).</p>
+                                    <a href="https://www.youtube.com/watch?v=NcWzeUNobks" target="_blank" rel="noopener noreferrer" 
                                        class="video-link-btn" 
                                        style="display: inline-flex; align-items: center; gap: 8px; background: #6B7280; color: white; padding: 12px 20px; border-radius: var(--radius-full); text-decoration: none; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3); margin-bottom: 10px;">
                                         <span>▶️</span> Watch Basic Tutorial
                                     </a>
                                     <div style="margin-top: 8px; font-size: 0.8em; color: var(--text-tertiary); font-style: italic;">
-                                        <p style="margin: 0;"><strong>Video Credit:</strong> Simon Sinek</p>
+                                        <p style="margin: 0;"><strong>Video Credit:</strong> YouTube Creator</p>
                                     </div>
                                 </div>
                                 <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.1); font-size: 0.75em; color: var(--text-tertiary); font-style: italic;">
@@ -296,15 +296,6 @@
                                     <button class="video-toggle-btn" aria-label="Toggle video section">+</button>
                                 </div>
                                 <div class="video-link-content">
-                                <div style="margin-bottom: 15px;">
-                                    <p style="color: var(--text-secondary); margin-bottom: 8px; font-size: 0.95em; font-weight: 600;">🎓 Harvard Business Review (Recommended):</p>
-                                    <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 0.9em;">Harvard Business Review: Strategic insights on conducting comprehensive analysis to inform your SWOT assessment.</p>
-                                    <a href="https://www.youtube.com/watch?v=iuYlGRnC7J8" target="_blank" rel="noopener noreferrer" 
-                                       class="video-link-btn" 
-                                       style="display: inline-flex; align-items: center; gap: 8px; background: #FF0000; color: white; padding: 12px 20px; border-radius: var(--radius-full); text-decoration: none; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(255, 0, 0, 0.3); margin-bottom: 15px;">
-                                        <span>▶️</span> Watch HBR Video
-                                    </a>
-                                </div>
                                 <div style="padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.1);">
                                     <p style="color: var(--text-secondary); margin-bottom: 8px; font-size: 0.95em; font-weight: 600;">📚 Basic Tutorial (For Beginners):</p>
                                     <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 0.9em;">Simple step-by-step guide to performing a SWOT analysis for beginners.</p>
@@ -4776,14 +4767,14 @@ const videoLinks = {
         url: 'https://www.youtube.com/watch?v=dbiNhAZlXZk',
         description: 'Harvard Business Review: "Use Strategic Thinking to Create the Life You Want" - Learn how to apply strategic thinking to define your vision and purpose.',
         hbrCreator: 'Harvard Business Review',
-        basicUrl: 'https://www.youtube.com/watch?v=IPYeCltXpxw',
-        basicDescription: 'Basic Tutorial: Simon Sinek\'s "Start With Why" - A simple introduction to understanding vision, mission, and values.',
-        basicCreator: 'Simon Sinek'
+        basicUrl: 'https://www.youtube.com/watch?v=NcWzeUNobks',
+        basicDescription: 'Basic Tutorial: Defining your purpose (vision, mission, and values).',
+        basicCreator: 'YouTube Creator'
     },
     'guide-step4': {
-        url: 'https://www.youtube.com/watch?v=iuYlGRnC7J8',
-        description: 'Harvard Business Review: Strategic insights on conducting comprehensive analysis to inform your SWOT assessment.',
-        hbrCreator: 'Harvard Business Review',
+        url: 'https://www.youtube.com/watch?v=mR9eICQJLXA',
+        description: 'Learn how to conduct a comprehensive SWOT analysis with practical examples and step-by-step guidance.',
+        hbrCreator: 'Virtual Strategist',
         basicUrl: 'https://www.youtube.com/watch?v=I_6AVRGLXGA',
         basicDescription: 'Basic Tutorial: Simple step-by-step guide to performing a SWOT analysis for beginners.',
         basicCreator: 'B2U - Business To You',
@@ -4999,6 +4990,15 @@ const learnContent = {
 function renderVideoLink(contentKey) {
     const video = videoLinks[contentKey];
     if (!video) return '';
+
+    const creator = (video.hbrCreator || video.creator || '').toString();
+    const isHbr = creator.toLowerCase().includes('harvard business review');
+    const headerLabel = isHbr ? '🎓 Harvard Business Review (Recommended):' : '🎓 Recommended Video:';
+    const buttonLabel = isHbr ? 'Watch HBR Video' : 'Watch Video';
+    const creditLabel = creator || (isHbr ? 'Harvard Business Review' : 'YouTube Creator');
+
+    // If this video isn't actually HBR, strip any accidental "Harvard Business Review:" prefix in description.
+    const desc = isHbr ? (video.description || '') : String(video.description || '').replace(/^Harvard Business Review:\s*/i, '');
     
     let html = `
         <div class="video-link-section collapsible collapsed">
@@ -5010,15 +5010,15 @@ function renderVideoLink(contentKey) {
             </div>
             <div class="video-link-content">
             <div style="margin-bottom: 15px;">
-                <p style="color: var(--text-secondary); margin-bottom: 8px; font-size: 0.95em; font-weight: 600;">🎓 Harvard Business Review (Recommended):</p>
-                <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 0.9em;">${video.description}</p>
+                <p style="color: var(--text-secondary); margin-bottom: 8px; font-size: 0.95em; font-weight: 600;">${headerLabel}</p>
+                <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 0.9em;">${desc}</p>
                 <a href="${video.url}" target="_blank" rel="noopener noreferrer" 
                    class="video-link-btn" 
                    style="display: inline-flex; align-items: center; gap: 8px; background: #FF0000; color: white; padding: 12px 20px; border-radius: var(--radius-full); text-decoration: none; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(255, 0, 0, 0.3); margin-bottom: 10px;">
-                    <span>▶️</span> Watch HBR Video
+                    <span>▶️</span> ${buttonLabel}
                 </a>
                 <div style="margin-top: 8px; font-size: 0.8em; color: var(--text-tertiary); font-style: italic;">
-                    <p style="margin: 0;"><strong>Video Credit:</strong> ${video.hbrCreator || 'Harvard Business Review'}</p>
+                    <p style="margin: 0;"><strong>Video Credit:</strong> ${creditLabel}</p>
                 </div>
             </div>`;
     
