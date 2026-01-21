@@ -2508,7 +2508,7 @@ function collectAllPrototypeData() {
     
     // Get Product Canvas data (user-specific)
     try {
-        var productCanvasData = localStorage.getItem('productCanvas_' + username);
+        var productCanvasData = localStorage.getItem('productCanvasData_' + username);
         if (productCanvasData) {
             allData.productCanvas = JSON.parse(productCanvasData);
         }
