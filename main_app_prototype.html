@@ -3863,7 +3863,9 @@ function generateWordDocument() {
     html += 'th { background-color: #0f4c75; color: white; font-weight: bold; padding: 8pt; border: 1px solid #000000; text-align: left; }\n';
     html += 'td { padding: 6pt; border: 1px solid #dddddd; font-size: 11pt; }\n';
     html += 'tr:nth-child(even) { background-color: #f8f9fa; }\n';
-    html += 'p { margin: 6pt 0; text-align: justify; }\n';
+    // Word's justification often creates huge inter-word gaps (especially with manual line breaks),
+    // so keep paragraph text left-aligned in the exported document.
+    html += 'p { margin: 6pt 0; text-align: left; word-spacing: normal; }\n';
     html += 'ul { margin: 8pt 0; padding-left: 25pt; }\n';
     html += 'li { margin: 4pt 0; line-height: 1.6; }\n';
     html += '.page-break { page-break-before: always; }\n';
