@@ -854,14 +854,10 @@
                 var session = sessionStorage.getItem('prototype_userSession');
                 if (session) {
                     var sessionData = JSON.parse(session);
-                    var username = (sessionData && sessionData.user && sessionData.user.username) || sessionData.username || null;
-                    console.log('Product Canvas getCurrentUsername result:', username, 'from session:', sessionData);
-                    return username;
-                } else {
-                    console.log('Product Canvas: No session found in sessionStorage');
+                    return (sessionData && sessionData.user && sessionData.user.username) || sessionData.username || null;
                 }
             } catch (e) {
-                console.log('Product Canvas: Could not get username from session:', e);
+                console.log('Product Canvas: Could not get username from session');
             }
             return null;
         }
@@ -872,11 +868,9 @@
             if (window.__suppressStrategicPlanAutosave) return;
 
             var username = getCurrentUsername();
-            console.log('Product Canvas saveData called, username:', username);
 
             // ONLY save data if user is logged in
             if (!username) {
-                console.log('Product Canvas: No user logged in - not saving data');
                 return;
             }
 
@@ -926,26 +920,21 @@
 
         // Load saved data from localStorage (user-specific ONLY - no guest fallback)
         function loadData() {
-            console.log('Product Canvas loadData called');
             var username = getCurrentUsername();
-            console.log('Product Canvas loadData username result:', username);
 
             // ONLY load data if user is logged in - never load guest data
             if (!username) {
-                console.log('Product Canvas: No user logged in - starting with blank form');
                 return;
             }
 
             var saved = null;
             var userKey = 'productCanvasData_' + username;
-            console.log('Product Canvas: Looking for data with key:', userKey);
 
             if (isStorageAvailable('localStorage')) {
                 try {
                     saved = localStorage.getItem(userKey);
-                    console.log('Product Canvas: Found saved data?', !!saved);
                 } catch (e) {
-                    console.log('Product Canvas: localStorage getItem failed:', e);
+                    console.log('Product Canvas: localStorage getItem failed');
                 }
             }
 
@@ -966,12 +955,9 @@
                     document.getElementById('sustainableAdvantage').value = canvasData.sustainableAdvantage || '';
                     document.getElementById('marketTrends').value = canvasData.marketTrends || '';
                     document.getElementById('risks').value = canvasData.risks || '';
-                    console.log('Product Canvas: Successfully loaded user-specific data for:', username);
                 } catch (e) {
-                    console.log('Product Canvas: Could not parse saved data for user:', username, 'error:', e);
+                    console.log('Product Canvas: Could not parse saved data');
                 }
-            } else {
-                console.log('Product Canvas: No saved data found for user:', username, 'with key:', userKey);
             }
         }
 
@@ -1527,39 +1513,28 @@
 
         // Initialize authentication and data loading on page load
         function initAuthAndData() {
-            console.log('Product Canvas: initAuthAndData called');
-
             // Check if user is logged in (sessionStorage)
             var session = sessionStorage.getItem('prototype_userSession');
-            console.log('Product Canvas: Raw session from sessionStorage:', session);
-
             if (session) {
                 try {
                     var sessionData = JSON.parse(session);
-                    console.log('Product Canvas: Parsed session data:', sessionData);
-                    console.log('Product Canvas: User session found for:', sessionData.user ? sessionData.user.username : 'unknown');
                     loadData(); // Load user's data
                 } catch (e) {
-                    console.log('Product Canvas: Invalid session, starting with blank form. Error:', e);
                     loadData(); // This will detect no user and show blank form
                 }
             } else {
-                console.log('Product Canvas: No user session found in sessionStorage');
                 loadData(); // This will detect no user and show blank form
             }
         }
 
         // Setup event listeners for auto-save
         function setupEventListeners() {
-            console.log('Product Canvas: Setting up autosave event listeners');
             var inputs = document.querySelectorAll('input, textarea, select');
             for (var i = 0; i < inputs.length; i++) {
                 inputs[i].addEventListener('input', function() {
-                    console.log('Product Canvas: Input event triggered, calling saveData()');
                     saveData();
                 });
                 inputs[i].addEventListener('change', function() {
-                    console.log('Product Canvas: Change event triggered, calling saveData()');
                     saveData();
                 });
             }
