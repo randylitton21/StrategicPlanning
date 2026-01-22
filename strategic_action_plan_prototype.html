@@ -432,13 +432,45 @@
 
         /* Action Step Headers */
         .action-step-header {
-            padding: 20px;
+            padding: 15px;
             color: white;
             font-weight: bold;
-            font-size: 1.1em;
             text-align: center;
             border-radius: 6px;
             margin-bottom: 2px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 70px;
+        }
+
+        .step-number-fine {
+            font-size: 0.75em;
+            opacity: 0.7;
+            font-weight: normal;
+        }
+
+        .step-title-input {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            padding: 6px 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .step-title-input:focus {
+            outline: 2px solid rgba(255, 255, 255, 0.8);
+            background: white;
+        }
+
+        .step-title-input::placeholder {
+            color: #666;
+            font-style: italic;
         }
 
         .action-step-1 {
@@ -1553,6 +1585,7 @@
                 const newStepNum = goal.actionSteps.length + 1;
                 const newStep = {
                     id: newStepNum,
+                    title: '',
                     responsible: '',
                     resources: '',
                     progress: '',
@@ -1779,28 +1812,34 @@
                         if (current.tagName === 'P' && !foundGoalText) {
                             // First P is likely the goal text
                             var goalText = textOf(current);
-                            if (goalText) {
+                            if (goalText && !goalText.includes('Goal Description:')) {
                                 goal.goal = goalText;
                                 foundGoalText = true;
+                            } else if (goalText && goalText.includes('Goal Description:')) {
+                                // Skip the "Goal Description:" label
+                                continue;
                             }
-                        } else if (current.tagName === 'H3') {
-                            // H3 indicates a new action step
-                            var stepTitle = textOf(current);
-                            if (stepTitle) {
-                                // Find the next P for the step content
-                                var nextP = current;
-                                while (nextP = nextP.nextElementSibling) {
-                                    if (nextP.tagName === 'P') {
-                                        var stepContent = textOf(nextP);
-                                        goal.actionSteps.push({
-                                            step: stepIndex,
-                                            title: stepTitle,
-                                            content: stepContent
-                                        });
-                                        stepIndex++;
-                                        break;
+                        } else if (current.tagName === 'TABLE') {
+                            // Table contains action steps
+                            var rows = current.querySelectorAll('tr');
+                            for (var rowIndex = 1; rowIndex < rows.length; rowIndex++) { // Skip header row
+                                var cells = rows[rowIndex].querySelectorAll('td');
+                                if (cells.length >= 7) {
+                                    var stepTitle = textOf(cells[1]) || '';
+                                    // If it's just the default "Action Step X", treat it as empty
+                                    if (stepTitle.match(/^Action Step \d+$/)) {
+                                        stepTitle = '';
                                     }
-                                    if (nextP.tagName === 'H2' || nextP.tagName === 'H3') break;
+                                    goal.actionSteps.push({
+                                        id: stepIndex,
+                                        title: stepTitle,
+                                        responsible: textOf(cells[2]) || '',
+                                        resources: textOf(cells[3]) || '',
+                                        progress: textOf(cells[4]) || '',
+                                        completion: textOf(cells[5]) || '',
+                                        evidence: textOf(cells[6]) || ''
+                                    });
+                                    stepIndex++;
                                 }
                             }
                         }
@@ -2066,6 +2105,19 @@
             }
         }
 
+        // Update step title
+        function updateStepTitle(event) {
+            const input = event.target;
+            const goalId = input.getAttribute('data-goal-id');
+            const stepIndex = parseInt(input.getAttribute('data-step-index'));
+
+            const goal = actionPlanData.goals.find(g => g.id === goalId);
+            if (goal && goal.actionSteps[stepIndex]) {
+                goal.actionSteps[stepIndex].title = input.value.trim();
+                saveData();
+            }
+        }
+
         // Send an Action Plan goal back to Strategic Planning Step 5 (creates/updates a goal tab there)
         function sendGoalToStrategicPlanStep5(goalId) {
             try {
@@ -2277,7 +2329,25 @@
             for (let i = 0; i < numSteps; i++) {
                 const header = document.createElement('div');
                 header.className = `action-step-header ${getStepColorClass(i)}`;
-                header.textContent = `Action Step ${i + 1}`;
+
+                // Fine print step number
+                const stepNumber = document.createElement('div');
+                stepNumber.className = 'step-number-fine';
+                stepNumber.textContent = `Action Step ${i + 1}`;
+                header.appendChild(stepNumber);
+
+                // Custom title input
+                const titleInput = document.createElement('input');
+                titleInput.type = 'text';
+                titleInput.className = 'step-title-input';
+                titleInput.placeholder = 'Name this step...';
+                titleInput.value = goal.actionSteps[i] ? (goal.actionSteps[i].title || '') : '';
+                titleInput.setAttribute('data-goal-id', goal.id);
+                titleInput.setAttribute('data-step-index', i);
+                titleInput.onchange = updateStepTitle;
+                titleInput.oninput = updateStepTitle;
+                header.appendChild(titleInput);
+
                 grid.appendChild(header);
             }
             
@@ -3422,9 +3492,10 @@
                     text += '-'.repeat(50) + '\n';
                     
                     goal.actionSteps.forEach((step, stepIndex) => {
-                        const hasData = step.responsible || step.resources || step.progress || step.completion || step.evidence;
+                        const hasData = step.responsible || step.resources || step.progress || step.completion || step.evidence || step.title;
                         if (hasData) {
-                            text += '\nAction Step ' + (stepIndex + 1) + ':\n';
+                            const stepName = step.title || ('Action Step ' + (stepIndex + 1));
+                            text += '\n' + stepName + ':\n';
                             if (step.responsible) text += '  Responsible: ' + step.responsible.trim() + '\n';
                             if (step.resources) text += '  Resources: ' + step.resources.trim() + '\n';
                             if (step.progress) text += '  Progress: ' + step.progress.trim() + '\n';
@@ -3497,13 +3568,14 @@
                     if (hasAnyData) {
                         html += '<h3>Action Steps</h3>\n';
                         html += '<table>\n';
-                        html += '<tr><th>Step</th><th>Responsible</th><th>Resources</th><th>Progress</th><th>Completion</th><th>Evidence</th></tr>\n';
-                        
+                        html += '<tr><th>Step</th><th>Title</th><th>Responsible</th><th>Resources</th><th>Progress</th><th>Completion</th><th>Evidence</th></tr>\n';
+
                         goal.actionSteps.forEach((step, stepIndex) => {
-                            const hasData = step.responsible || step.resources || step.progress || step.completion || step.evidence;
+                            const hasData = step.responsible || step.resources || step.progress || step.completion || step.evidence || step.title;
                             if (hasData) {
                                 html += '<tr>\n';
                                 html += '<td>' + (stepIndex + 1) + '</td>\n';
+                                html += '<td>' + escapeHtml(step.title || ('Action Step ' + (stepIndex + 1))) + '</td>\n';
                                 html += '<td>' + escapeHtml(step.responsible || '') + '</td>\n';
                                 html += '<td>' + formatTextForWord(step.resources || '') + '</td>\n';
                                 html += '<td>' + formatTextForWord(step.progress || '') + '</td>\n';
@@ -3565,34 +3637,35 @@
             html += '</style>\n</head>\n<body>\n';
             html += '<table>\n';
             
-            html += '<tr><td colspan="6" class="header-cell">STRATEGIC ACTION PLAN</td></tr>\n';
-            html += '<tr class="meta-row"><td colspan="6" style="text-align: center; padding: 5px;">Generated: ' + date + '</td></tr>\n';
+            html += '<tr><td colspan="7" class="header-cell">STRATEGIC ACTION PLAN</td></tr>\n';
+            html += '<tr class="meta-row"><td colspan="7" style="text-align: center; padding: 5px;">Generated: ' + date + '</td></tr>\n';
             html += '<tr><td colspan="6" style="height: 10px; border: none;"></td></tr>\n';
             
             if (!actionPlanData.goals || actionPlanData.goals.length === 0) {
-                html += '<tr><td colspan="6" style="text-align: center; padding: 20px;">No goals defined.</td></tr>\n';
+                html += '<tr><td colspan="7" style="text-align: center; padding: 20px;">No goals defined.</td></tr>\n';
                 html += '</table>\n</body>\n</html>\n';
                 return html;
             }
             
             actionPlanData.goals.forEach((goal, goalIndex) => {
-                html += '<tr><td colspan="6" class="section-header">Goal ' + (goalIndex + 1) + ': ' + escapeHtml(goal.name || 'Untitled Goal') + '</td></tr>\n';
-                
+                html += '<tr><td colspan="7" class="section-header">Goal ' + (goalIndex + 1) + ': ' + escapeHtml(goal.name || 'Untitled Goal') + '</td></tr>\n';
+
                 if (goal.goal && goal.goal.trim()) {
-                    html += '<tr><td colspan="6" style="font-weight: bold; background-color: #f0f0f0;">Goal Description:</td></tr>\n';
-                    html += '<tr><td colspan="6" class="data-cell">' + formatTextForExcel(goal.goal.trim()) + '</td></tr>\n';
+                    html += '<tr><td colspan="7" style="font-weight: bold; background-color: #f0f0f0;">Goal Description:</td></tr>\n';
+                    html += '<tr><td colspan="7" class="data-cell">' + formatTextForExcel(goal.goal.trim()) + '</td></tr>\n';
                 }
                 
                 if (goal.actionSteps && goal.actionSteps.length > 0) {
-                    const hasAnyData = goal.actionSteps.some(step => step.responsible || step.resources || step.progress || step.completion || step.evidence);
+                    const hasAnyData = goal.actionSteps.some(step => step.responsible || step.resources || step.progress || step.completion || step.evidence || step.title);
                     if (hasAnyData) {
-                        html += '<tr><th>Step</th><th>Responsible</th><th>Resources</th><th>Progress</th><th>Completion</th><th>Evidence</th></tr>\n';
-                        
+                        html += '<tr><th>Step</th><th>Title</th><th>Responsible</th><th>Resources</th><th>Progress</th><th>Completion</th><th>Evidence</th></tr>\n';
+
                         goal.actionSteps.forEach((step, stepIndex) => {
-                            const hasData = step.responsible || step.resources || step.progress || step.completion || step.evidence;
+                            const hasData = step.responsible || step.resources || step.progress || step.completion || step.evidence || step.title;
                             if (hasData) {
                                 html += '<tr>\n';
                                 html += '<td style="text-align: center; font-weight: bold;">' + (stepIndex + 1) + '</td>\n';
+                                html += '<td class="data-cell">' + escapeHtml(step.title || ('Action Step ' + (stepIndex + 1))) + '</td>\n';
                                 html += '<td class="data-cell">' + escapeHtml(step.responsible || '') + '</td>\n';
                                 html += '<td class="data-cell">' + formatTextForExcel(step.resources || '') + '</td>\n';
                                 html += '<td class="data-cell">' + formatTextForExcel(step.progress || '') + '</td>\n';
@@ -3604,7 +3677,7 @@
                     }
                 }
                 
-                html += '<tr><td colspan="6" style="height: 15px; border: none;"></td></tr>\n';
+                html += '<tr><td colspan="7" style="height: 15px; border: none;"></td></tr>\n';
             });
             
             html += '</table>\n</body>\n</html>\n';
