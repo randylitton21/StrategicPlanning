@@ -3440,9 +3440,28 @@
                 yPosition += 10;
             } else {
                 essentials.forEach(expense => {
-                    const freqText = expense.frequency !== 'monthly' ? ` (${expense.frequency}: ${formatCurrency(expense.originalAmount)})` : '';
-                    const descText = expense.description ? `${expense.description}: ` : '';
-                    doc.text(`${descText}${formatCurrency(expense.amount)}${freqText}`, 25, yPosition);
+                    let expenseText = '';
+
+                    // Add frequency prefix if not monthly
+                    if (expense.frequency && expense.frequency !== 'monthly') {
+                        expenseText += expense.frequency.charAt(0).toUpperCase() + expense.frequency.slice(1) + ' ';
+                    }
+
+                    // Add description if available
+                    if (expense.description && expense.description.trim()) {
+                        expenseText += expense.description + ': ';
+                    } else {
+                        expenseText += 'Expense: ';
+                    }
+
+                    // Add the entered amount and monthly equivalent
+                    if (expense.frequency && expense.frequency !== 'monthly') {
+                        expenseText += `${formatCurrency(expense.originalAmount)} (${formatCurrency(expense.amount)} monthly)`;
+                    } else {
+                        expenseText += formatCurrency(expense.amount);
+                    }
+
+                    doc.text(expenseText, 25, yPosition);
                     yPosition += 8;
                 });
             }
@@ -3467,9 +3486,28 @@
                 nonEssentialsY += 10;
             } else {
                 nonEssentials.forEach(expense => {
-                    const freqText = expense.frequency !== 'monthly' ? ` (${expense.frequency}: ${formatCurrency(expense.originalAmount)})` : '';
-                    const descText = expense.description ? `${expense.description}: ` : '';
-                    doc.text(`${descText}${formatCurrency(expense.amount)}${freqText}`, 115, nonEssentialsY);
+                    let expenseText = '';
+
+                    // Add frequency prefix if not monthly
+                    if (expense.frequency && expense.frequency !== 'monthly') {
+                        expenseText += expense.frequency.charAt(0).toUpperCase() + expense.frequency.slice(1) + ' ';
+                    }
+
+                    // Add description if available
+                    if (expense.description && expense.description.trim()) {
+                        expenseText += expense.description + ': ';
+                    } else {
+                        expenseText += 'Expense: ';
+                    }
+
+                    // Add the entered amount and monthly equivalent
+                    if (expense.frequency && expense.frequency !== 'monthly') {
+                        expenseText += `${formatCurrency(expense.originalAmount)} (${formatCurrency(expense.amount)} monthly)`;
+                    } else {
+                        expenseText += formatCurrency(expense.amount);
+                    }
+
+                    doc.text(expenseText, 115, nonEssentialsY);
                     nonEssentialsY += 8;
                 });
             }
