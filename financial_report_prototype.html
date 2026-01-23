@@ -3385,20 +3385,21 @@
         }
 
         // Export basic report as PDF
-        function exportBasicReport() {
-            const data = collectData();
-            const report = computeReport(data);
+        async function exportBasicReport() {
+            try {
+                const data = collectData();
+                const report = computeReport(data);
 
-            // Separate expenses by category
-            const essentials = data.expenses.filter(exp =>
-                ['Housing', 'Transportation', 'Food', 'Utilities', 'Insurance', 'Healthcare', 'Debt Payments'].includes(exp.fullCategory.split(':')[0])
-            );
-            const nonEssentials = data.expenses.filter(exp =>
-                !['Housing', 'Transportation', 'Food', 'Utilities', 'Insurance', 'Healthcare', 'Debt Payments'].includes(exp.fullCategory.split(':')[0])
-            );
+                // Separate expenses by category
+                const essentials = data.expenses.filter(exp =>
+                    ['Housing', 'Transportation', 'Food', 'Utilities', 'Insurance', 'Healthcare', 'Debt Payments'].includes(exp.fullCategory.split(':')[0])
+                );
+                const nonEssentials = data.expenses.filter(exp =>
+                    !['Housing', 'Transportation', 'Food', 'Utilities', 'Insurance', 'Healthcare', 'Debt Payments'].includes(exp.fullCategory.split(':')[0])
+                );
 
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
 
             // Title
             doc.setFontSize(20);
@@ -3490,8 +3491,12 @@
             doc.setFont('helvetica', 'bold');
             doc.text(bottomLineText, 25, yPosition);
 
-            // Save the PDF
-            doc.save('basic-financial-summary.pdf');
+                // Save the PDF
+                doc.save('basic-financial-summary.pdf');
+            } catch (error) {
+                console.error('Error generating basic report:', error);
+                alert('Sorry, there was an error generating the basic report. Please try again.');
+            }
         }
 
         // Export functionality (placeholder)
