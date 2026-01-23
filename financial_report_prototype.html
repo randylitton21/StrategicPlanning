@@ -1350,8 +1350,10 @@
             const data = collectData();
             const report = computeReport(data);
 
+            console.log('Update calculations:', data, report);
+
             // Update step-specific displays
-            if (currentStep === 'fixed' || currentStep === 'nonEssential') {
+            if (currentStep === 'fixed' || currentStep === 'nonEssential' || currentStep === 'review') {
                 document.getElementById('necessaryTotal').textContent = report.totalNecessary.toFixed(2);
                 document.getElementById('nonNecessaryTotal').textContent = report.totalNonNecessary.toFixed(2);
             }
@@ -1471,9 +1473,9 @@
             const income = parseFloat(document.getElementById('monthlyIncome').value) || 0;
             const expenses = [];
 
-            // Collect necessary expenses
-            const necessaryItems = document.querySelectorAll('#necessaryExpensesContainer .expense-item');
-            necessaryItems.forEach(item => {
+            // Collect fixed expenses
+            const fixedItems = document.querySelectorAll('#fixedExpensesContainer .expense-item');
+            fixedItems.forEach(item => {
                 const description = item.querySelector('.expense-description').value.trim();
                 const amount = parseFloat(item.querySelector('.expense-amount').value) || 0;
 
@@ -1486,8 +1488,8 @@
                 }
             });
 
-            // Collect non-necessary expenses
-            const nonNecessaryItems = document.querySelectorAll('#nonNecessaryExpensesContainer .expense-item');
+            // Collect non-essential expenses
+            const nonEssentialItems = document.querySelectorAll('#nonEssentialExpensesContainer .expense-item');
             nonNecessaryItems.forEach(item => {
                 const description = item.querySelector('.expense-description').value.trim();
                 const amount = parseFloat(item.querySelector('.expense-amount').value) || 0;
