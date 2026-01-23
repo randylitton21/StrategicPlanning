@@ -1842,11 +1842,11 @@
                                 <h4>💡 Think Weekly or Daily? We've Got You Covered!</h4>
                             </div>
                             <div class="frequency-explanation">
-                                <p><strong>Most people naturally think about expenses in daily or weekly terms, not monthly.</strong> That's why we created this flexible input system - enter your spending in whatever timeframe feels most natural to you.</p>
-                                <p><strong>Daily Thinking:</strong> Perfect for small, recurring habits like your morning coffee ($5/day), lunch out ($10/day), or evening snacks ($3/day). These "little" daily expenses often add up to big monthly numbers you might underestimate.</p>
-                                <p><strong>Weekly Thinking:</strong> Great for regular purchases like groceries ($120/week), gas ($60/week), or entertainment ($50/week). Weekly thinking helps you see the true cost of your lifestyle choices.</p>
-                                <p><strong>How it works:</strong> Simply select Daily/Weekly/Monthly from the dropdown and enter the amount as you normally think about it. We'll automatically convert everything to monthly totals for accurate budgeting.</p>
-                                <p><strong>Why this matters:</strong> When you think monthly, small daily habits seem insignificant. But $5/day = $150/month, and $50/week = $200/month. This system helps you see the real impact of your spending patterns and make better financial decisions.</p>
+                                <p><strong>Now let's focus on cutting expenses intelligently.</strong> Research shows that gradual, realistic reductions are far more successful than drastic cuts. Instead of eliminating expenses completely, we'll reduce their frequency to save money while maintaining your lifestyle.</p>
+                                <p><strong>Daily Expenses:</strong> Perfect for habits like coffee ($5/day), snacks ($3/day), or impulse purchases. Cutting from "every day" to "5 days/week" saves $240/year while still enjoying the habit.</p>
+                                <p><strong>Weekly Expenses:</strong> Great for dining out ($80/week), entertainment ($50/week), or shopping. Reducing frequency or percentage gives you control over discretionary spending.</p>
+                                <p><strong>Monthly Expenses:</strong> Essential bills can often be negotiated - insurance, utilities, subscriptions. Even small percentage cuts add up quickly.</p>
+                                <p><strong>Remember:</strong> Essential expenses aren't immune to cuts. Shop around for better rates, bundle services, or eliminate unnecessary add-ons. Every dollar saved improves your financial health.</p>
                             </div>
                         </div>
                         <div class="hints-section">
@@ -1924,11 +1924,11 @@
                                 <h4>💡 Think Weekly or Daily? We've Got You Covered!</h4>
                             </div>
                             <div class="frequency-explanation">
-                                <p><strong>Most people naturally think about expenses in daily or weekly terms, not monthly.</strong> That's why we created this flexible input system - enter your spending in whatever timeframe feels most natural to you.</p>
-                                <p><strong>Daily Thinking:</strong> Perfect for small, recurring habits like your morning coffee ($5/day), lunch out ($10/day), or evening snacks ($3/day). These "little" daily expenses often add up to big monthly numbers you might underestimate.</p>
-                                <p><strong>Weekly Thinking:</strong> Great for regular purchases like groceries ($120/week), gas ($60/week), or entertainment ($50/week). Weekly thinking helps you see the true cost of your lifestyle choices.</p>
-                                <p><strong>How it works:</strong> Simply select Daily/Weekly/Monthly from the dropdown and enter the amount as you normally think about it. We'll automatically convert everything to monthly totals for accurate budgeting.</p>
-                                <p><strong>Why this matters:</strong> When you think monthly, small daily habits seem insignificant. But $5/day = $150/month, and $50/week = $200/month. This system helps you see the real impact of your spending patterns and make better financial decisions.</p>
+                                <p><strong>Now let's focus on cutting expenses intelligently.</strong> Research shows that gradual, realistic reductions are far more successful than drastic cuts. Instead of eliminating expenses completely, we'll reduce their frequency to save money while maintaining your lifestyle.</p>
+                                <p><strong>Daily Expenses:</strong> Perfect for habits like coffee ($5/day), snacks ($3/day), or impulse purchases. Cutting from "every day" to "5 days/week" saves $240/year while still enjoying the habit.</p>
+                                <p><strong>Weekly Expenses:</strong> Great for dining out ($80/week), entertainment ($50/week), or shopping. Reducing frequency or percentage gives you control over discretionary spending.</p>
+                                <p><strong>Monthly Expenses:</strong> Essential bills can often be negotiated - insurance, utilities, subscriptions. Even small percentage cuts add up quickly.</p>
+                                <p><strong>Remember:</strong> Essential expenses aren't immune to cuts. Shop around for better rates, bundle services, or eliminate unnecessary add-ons. Every dollar saved improves your financial health.</p>
                             </div>
                         </div>
                     </div>
@@ -2194,8 +2194,8 @@
 
                         <div class="reduction-intro">
                             <div class="reduction-tip">
-                                <h5>💡 Why This Works Better Than "Cold Turkey"</h5>
-                                <p>Behavioral finance research shows people are more successful with gradual changes. Cutting coffee from 7→5 days/week saves $240/month but feels achievable. Completely eliminating it might lead to burnout and relapse.</p>
+                                <h5>💡 Why Smart Cutting Works Better Than Elimination</h5>
+                                <p>Research shows gradual reductions are 3x more successful than "cold turkey" approaches. Cutting expenses from "every day" to "5 days/week" creates sustainable savings while maintaining life enjoyment. Drastic elimination often leads to burnout and relapse.</p>
                             </div>
                         </div>
                     </div>
@@ -3705,7 +3705,7 @@
                     controlsHTML = `
                         <div class="reduction-controls">
                             <div class="control-group">
-                                <span class="reduction-label">Keep:</span>
+                                <span class="reduction-label">Cut to:</span>
                                 <select class="reduction-select" id="full-days-${index}" onchange="updateFullExpenseReduction(${index})">
                                     <option value="7">7 days/week</option>
                                     <option value="6">6 days/week</option>
@@ -3727,7 +3727,7 @@
                     controlsHTML = `
                         <div class="reduction-controls">
                             <div class="control-group">
-                                <span class="reduction-label">Keep:</span>
+                                <span class="reduction-label">Cut to:</span>
                                 <select class="reduction-select" id="full-weeks-${index}" onchange="updateFullExpenseReduction(${index})">
                                     <option value="4">4 weeks/month</option>
                                     <option value="3" selected>3 weeks/month</option>
@@ -3743,7 +3743,7 @@
                                     <option value="75">75%</option>
                                     <option value="100">100%</option>
                                 </select>
-                                <span class="percent-label">%</span>
+                                <span class="percent-label">cut</span>
                             </div>
                             <div class="savings-display">
                                 <span class="reduction-savings" id="full-savings-${index}">$0.00</span>
@@ -3756,7 +3756,7 @@
                     controlsHTML = `
                         <div class="reduction-controls">
                             <div class="control-group">
-                                <span class="reduction-label">Reduce by:</span>
+                                <span class="reduction-label">Cut by:</span>
                                 <select class="reduction-select" id="full-percent-${index}" onchange="updateFullExpenseReduction(${index})">
                                     <option value="0">0%</option>
                                     <option value="10">10%</option>
@@ -3917,19 +3917,27 @@
             let reductionPercentage = 0;
 
             if (expense.frequency === 'daily') {
-                const currentDays = parseInt(document.getElementById(`full-days-${index}`).value);
-                const targetMonthly = (expense.originalAmount * currentDays * 52) / 12;
-                monthlySavings = expense.amount - targetMonthly;
-                reductionPercentage = expense.amount > 0 ? (monthlySavings / expense.amount) * 100 : 0;
+                const targetDaysPerWeek = parseInt(document.getElementById(`full-days-${index}`).value);
+                // Current spending: originalAmount per day × 7 days/week × 4.33 weeks/month
+                // Target spending: originalAmount per day × targetDaysPerWeek days/week × 4.33 weeks/month
+                const currentWeeklySpending = expense.originalAmount * 7; // $5/day × 7 days = $35/week
+                const targetWeeklySpending = expense.originalAmount * targetDaysPerWeek; // $5/day × target days
+                const currentMonthly = (currentWeeklySpending * 52) / 12; // Convert to monthly
+                const targetMonthly = (targetWeeklySpending * 52) / 12; // Convert to monthly
+                monthlySavings = currentMonthly - targetMonthly;
+                reductionPercentage = currentMonthly > 0 ? (monthlySavings / currentMonthly) * 100 : 0;
             } else if (expense.frequency === 'weekly') {
                 // Check which control was used last
                 const weeksSelect = document.getElementById(`full-weeks-${index}`);
                 const percentSelect = document.getElementById(`full-week-percent-${index}`);
 
                 if (weeksSelect && weeksSelect.value !== undefined) {
-                    const currentWeeks = parseInt(weeksSelect.value);
-                    const targetMonthly = expense.originalAmount * currentWeeks;
-                    monthlySavings = expense.amount - targetMonthly;
+                    const targetWeeksPerMonth = parseInt(weeksSelect.value);
+                    // Current spending: originalAmount per week × 4.33 weeks/month
+                    // Target spending: originalAmount per week × targetWeeksPerMonth
+                    const currentMonthly = expense.originalAmount * (52/12); // Convert weekly to monthly
+                    const targetMonthly = expense.originalAmount * targetWeeksPerMonth;
+                    monthlySavings = currentMonthly - targetMonthly;
                 }
 
                 if (percentSelect && percentSelect.value !== '0') {
@@ -3975,17 +3983,21 @@
                 let itemSavings = 0;
 
                 if (expense.frequency === 'daily') {
-                    const currentDays = parseInt(document.getElementById(`full-days-${index}`).value);
-                    const targetMonthly = (expense.originalAmount * currentDays * 52) / 12;
-                    itemSavings = expense.amount - targetMonthly;
+                    const targetDaysPerWeek = parseInt(document.getElementById(`full-days-${index}`).value);
+                    const currentWeeklySpending = expense.originalAmount * 7;
+                    const targetWeeklySpending = expense.originalAmount * targetDaysPerWeek;
+                    const currentMonthly = (currentWeeklySpending * 52) / 12;
+                    const targetMonthly = (targetWeeklySpending * 52) / 12;
+                    itemSavings = currentMonthly - targetMonthly;
                 } else if (expense.frequency === 'weekly') {
                     const weeksSelect = document.getElementById(`full-weeks-${index}`);
                     const percentSelect = document.getElementById(`full-week-percent-${index}`);
 
                     if (weeksSelect && weeksSelect.value !== undefined) {
-                        const currentWeeks = parseInt(weeksSelect.value);
-                        const targetMonthly = expense.originalAmount * currentWeeks;
-                        itemSavings = expense.amount - targetMonthly;
+                        const targetWeeksPerMonth = parseInt(weeksSelect.value);
+                        const currentMonthly = expense.originalAmount * (52/12);
+                        const targetMonthly = expense.originalAmount * targetWeeksPerMonth;
+                        itemSavings = currentMonthly - targetMonthly;
                     }
 
                     if (percentSelect && percentSelect.value !== '0') {
@@ -4072,9 +4084,12 @@
                 let itemSavings = 0;
 
                 if (expense.frequency === 'daily') {
-                    const currentDays = parseInt(document.getElementById(`days-${index}`).value);
-                    const targetMonthly = (expense.originalAmount * currentDays * 52) / 12;
-                    itemSavings = expense.amount - targetMonthly;
+                    const targetDaysPerWeek = parseInt(document.getElementById(`days-${index}`).value);
+                    const currentWeeklySpending = expense.originalAmount * 7;
+                    const targetWeeklySpending = expense.originalAmount * targetDaysPerWeek;
+                    const currentMonthly = (currentWeeklySpending * 52) / 12;
+                    const targetMonthly = (targetWeeklySpending * 52) / 12;
+                    itemSavings = currentMonthly - targetMonthly;
                 } else if (expense.frequency === 'weekly') {
                     const currentWeeks = parseInt(document.getElementById(`weeks-${index}`).value);
                     const targetMonthly = expense.originalAmount * currentWeeks;
