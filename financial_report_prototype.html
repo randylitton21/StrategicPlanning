@@ -2033,8 +2033,6 @@
             'Other': ['❓ Miscellaneous', '🎁 Gifts', '📧 Subscriptions', '🔧 Household Items']
         };
 
-        // Categories that are considered "necessary" (fixed expenses)
-        const necessaryCategories = ['Housing', 'Transportation', 'Food', 'Utilities', 'Healthcare', 'Insurance'];
 
         // Get category options for dropdown
         function getCategoryOptions(selectedCategory = '') {
@@ -3071,33 +3069,39 @@
             const expenses = [];
 
             // Collect all expenses from both containers
-            const containerMappings = {
-                '#fixedExpensesContainer': 'necessary',
-                '#nonEssentialExpensesContainer': 'non-necessary'
-            };
-
-            Object.entries(containerMappings).forEach(([containerId, containerType]) => {
+            const allContainers = ['#fixedExpensesContainer', '#nonEssentialExpensesContainer'];
+            allContainers.forEach(containerId => {
+                const containerType = containerId === '#fixedExpensesContainer' ? 'necessary' : 'non-necessary';
                 const items = document.querySelectorAll(`${containerId} .expense-item`);
+
+                console.log(`Container ${containerId} has ${items.length} items`);
+
                 items.forEach(item => {
                     const categoryValue = item.querySelector('.expense-category').value;
                     const description = item.querySelector('.expense-description').value.trim();
                     const amount = parseFloat(item.querySelector('.expense-amount').value) || 0;
 
+                    console.log(`Item: desc="${description}", amount=${amount}, category="${categoryValue}", container="${containerType}"`);
+
                     if (description && !isNaN(amount) && amount > 0) {
                         // If no category selected, default to "Other"
                         const finalCategoryValue = categoryValue || 'Other:Miscellaneous';
                         const [mainCategory, subCategory] = finalCategoryValue.split(':');
-                        expenses.push({
+                        const expense = {
                             description: description,
                             amount: amount,
                             category: mainCategory || 'Other',
                             subCategory: subCategory || 'Miscellaneous',
                             fullCategory: finalCategoryValue,
                             container: containerType
-                        });
+                        };
+                        console.log('Adding expense:', expense);
+                        expenses.push(expense);
                     }
                 });
             });
+
+            console.log('Total expenses collected:', expenses.length);
 
             return {
                 monthlyIncome: income,
@@ -3111,8 +3115,14 @@
             const necessaryExpenses = data.expenses.filter(exp => exp.container === 'necessary');
             const nonNecessaryExpenses = data.expenses.filter(exp => exp.container === 'non-necessary');
 
+            console.log('Expenses:', data.expenses);
+            console.log('Necessary expenses:', necessaryExpenses);
+            console.log('Non-necessary expenses:', nonNecessaryExpenses);
+
             const totalNecessary = necessaryExpenses.reduce((sum, exp) => sum + exp.amount, 0);
             const totalNonNecessary = nonNecessaryExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+            console.log('Total necessary:', totalNecessary, 'Total non-necessary:', totalNonNecessary);
 
             const totalExpenses = totalNecessary + totalNonNecessary;
             const savingsOrDeficit = data.monthlyIncome - totalExpenses;
