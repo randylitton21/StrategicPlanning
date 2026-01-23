@@ -275,8 +275,7 @@
             border: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            height: 500px; /* Fixed height to prevent overflow */
-            overflow: hidden;
+            min-height: 300px; /* Minimum height but allow growth */
         }
 
         .expense-column-header {
@@ -302,9 +301,8 @@
 
         .expense-items-container {
             flex: 1; /* Take remaining space */
-            overflow-y: auto; /* Scroll when content exceeds height */
             padding: 0;
-            min-height: 0; /* Allow flex shrinking */
+            min-height: 200px; /* Minimum space for content */
         }
 
         .add-expense-btn {
@@ -327,7 +325,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 20px;
+            padding: 10px 15px;
             border-bottom: 1px solid var(--border);
             transition: background var(--transition-fast);
         }
@@ -342,17 +340,27 @@
 
         .expense-item-input-group {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
             flex: 1;
         }
 
         .expense-item input {
-            flex: 1;
-            padding: 8px 12px;
+            padding: 6px 8px;
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
-            font-size: 0.95em;
+            font-size: 0.9em;
+            height: 32px; /* Fixed height for consistency */
+        }
+
+        .expense-item input:first-child {
+            flex: 2; /* Description takes more space */
+            min-width: 0; /* Allow shrinking */
+        }
+
+        .expense-item input:last-of-type {
+            flex: 1; /* Amount takes less space */
+            max-width: 100px; /* Limit amount field width */
         }
 
         .expense-item input:focus {
@@ -588,12 +596,7 @@
             }
 
             .expense-column {
-                height: auto; /* Allow natural height on mobile */
-                max-height: 500px; /* But cap at reasonable max */
-            }
-
-            .expense-items-container {
-                max-height: 300px; /* Scrollable on mobile too */
+                min-height: 250px; /* Minimum height on mobile */
             }
 
             .expense-item-input-group {
