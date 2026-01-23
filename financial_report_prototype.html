@@ -3392,6 +3392,16 @@
             }).format(amount || 0);
         };
 
+        // Helper function to sanitize text for PDF (remove problematic characters)
+        const sanitizeForPDF = (text) => {
+            if (!text) return '';
+            return text
+                .replace(/[\/\\:*?"<>|]/g, '-')  // Replace filesystem special chars
+                .replace(/[^\x20-\x7E]/g, '')     // Remove non-ASCII characters
+                .replace(/\s+/g, ' ')            // Normalize whitespace
+                .trim();
+        };
+
         // Export basic report as PDF
         async function exportBasicReport() {
             try {
@@ -3412,42 +3422,42 @@
             // Title
             doc.setFontSize(20);
             doc.setFont('helvetica', 'bold');
-            doc.text('Basic Financial Summary', 20, 30);
+            doc.text(sanitizeForPDF('Basic Financial Summary'), 20, 30);
 
             // Date
             doc.setFontSize(12);
             doc.setFont('helvetica', 'normal');
-            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 45);
+            doc.text(sanitizeForPDF(`Generated on: ${new Date().toLocaleDateString()}`), 20, 45);
 
             // Total Income
             doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
-            doc.text(`Total Monthly Income: ${formatCurrency(report.income)}`, 20, 65);
+            doc.text(sanitizeForPDF(`Total Monthly Income: ${formatCurrency(report.income)}`), 20, 65);
 
             let yPosition = 85;
 
             // Essentials Column
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
-            doc.text('ESSENTIALS (Fixed Expenses)', 20, yPosition);
+            doc.text(sanitizeForPDF('ESSENTIALS (Fixed Expenses)'), 20, yPosition);
             yPosition += 10;
 
             doc.setFontSize(12);
             doc.setFont('helvetica', 'normal');
 
             if (essentials.length === 0) {
-                doc.text('No essential expenses added yet', 25, yPosition);
+                doc.text(sanitizeForPDF('No essential expenses added yet'), 25, yPosition);
                 yPosition += 10;
             } else {
                 essentials.forEach(expense => {
                     let expenseText = '';
 
-                    // Add category/subcategory title (sanitize special characters)
+                    // Add category/subcategory title
                     let categoryTitle = '';
                     if (expense.subCategory && expense.subCategory !== 'Miscellaneous') {
-                        categoryTitle = expense.subCategory.replace(/[\/\\:*?"<>|]/g, '-'); // Replace special chars
+                        categoryTitle = sanitizeForPDF(expense.subCategory);
                     } else if (expense.category) {
-                        categoryTitle = expense.category.replace(/[\/\\:*?"<>|]/g, '-'); // Replace special chars
+                        categoryTitle = sanitizeForPDF(expense.category);
                     }
 
                     if (categoryTitle) {
@@ -3456,13 +3466,12 @@
 
                     // Add frequency prefix if not monthly
                     if (expense.frequency && expense.frequency !== 'monthly') {
-                        expenseText += expense.frequency.charAt(0).toUpperCase() + expense.frequency.slice(1) + ' ';
+                        expenseText += sanitizeForPDF(expense.frequency.charAt(0).toUpperCase() + expense.frequency.slice(1)) + ' ';
                     }
 
-                    // Add description if available (sanitize special characters)
+                    // Add description if available
                     if (expense.description && expense.description.trim()) {
-                        const cleanDescription = expense.description.replace(/[\/\\:*?"<>|]/g, '-');
-                        expenseText += cleanDescription + ': ';
+                        expenseText += sanitizeForPDF(expense.description) + ': ';
                     } else {
                         expenseText += 'Expense: ';
                     }
@@ -3474,6 +3483,8 @@
                         expenseText += formatCurrency(expense.amount);
                     }
 
+                    // Final sanitization of the complete text
+                    expenseText = sanitizeForPDF(expenseText);
                     doc.text(expenseText, 25, yPosition);
                     yPosition += 8;
                 });
@@ -3482,31 +3493,31 @@
             // Essentials subtotal
             const essentialsTotal = essentials.reduce((sum, exp) => sum + exp.amount, 0);
             doc.setFont('helvetica', 'bold');
-            doc.text(`Subtotal: ${formatCurrency(essentialsTotal)}`, 25, yPosition);
+            doc.text(sanitizeForPDF(`Subtotal: ${formatCurrency(essentialsTotal)}`), 25, yPosition);
             yPosition += 20;
 
             // Non-Essentials Column
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
-            doc.text('NON-ESSENTIALS (Discretionary)', 110, 85);
+            doc.text(sanitizeForPDF('NON-ESSENTIALS (Discretionary)'), 110, 85);
             let nonEssentialsY = 95;
 
             doc.setFontSize(12);
             doc.setFont('helvetica', 'normal');
 
             if (nonEssentials.length === 0) {
-                doc.text('No non-essential expenses added yet', 115, nonEssentialsY);
+                doc.text(sanitizeForPDF('No non-essential expenses added yet'), 115, nonEssentialsY);
                 nonEssentialsY += 10;
             } else {
                 nonEssentials.forEach(expense => {
                     let expenseText = '';
 
-                    // Add category/subcategory title (sanitize special characters)
+                    // Add category/subcategory title
                     let categoryTitle = '';
                     if (expense.subCategory && expense.subCategory !== 'Miscellaneous') {
-                        categoryTitle = expense.subCategory.replace(/[\/\\:*?"<>|]/g, '-'); // Replace special chars
+                        categoryTitle = sanitizeForPDF(expense.subCategory);
                     } else if (expense.category) {
-                        categoryTitle = expense.category.replace(/[\/\\:*?"<>|]/g, '-'); // Replace special chars
+                        categoryTitle = sanitizeForPDF(expense.category);
                     }
 
                     if (categoryTitle) {
@@ -3515,13 +3526,12 @@
 
                     // Add frequency prefix if not monthly
                     if (expense.frequency && expense.frequency !== 'monthly') {
-                        expenseText += expense.frequency.charAt(0).toUpperCase() + expense.frequency.slice(1) + ' ';
+                        expenseText += sanitizeForPDF(expense.frequency.charAt(0).toUpperCase() + expense.frequency.slice(1)) + ' ';
                     }
 
-                    // Add description if available (sanitize special characters)
+                    // Add description if available
                     if (expense.description && expense.description.trim()) {
-                        const cleanDescription = expense.description.replace(/[\/\\:*?"<>|]/g, '-');
-                        expenseText += cleanDescription + ': ';
+                        expenseText += sanitizeForPDF(expense.description) + ': ';
                     } else {
                         expenseText += 'Expense: ';
                     }
@@ -3533,6 +3543,8 @@
                         expenseText += formatCurrency(expense.amount);
                     }
 
+                    // Final sanitization of the complete text
+                    expenseText = sanitizeForPDF(expenseText);
                     doc.text(expenseText, 115, nonEssentialsY);
                     nonEssentialsY += 8;
                 });
@@ -3541,19 +3553,19 @@
             // Non-essentials subtotal
             const nonEssentialsTotal = nonEssentials.reduce((sum, exp) => sum + exp.amount, 0);
             doc.setFont('helvetica', 'bold');
-            doc.text(`Subtotal: ${formatCurrency(nonEssentialsTotal)}`, 115, nonEssentialsY);
+            doc.text(sanitizeForPDF(`Subtotal: ${formatCurrency(nonEssentialsTotal)}`), 115, nonEssentialsY);
 
             // Bottom summary - position it below the longer column
             yPosition = Math.max(yPosition, nonEssentialsY + 20);
 
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
-            doc.text('Summary:', 20, yPosition);
+            doc.text(sanitizeForPDF('Summary:'), 20, yPosition);
             yPosition += 15;
 
             doc.setFontSize(12);
             doc.setFont('helvetica', 'normal');
-            doc.text(`Total Expenses: ${formatCurrency(report.totalExpenses)}`, 25, yPosition);
+            doc.text(sanitizeForPDF(`Total Expenses: ${formatCurrency(report.totalExpenses)}`), 25, yPosition);
             yPosition += 10;
 
             const bottomLineText = report.savingsOrDeficit >= 0 ?
@@ -3561,7 +3573,7 @@
                 `Monthly Bottom Line (Deficit): ${formatCurrency(report.savingsOrDeficit)}`;
 
             doc.setFont('helvetica', 'bold');
-            doc.text(bottomLineText, 25, yPosition);
+            doc.text(sanitizeForPDF(bottomLineText), 25, yPosition);
 
                 // Save the PDF
                 doc.save('basic-financial-summary.pdf');
