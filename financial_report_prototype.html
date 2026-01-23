@@ -3708,9 +3708,9 @@
                                 <span class="reduction-label">Cut:</span>
                                 <select class="reduction-select" id="full-days-${index}" onchange="updateFullExpenseReduction(${index})">
                                     <option value="0">0 days/week</option>
-                                    <option value="1">1 day/week</option>
+                                    <option value="1" selected>1 day/week</option>
                                     <option value="2">2 days/week</option>
-                                    <option value="3" selected>3 days/week</option>
+                                    <option value="3">3 days/week</option>
                                     <option value="4">4 days/week</option>
                                     <option value="5">5 days/week</option>
                                     <option value="6">6 days/week</option>
@@ -3729,8 +3729,8 @@
                                 <span class="reduction-label">Cut:</span>
                                 <select class="reduction-select" id="full-weeks-${index}" onchange="updateFullExpenseReduction(${index})">
                                     <option value="0">0 weeks/month</option>
-                                    <option value="1">1 week/month</option>
-                                    <option value="2" selected>2 weeks/month</option>
+                                    <option value="1" selected>1 week/month</option>
+                                    <option value="2">2 weeks/month</option>
                                     <option value="3">3 weeks/month</option>
                                 </select>
                                 <span class="or-text">or</span>
@@ -3916,16 +3916,12 @@
 
             if (expense.frequency === 'daily') {
                 const daysToCut = parseInt(document.getElementById(`full-days-${index}`).value);
-                // Current spending: originalAmount per day × 7 days/week
-                // Target spending: originalAmount per day × (7 - daysToCut) days/week
-                const currentWeeklySpending = expense.originalAmount * 7; // $10/day × 7 days = $70/week
-                const daysKept = 7 - daysToCut;
-                const targetWeeklySpending = expense.originalAmount * daysKept; // $10/day × days kept
-                const currentMonthly = (currentWeeklySpending * 52) / 12; // Convert to monthly
-                const targetMonthly = (targetWeeklySpending * 52) / 12; // Convert to monthly
+                // Simple calculation: 4 weeks per month × 7 days per week = 28 days per month
+                const currentMonthly = expense.originalAmount * 28; // $10/day × 28 days = $280/month
+                const targetMonthly = expense.originalAmount * (28 - (daysToCut * 4)); // Cut daysToCut days × 4 weeks
                 monthlySavings = currentMonthly - targetMonthly;
-                // Show cut percentage: (daysToCut / 7) * 100
-                reductionPercentage = (daysToCut / 7) * 100;
+                // Show cut percentage: (days cut / total days) * 100 = (daysToCut * 4 / 28) * 100
+                reductionPercentage = ((daysToCut * 4) / 28) * 100;
             } else if (expense.frequency === 'weekly') {
                 // Check which control was used last
                 const weeksSelect = document.getElementById(`full-weeks-${index}`);
@@ -3936,14 +3932,12 @@
                 if (weeksSelect && weeksSelect.value !== undefined && percentSelect.value === '0') {
                     // Using frequency control only
                     const weeksToCut = parseInt(weeksSelect.value);
-                    // Current spending: originalAmount per week × 4.33 weeks/month
-                    currentMonthly = expense.originalAmount * (52/12); // Convert weekly to monthly
-                    const currentWeeksPerMonth = 52/12; // Approximately 4.33
-                    const weeksKept = currentWeeksPerMonth - weeksToCut;
-                    const targetMonthly = expense.originalAmount * weeksKept;
+                    // Simple calculation: 4 weeks per month
+                    const currentMonthly = expense.originalAmount * 4; // $X/week × 4 weeks = $4X/month
+                    const targetMonthly = expense.originalAmount * (4 - weeksToCut); // Keep (4 - weeksToCut) weeks
                     monthlySavings = currentMonthly - targetMonthly;
-                    // Show cut percentage: (weeksToCut / currentWeeksPerMonth) * 100
-                    reductionPercentage = (weeksToCut / currentWeeksPerMonth) * 100;
+                    // Show cut percentage: (weeksToCut / 4) * 100
+                    reductionPercentage = (weeksToCut / 4) * 100;
                 } else if (percentSelect && percentSelect.value !== '0') {
                     // Using percentage control
                     const percentReduction = parseInt(percentSelect.value) / 100;
@@ -4000,11 +3994,9 @@
 
                 if (expense.frequency === 'daily') {
                     const daysToCut = parseInt(document.getElementById(`full-days-${index}`).value);
-                    const currentWeeklySpending = expense.originalAmount * 7;
-                    const daysKept = 7 - daysToCut;
-                    const targetWeeklySpending = expense.originalAmount * daysKept;
-                    const currentMonthly = (currentWeeklySpending * 52) / 12;
-                    const targetMonthly = (targetWeeklySpending * 52) / 12;
+                    // 4 weeks per month × 7 days per week = 28 days per month
+                    const currentMonthly = expense.originalAmount * 28;
+                    const targetMonthly = expense.originalAmount * (28 - (daysToCut * 4)); // Cut daysToCut × 4 weeks
                     itemSavings = currentMonthly - targetMonthly;
                 } else if (expense.frequency === 'weekly') {
                     const weeksSelect = document.getElementById(`full-weeks-${index}`);
@@ -4012,10 +4004,9 @@
 
                     if (weeksSelect && weeksSelect.value !== undefined) {
                         const weeksToCut = parseInt(weeksSelect.value);
-                        const currentMonthly = expense.originalAmount * (52/12);
-                        const currentWeeksPerMonth = 52/12;
-                        const weeksKept = currentWeeksPerMonth - weeksToCut;
-                        const targetMonthly = expense.originalAmount * weeksKept;
+                        // 4 weeks per month
+                        const currentMonthly = expense.originalAmount * 4;
+                        const targetMonthly = expense.originalAmount * (4 - weeksToCut);
                         itemSavings = currentMonthly - targetMonthly;
                     }
 
