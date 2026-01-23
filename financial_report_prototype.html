@@ -413,37 +413,6 @@
             border-color: var(--primary-color);
         }
 
-        .amount-input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            min-width: 120px;
-        }
-
-        .amount-input-group .expense-amount {
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 0.9em;
-            width: 100%;
-        }
-
-        .amount-input-group .expense-amount:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-
-        .monthly-display {
-            font-size: 0.8em;
-            color: var(--text-secondary);
-            font-weight: 500;
-            text-align: center;
-            background: rgba(74, 124, 74, 0.1);
-            padding: 2px 6px;
-            border-radius: var(--radius-sm);
-            border: 1px solid rgba(74, 124, 74, 0.2);
-        }
-
 
         .add-expense-btn {
             background: var(--success);
@@ -2251,9 +2220,6 @@
             expenseItem.className = 'expense-item';
             expenseItem.id = expenseId;
 
-            // Return the expenseId for use in loadSavedData
-            return expenseId;
-
             expenseItem.innerHTML = `
                 <div class="expense-item-input-group">
                     <select class="expense-category" onchange="updateTotals()">
@@ -2261,23 +2227,17 @@
                         ${getCategoryOptions(fullCategory)}
                     </select>
                     <input type="text" placeholder="Expense description (optional)" value="${description}" class="expense-description" onchange="updateTotals()" oninput="updateTotals()">
-                    <select class="expense-frequency" onchange="updateExpenseDisplay('${expenseId}'); updateTotals()">
+                    <select class="expense-frequency" onchange="updateTotals()">
                         <option value="monthly">Monthly</option>
                         <option value="weekly">Weekly</option>
                         <option value="daily">Daily</option>
                     </select>
-                    <div class="amount-input-group">
-                        <input type="number" placeholder="Amount" value="${amount}" min="0" step="0.01" class="expense-amount" onchange="updateExpenseDisplay('${expenseId}'); updateTotals()" oninput="updateExpenseDisplay('${expenseId}'); updateTotals()">
-                        <div class="monthly-display" id="monthly-${expenseId}">Monthly: $0.00</div>
-                    </div>
+                    <input type="number" placeholder="Amount" value="${amount}" min="0" step="0.01" class="expense-amount" onchange="updateTotals()" oninput="updateTotals()">
                 </div>
                 <button type="button" class="remove-expense" onclick="removeExpense('${expenseId}')">×</button>
             `;
 
             container.appendChild(expenseItem);
-
-            // Initialize the monthly display
-            updateExpenseDisplay(expenseId);
 
             // Focus on the description input for new items
             if (!description) {
@@ -2286,37 +2246,6 @@
                     if (descInput) descInput.focus();
                 }, 100);
             }
-
-            return expenseId;
-        }
-
-        // Update the monthly amount display for an expense
-        function updateExpenseDisplay(expenseId) {
-            const item = document.getElementById(expenseId);
-            if (!item) return;
-
-            const amountInput = item.querySelector('.expense-amount');
-            const frequencySelect = item.querySelector('.expense-frequency');
-            const monthlyDisplay = document.getElementById(`monthly-${expenseId}`);
-
-            const amount = parseFloat(amountInput.value) || 0;
-            const frequency = frequencySelect.value;
-
-            let monthlyAmount = amount;
-            switch(frequency) {
-                case 'daily':
-                    monthlyAmount = amount * 28;
-                    break;
-                case 'weekly':
-                    monthlyAmount = amount * 4;
-                    break;
-                case 'monthly':
-                default:
-                    monthlyAmount = amount;
-                    break;
-            }
-
-            monthlyDisplay.textContent = `Monthly: ${formatCurrency(monthlyAmount)}`;
         }
 
         // Remove an expense item
@@ -3245,25 +3174,25 @@
                 items.forEach(item => {
                     const categoryValue = item.querySelector('.expense-category').value;
                     const description = item.querySelector('.expense-description').value.trim();
-                    const enteredAmount = parseFloat(item.querySelector('.expense-amount').value) || 0;
+                    const amount = parseFloat(item.querySelector('.expense-amount').value) || 0;
                     const frequency = item.querySelector('.expense-frequency').value || 'monthly';
 
-                    console.log(`Item: desc="${description}", enteredAmount=${enteredAmount}, frequency=${frequency}, category="${categoryValue}", container="${containerType}"`);
+                    console.log(`Item: desc="${description}", amount=${amount}, frequency=${frequency}, category="${categoryValue}", container="${containerType}"`);
 
                     // Description is now optional, but we need an amount and category
-                    if (!isNaN(enteredAmount) && enteredAmount > 0 && categoryValue) {
-                        // Apply frequency multiplier to get monthly amount
-                        let monthlyAmount = enteredAmount;
+                    if (!isNaN(amount) && amount > 0 && categoryValue) {
+                        // Apply frequency multiplier
+                        let monthlyAmount = amount;
                         switch(frequency) {
                             case 'daily':
-                                monthlyAmount = enteredAmount * 28; // 28 days per month
+                                monthlyAmount = amount * 28; // 28 days per month
                                 break;
                             case 'weekly':
-                                monthlyAmount = enteredAmount * 4; // 4 weeks per month
+                                monthlyAmount = amount * 4; // 4 weeks per month
                                 break;
                             case 'monthly':
                             default:
-                                monthlyAmount = enteredAmount;
+                                monthlyAmount = amount;
                                 break;
                         }
 
@@ -3272,7 +3201,7 @@
                         const expense = {
                             description: description,
                             amount: monthlyAmount,
-                            originalAmount: enteredAmount,
+                            originalAmount: amount,
                             frequency: frequency,
                             category: mainCategory || 'Other',
                             subCategory: subCategory || 'Miscellaneous',
@@ -3430,24 +3359,7 @@
                             // Determine which container based on category
                             const isNecessary = ['Housing', 'Transportation', 'Food', 'Utilities', 'Healthcare', 'Insurance'].includes(expense.category);
                             const containerCategory = isNecessary ? 'Necessary' : 'Non-Necessary';
-
-                            // Use originalAmount if available, otherwise use amount (for backward compatibility)
-                            const displayAmount = expense.originalAmount || expense.amount;
-
-                            // Add the expense item
-                            const expenseId = addExpenseToCategory(containerCategory, expense.description, displayAmount, expense.fullCategory || expense.category);
-
-                            // Set the frequency if it exists
-                            if (expense.frequency && expenseId) {
-                                const item = document.getElementById(expenseId);
-                                if (item) {
-                                    const freqSelect = item.querySelector('.expense-frequency');
-                                    if (freqSelect) {
-                                        freqSelect.value = expense.frequency;
-                                        updateExpenseDisplay(expenseId);
-                                    }
-                                }
-                            }
+                            addExpenseToCategory(containerCategory, expense.description, expense.amount, expense.fullCategory || expense.category);
                         });
                     }
                 } else {
