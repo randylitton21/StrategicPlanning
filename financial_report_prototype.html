@@ -384,6 +384,28 @@
             background: #d32f2f;
         }
 
+        .expense-item-actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .add-expense-confirm {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: background var(--transition-fast);
+            font-weight: bold;
+        }
+
+        .add-expense-confirm:hover {
+            background: #388e3c;
+        }
+
         .add-expense-btn {
             background: var(--success);
             color: white;
@@ -909,6 +931,10 @@
                 width: 100%;
             }
 
+            .expense-item-actions {
+                justify-content: center;
+            }
+
             .summary-grid {
                 grid-template-columns: 1fr;
                 gap: 15px;
@@ -984,7 +1010,7 @@
                     </div>
                     <div class="form-group">
                         <label for="monthlyIncome">Monthly Net Income (after taxes)</label>
-                        <input type="number" id="monthlyIncome" class="form-input" placeholder="Your take-home pay each month" min="0" step="0.01" onchange="updateCalculations(); updateStepNavigation();" oninput="updateCalculations(); updateStepNavigation();">
+                        <input type="number" id="monthlyIncome" class="form-input" placeholder="Your take-home pay each month" min="0" step="0.01" onchange="updateTotals(); updateStepNavigation();" oninput="updateTotals(); updateStepNavigation();">
                         <div class="error-message" id="incomeError">Please enter your actual net income</div>
                     </div>
                     <div class="step-navigation">
@@ -1225,7 +1251,18 @@
             loadSavedData();
             showStep('income');
             updateStepNavigation(); // Initialize button states
+            updateTotals(); // Initialize totals display
         });
+
+        // Add expense to total when check mark is clicked
+        function addExpenseToTotal(expenseId) {
+            const expenseItem = document.getElementById(expenseId);
+            if (expenseItem) {
+                expenseItem.setAttribute('data-confirmed', 'true');
+                expenseItem.style.opacity = '0.7'; // Visual feedback that it's confirmed
+                updateTotals();
+            }
+        }
 
         // Step navigation
         function nextStep(fromStep) {
@@ -1310,10 +1347,13 @@
 
             expenseItem.innerHTML = `
                 <div class="expense-item-input-group">
-                    <input type="text" placeholder="Expense description" value="${description}" class="expense-description" onchange="updateCalculations()" oninput="updateCalculations()">
-                    <input type="number" placeholder="Amount" value="${amount}" min="0" step="0.01" class="expense-amount" onchange="updateCalculations()" oninput="updateCalculations()">
+                    <input type="text" placeholder="Expense description" value="${description}" class="expense-description">
+                    <input type="number" placeholder="Amount" value="${amount}" min="0" step="0.01" class="expense-amount">
                 </div>
-                <button type="button" class="remove-expense" onclick="removeExpense('${expenseId}')">×</button>
+                <div class="expense-item-actions">
+                    <button type="button" class="add-expense-confirm" onclick="addExpenseToTotal('${expenseId}')">✓</button>
+                    <button type="button" class="remove-expense" onclick="removeExpense('${expenseId}')">×</button>
+                </div>
             `;
 
             container.appendChild(expenseItem);
@@ -1326,7 +1366,7 @@
                 }, 100);
             }
 
-            updateCalculations();
+            // No automatic calculation update - user must confirm with check mark
         }
 
         // Remove an expense item
@@ -1334,7 +1374,7 @@
             const item = document.getElementById(expenseId);
             if (item) {
                 item.remove();
-                updateCalculations();
+                updateTotals();
             }
         }
 
@@ -1345,15 +1385,19 @@
             hintsElement.style.display = isVisible ? 'none' : 'block';
         }
 
-        // Update calculations and display
-        function updateCalculations() {
+        // Update totals and display (only for confirmed expenses)
+        function updateTotals() {
             const data = collectData();
             const report = computeReport(data);
 
-            console.log('Update calculations:', data, report);
+            // Update summary section
+            document.getElementById('summaryIncome').textContent = '$' + report.income.toFixed(2);
+            document.getElementById('summaryTotalExpenses').textContent = '$' + report.totalExpenses.toFixed(2);
+            document.getElementById('summarySavings').textContent = (report.savingsOrDeficit >= 0 ? '$' : '-$') + Math.abs(report.savingsOrDeficit).toFixed(2);
+            document.getElementById('summarySavingsPercentage').textContent = Math.abs(report.savingsPercentage).toFixed(1) + '%';
 
             // Update step-specific displays
-            if (currentStep === 'fixed' || currentStep === 'nonEssential' || currentStep === 'review') {
+            if (currentStep === 'fixed' || currentStep === 'nonEssential') {
                 document.getElementById('necessaryTotal').textContent = report.totalNecessary.toFixed(2);
                 document.getElementById('nonNecessaryTotal').textContent = report.totalNonNecessary.toFixed(2);
             }
@@ -1468,14 +1512,14 @@
             return isValid;
         }
 
-        // Collect data from form inputs
+        // Collect data from form inputs (only confirmed expenses)
         function collectData() {
             const income = parseFloat(document.getElementById('monthlyIncome').value) || 0;
             const expenses = [];
 
-            // Collect fixed expenses
-            const fixedItems = document.querySelectorAll('#fixedExpensesContainer .expense-item');
-            fixedItems.forEach(item => {
+            // Collect confirmed necessary expenses
+            const necessaryItems = document.querySelectorAll('#necessaryExpensesContainer .expense-item[data-confirmed="true"]');
+            necessaryItems.forEach(item => {
                 const description = item.querySelector('.expense-description').value.trim();
                 const amount = parseFloat(item.querySelector('.expense-amount').value) || 0;
 
@@ -1488,8 +1532,8 @@
                 }
             });
 
-            // Collect non-essential expenses
-            const nonEssentialItems = document.querySelectorAll('#nonEssentialExpensesContainer .expense-item');
+            // Collect confirmed non-necessary expenses
+            const nonNecessaryItems = document.querySelectorAll('#nonNecessaryExpensesContainer .expense-item[data-confirmed="true"]');
             nonNecessaryItems.forEach(item => {
                 const description = item.querySelector('.expense-description').value.trim();
                 const amount = parseFloat(item.querySelector('.expense-amount').value) || 0;
@@ -1635,10 +1679,22 @@
                     document.getElementById('fixedExpensesContainer').innerHTML = '';
                     document.getElementById('nonEssentialExpensesContainer').innerHTML = '';
 
-                    // Add saved expense items to appropriate categories
+                    // Add saved expense items to appropriate categories and mark as confirmed
                     if (financialData.expenses && financialData.expenses.length > 0) {
                         financialData.expenses.forEach(expense => {
                             addExpenseToCategory(expense.category, expense.description, expense.amount);
+                            // Mark the last added expense as confirmed
+                            setTimeout(() => {
+                                const containers = document.querySelectorAll('.expense-items-container');
+                                containers.forEach(container => {
+                                    const items = container.querySelectorAll('.expense-item');
+                                    const lastItem = items[items.length - 1];
+                                    if (lastItem) {
+                                        lastItem.setAttribute('data-confirmed', 'true');
+                                        lastItem.style.opacity = '0.7';
+                                    }
+                                });
+                            }, 100);
                         });
                     }
                 } else {
