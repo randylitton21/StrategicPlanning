@@ -3442,6 +3442,13 @@
                 essentials.forEach(expense => {
                     let expenseText = '';
 
+                    // Add category/subcategory title
+                    if (expense.subCategory && expense.subCategory !== 'Miscellaneous') {
+                        expenseText += expense.subCategory + ': ';
+                    } else if (expense.category) {
+                        expenseText += expense.category + ': ';
+                    }
+
                     // Add frequency prefix if not monthly
                     if (expense.frequency && expense.frequency !== 'monthly') {
                         expenseText += expense.frequency.charAt(0).toUpperCase() + expense.frequency.slice(1) + ' ';
@@ -3487,6 +3494,13 @@
             } else {
                 nonEssentials.forEach(expense => {
                     let expenseText = '';
+
+                    // Add category/subcategory title
+                    if (expense.subCategory && expense.subCategory !== 'Miscellaneous') {
+                        expenseText += expense.subCategory + ': ';
+                    } else if (expense.category) {
+                        expenseText += expense.category + ': ';
+                    }
 
                     // Add frequency prefix if not monthly
                     if (expense.frequency && expense.frequency !== 'monthly') {
