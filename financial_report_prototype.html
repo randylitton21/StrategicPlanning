@@ -464,10 +464,311 @@
             transition: all var(--transition-base);
         }
 
-        .generate-report-btn:hover {
+        .generate-report-btn:hover:not(:disabled) {
             background: var(--primary-dark);
             transform: translateY(-2px);
             box-shadow: var(--shadow-lg);
+        }
+
+        .generate-report-btn:disabled {
+            background: var(--text-light);
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: none;
+        }
+
+        /* Step-Based Interface */
+        .step-section {
+            display: none;
+        }
+
+        .step-section.active {
+            display: block;
+        }
+
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .step-header h3 {
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .step-progress {
+            background: var(--primary-color);
+            color: white;
+            padding: 6px 12px;
+            border-radius: var(--radius-full);
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        /* Educational Content */
+        .educational-content {
+            margin-bottom: 30px;
+        }
+
+        .motivational-text {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .motivational-text p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .motivational-text p:last-child {
+            margin-bottom: 0;
+        }
+
+        .motivational-text strong {
+            color: var(--primary-color);
+        }
+
+        .action-required {
+            background: var(--warning-light);
+            border: 1px solid var(--warning);
+            border-radius: var(--radius-md);
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .action-required h4 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        /* Hints Section */
+        .hints-section {
+            margin-bottom: 20px;
+        }
+
+        .hint-toggle {
+            background: var(--info);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: background var(--transition-fast);
+        }
+
+        .hint-toggle:hover {
+            background: #1976d2;
+        }
+
+        .hints-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-top: 10px;
+        }
+
+        .hints-content ul {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+
+        .hints-content li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .hints-content em {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        /* Step Navigation */
+        .step-navigation {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .next-step-btn,
+        .prev-step-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .next-step-btn {
+            background: var(--success);
+            color: white;
+        }
+
+        .next-step-btn:hover:not(:disabled) {
+            background: #388e3c;
+            transform: translateY(-2px);
+        }
+
+        .next-step-btn:disabled {
+            background: var(--text-light);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .prev-step-btn {
+            background: var(--text-secondary);
+            color: white;
+        }
+
+        .prev-step-btn:hover {
+            background: var(--text-primary);
+        }
+
+        /* Expense Input Section */
+        .expense-input-section {
+            margin-top: 20px;
+        }
+
+        .current-total {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 1.1em;
+            margin-top: 15px;
+            border-radius: var(--radius-md);
+        }
+
+        /* Reality Check */
+        .reality-check {
+            background: linear-gradient(135deg, var(--warning-light), var(--warning));
+            border: 2px solid var(--warning);
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .check-question h4 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        .check-question p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .honesty-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .honesty-btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 20px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .honesty-btn.primary {
+            background: var(--success);
+            color: white;
+        }
+
+        .honesty-btn.primary:hover {
+            background: #388e3c;
+            transform: translateY(-2px);
+        }
+
+        .honesty-btn:not(.primary) {
+            background: var(--warning);
+            color: white;
+        }
+
+        .honesty-btn:not(.primary):hover {
+            background: #f57c00;
+        }
+
+        /* Financial Summary Review */
+        .financial-summary-review {
+            margin-top: 30px;
+        }
+
+        .summary-review-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-review-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .summary-review-item.full-width {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+        }
+
+        .summary-review-label {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .summary-review-item.full-width .summary-review-label {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .summary-review-value {
+            font-size: 2em;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .summary-review-item.full-width .summary-review-value {
+            color: white;
+            font-size: 2.5em;
+        }
+
+        .bottom-line-explanation {
+            margin-top: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            color: white;
+        }
+
+        .bottom-line-positive {
+            color: var(--success);
+        }
+
+        .bottom-line-negative {
+            color: var(--error);
         }
 
         /* Report Styles */
@@ -660,78 +961,194 @@
             </div>
 
             <!-- Financial Input Form -->
+            <!-- Educational Financial Assessment -->
             <div class="financial-form" id="financialForm">
-                <!-- Income Section -->
-                <div class="form-section">
-                    <h3>📈 Monthly Income</h3>
+
+                <!-- Step 1: Introduction & Income -->
+                <div class="form-section step-section active" id="stepIncome">
+                    <div class="step-header">
+                        <h3>🎯 Step 1: Let's Get Honest About Your Money</h3>
+                        <div class="step-progress">Step 1 of 4</div>
+                    </div>
+                    <div class="educational-content">
+                        <div class="motivational-text">
+                            <p><strong>Hey, let's be real for a minute...</strong></p>
+                            <p>Most people don't even realize how much money they spend every month on unnecessary items. You know those little things - stopping at the gas station before work for an energy drink, chips, and a Gatorade. It's these small purchases that really keep us from getting ahead in life.</p>
+                            <p>The hardest thing for most people is being honest with themselves. We all want to believe we're doing better than we really are. But here's the truth: you can't fix what you won't face.</p>
+                            <p><strong>Why does this matter?</strong> Because until you know exactly where every penny goes, you can't take control of your financial future. This isn't about judgment - it's about awareness. And awareness is the first step to real change.</p>
+                        </div>
+                        <div class="action-required">
+                            <h4>📈 Start Here: Your Monthly Income</h4>
+                            <p>Enter your <strong>net income</strong> (after taxes and deductions). Be honest - this is your foundation.</p>
+                        </div>
+                    </div>
                     <div class="form-group">
-                        <label for="monthlyIncome">Net Monthly Income (after taxes)</label>
-                        <input type="number" id="monthlyIncome" class="form-input" placeholder="Enter your monthly net income" min="0" step="0.01" onchange="updateCalculations()" oninput="updateCalculations()">
-                        <div class="error-message" id="incomeError">Please enter a valid income amount</div>
+                        <label for="monthlyIncome">Monthly Net Income (after taxes)</label>
+                        <input type="number" id="monthlyIncome" class="form-input" placeholder="Your take-home pay each month" min="0" step="0.01" onchange="updateCalculations()" oninput="updateCalculations()">
+                        <div class="error-message" id="incomeError">Please enter your actual net income</div>
+                    </div>
+                    <div class="step-navigation">
+                        <button type="button" class="next-step-btn" onclick="nextStep('income')" disabled id="incomeNextBtn">Continue to Fixed Expenses →</button>
                     </div>
                 </div>
 
-                <!-- Expenses Section - Two Columns -->
-                <div class="form-section">
-                    <h3>💰 Monthly Expenses</h3>
-                    <div class="expenses-grid">
-                        <!-- Necessary Expenses Column -->
-                        <div class="expense-column">
-                            <div class="expense-column-header">
-                                <h4>🔒 Necessary Expenses</h4>
-                                <p class="expense-description">Fixed or essential costs that are difficult to reduce</p>
-                            </div>
-                            <div id="necessaryExpensesContainer" class="expense-items-container">
-                                <!-- Necessary expense items will be added here -->
-                            </div>
-                            <button type="button" class="add-expense-btn" onclick="addExpenseToCategory('Necessary')">➕ Add Expense</button>
-                            <div class="column-subtotal">
-                                <strong>Necessary Total: $<span id="necessaryTotal">0.00</span></strong>
-                            </div>
+                <!-- Step 2: Fixed Expenses -->
+                <div class="form-section step-section" id="stepFixed">
+                    <div class="step-header">
+                        <h3>🏠 Step 2: Your Fixed Expenses - The Must-Haves</h3>
+                        <div class="step-progress">Step 2 of 4</div>
+                    </div>
+                    <div class="educational-content">
+                        <div class="motivational-text">
+                            <p><strong>These are the expenses you HAVE to pay to keep a roof over your head and survive.</strong></p>
+                            <p>Think house payment, car payment, food, insurance, utilities - the things that if you don't pay, you could lose your home, car, or go hungry. These are your foundation expenses.</p>
+                            <p>Don't include anything you could cut if you really had to. Be thorough but honest.</p>
                         </div>
-
-                        <!-- Non-Necessary Expenses Column -->
-                        <div class="expense-column">
-                            <div class="expense-column-header">
-                                <h4>🎯 Non-Necessary Expenses</h4>
-                                <p class="expense-description">Discretionary spending that can be adjusted or eliminated</p>
-                            </div>
-                            <div id="nonNecessaryExpensesContainer" class="expense-items-container">
-                                <!-- Non-necessary expense items will be added here -->
-                            </div>
-                            <button type="button" class="add-expense-btn" onclick="addExpenseToCategory('Non-Necessary')">➕ Add Expense</button>
-                            <div class="column-subtotal">
-                                <strong>Non-Necessary Total: $<span id="nonNecessaryTotal">0.00</span></strong>
+                        <div class="hints-section">
+                            <button type="button" class="hint-toggle" onclick="toggleHints('fixed')">💡 Need Examples? Click Here</button>
+                            <div class="hints-content" id="fixedHints" style="display: none;">
+                                <p><strong>Fixed/Necessary Expenses Include:</strong></p>
+                                <ul>
+                                    <li>🏠 House/Rent payment</li>
+                                    <li>🚗 Car payment or transportation costs</li>
+                                    <li>🛡️ Insurance (health, car, home)</li>
+                                    <li>💡 Utilities (electricity, water, gas)</li>
+                                    <li>🛒 Groceries (actual food you eat)</li>
+                                    <li>🏥 Medical expenses</li>
+                                    <li>👨‍👩‍👧‍👦 Child care or support payments</li>
+                                    <li>💼 Work-related expenses</li>
+                                </ul>
+                                <p><em>Remember: These are expenses you can't easily eliminate without major life changes.</em></p>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Financial Summary -->
-                <div class="form-section summary-section">
-                    <h3>📊 Financial Summary</h3>
-                    <div class="summary-grid">
-                        <div class="summary-item">
-                            <div class="summary-label">Monthly Income</div>
-                            <div class="summary-value" id="summaryIncome">$0.00</div>
+                    <div class="expense-input-section">
+                        <div id="fixedExpensesContainer" class="expense-items-container">
+                            <!-- Fixed expense items will be added here -->
                         </div>
-                        <div class="summary-item">
-                            <div class="summary-label">Total Expenses</div>
-                            <div class="summary-value" id="summaryTotalExpenses">$0.00</div>
+                        <button type="button" class="add-expense-btn" onclick="addExpenseToCategory('Necessary')">➕ Add Fixed Expense</button>
+                        <div class="current-total">
+                            <strong>Fixed Expenses Total: $<span id="necessaryTotal">0.00</span></strong>
                         </div>
-                        <div class="summary-item">
-                            <div class="summary-label">Savings/Deficit</div>
-                            <div class="summary-value" id="summarySavings">$0.00</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-label">Savings Rate</div>
-                            <div class="summary-value" id="summarySavingsPercentage">0.0%</div>
-                        </div>
+                    </div>
+
+                    <div class="step-navigation">
+                        <button type="button" class="prev-step-btn" onclick="prevStep('fixed')">← Back to Income</button>
+                        <button type="button" class="next-step-btn" onclick="nextStep('fixed')" id="fixedNextBtn">Continue to Non-Essential →</button>
                     </div>
                 </div>
 
-                <!-- Generate Report Button -->
-                <button type="button" class="generate-report-btn" onclick="generateReport()">📊 Generate Detailed Report</button>
+                <!-- Step 3: Non-Essential Expenses -->
+                <div class="form-section step-section" id="stepNonEssential">
+                    <div class="step-header">
+                        <h3>🎯 Step 3: Non-Essential Expenses - The Truth Hurts</h3>
+                        <div class="step-progress">Step 3 of 4</div>
+                    </div>
+                    <div class="educational-content">
+                        <div class="motivational-text">
+                            <p><strong>This is where most people get honest with themselves... or avoid it.</strong></p>
+                            <p>These are the things you buy that you don't absolutely NEED to survive. The daily stops, the subscriptions you forget about, the habits that drain your account.</p>
+                            <p>Here's the hard truth: If you're broke at the end of the month but your list shows money left over, you're not being honest here. Every penny counts. Break your month down into weeks, your weeks into days. Where does that money go?</p>
+                            <p>The gas station stop every morning? The vending machine snack? The streaming service you never watch? These add up faster than you think.</p>
+                        </div>
+                        <div class="hints-section">
+                            <button type="button" class="hint-toggle" onclick="toggleHints('nonEssential')">💡 Common Non-Essential Expenses</button>
+                            <div class="hints-content" id="nonEssentialHints" style="display: none;">
+                                <p><strong>Non-Essential Expenses Include:</strong></p>
+                                <ul>
+                                    <li>🚬 Cigarettes or vaping</li>
+                                    <li>🍺 Alcohol and bars</li>
+                                    <li>☕ Daily coffee/latte runs</li>
+                                    <li>🍟 Fast food and takeout</li>
+                                    <li>🎬 Streaming services (Netflix, etc.)</li>
+                                    <li>🎮 Video games and entertainment</li>
+                                    <li>🛒 Impulse purchases</li>
+                                    <li>📱 Phone apps and in-app purchases</li>
+                                    <li>💅 Salon, spa, or grooming</li>
+                                    <li>👕 Clothing you don't need</li>
+                                    <li>🎭 Hobbies and recreational activities</li>
+                                    <li>🚗 Extra car washes/detailing</li>
+                                </ul>
+                                <p><em>Think daily habits: That $5 energy drink every morning = $150/month. Small things add up.</em></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="expense-input-section">
+                        <div id="nonEssentialExpensesContainer" class="expense-items-container">
+                            <!-- Non-essential expense items will be added here -->
+                        </div>
+                        <button type="button" class="add-expense-btn" onclick="addExpenseToCategory('Non-Necessary')">➕ Add Non-Essential Expense</button>
+                        <div class="current-total">
+                            <strong>Non-Essential Total: $<span id="nonNecessaryTotal">0.00</span></strong>
+                        </div>
+                    </div>
+
+                    <div class="step-navigation">
+                        <button type="button" class="prev-step-btn" onclick="prevStep('nonEssential')">← Back to Fixed Expenses</button>
+                        <button type="button" class="next-step-btn" onclick="nextStep('nonEssential')" id="nonEssentialNextBtn">Review Your Finances →</button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Financial Reality Check -->
+                <div class="form-section step-section" id="stepReview">
+                    <div class="step-header">
+                        <h3>🔍 Step 4: The Moment of Truth</h3>
+                        <div class="step-progress">Step 4 of 4</div>
+                    </div>
+                    <div class="educational-content">
+                        <div class="motivational-text">
+                            <p><strong>Now we see the real picture.</strong></p>
+                            <p>Look at these numbers. Does this match your reality? If you're broke every month but this shows money left over, we missed something. Go back through your days, your weeks, your month. That $5 here, $10 there - it adds up.</p>
+                            <p><strong>You can't fix what you won't see.</strong> And you can't see it until you're honest about where your money goes.</p>
+                            <p>The goal here isn't perfection - it's awareness. Once you know where your money goes, you can make real changes.</p>
+                        </div>
+
+                        <div class="reality-check" id="realityCheck">
+                            <div class="check-question">
+                                <h4>🤔 Be Honest: Does this match your experience?</h4>
+                                <p>If these numbers don't reflect reality, you haven't captured all your spending. Every penny matters.</p>
+                                <div class="honesty-buttons">
+                                    <button type="button" class="honesty-btn" onclick="beHonest()" id="beHonestBtn">I Need to Add More Expenses</button>
+                                    <button type="button" class="honesty-btn primary" onclick="acceptReality()" id="acceptRealityBtn" disabled>These Numbers Are Accurate</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financial Summary -->
+                    <div class="financial-summary-review">
+                        <div class="summary-review-grid">
+                            <div class="summary-review-item">
+                                <div class="summary-review-label">Monthly Income</div>
+                                <div class="summary-review-value" id="reviewIncome">$0.00</div>
+                            </div>
+                            <div class="summary-review-item">
+                                <div class="summary-review-label">Fixed Expenses</div>
+                                <div class="summary-review-value" id="reviewFixed">$0.00</div>
+                            </div>
+                            <div class="summary-review-item">
+                                <div class="summary-review-label">Non-Essential Expenses</div>
+                                <div class="summary-review-value" id="reviewNonEssential">$0.00</div>
+                            </div>
+                            <div class="summary-review-item">
+                                <div class="summary-review-label">Total Expenses</div>
+                                <div class="summary-review-value" id="reviewTotalExpenses">$0.00</div>
+                            </div>
+                            <div class="summary-review-item full-width">
+                                <div class="summary-review-label">Bottom Line</div>
+                                <div class="summary-review-value" id="reviewBottomLine">$0.00</div>
+                                <div class="bottom-line-explanation" id="bottomLineExplanation"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-navigation">
+                        <button type="button" class="prev-step-btn" onclick="prevStep('review')">← Back to Non-Essential</button>
+                        <button type="button" class="generate-report-btn" onclick="generateReport()" id="finalReportBtn" disabled>📊 Generate My Financial Report</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Report Output Section -->
@@ -791,7 +1208,7 @@
 
     <script>
         // ============================================
-        // PERSONAL FINANCIAL REPORT APPLICATION
+        // EDUCATIONAL FINANCIAL ASSESSMENT
         // ============================================
 
         // Data Model
@@ -801,19 +1218,75 @@
         };
 
         let expenseCounter = 0;
+        let currentStep = 'income';
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             loadSavedData();
-            updateCalculations(); // Initialize summary
+            showStep('income');
         });
+
+        // Step navigation
+        function nextStep(fromStep) {
+            if (fromStep === 'income') {
+                const income = parseFloat(document.getElementById('monthlyIncome').value);
+                if (!income || income <= 0) {
+                    alert('Please enter your monthly income to continue.');
+                    return;
+                }
+                showStep('fixed');
+            } else if (fromStep === 'fixed') {
+                showStep('nonEssential');
+            } else if (fromStep === 'nonEssential') {
+                showStep('review');
+                updateReviewSummary();
+            }
+        }
+
+        function prevStep(fromStep) {
+            if (fromStep === 'fixed') {
+                showStep('income');
+            } else if (fromStep === 'nonEssential') {
+                showStep('fixed');
+            } else if (fromStep === 'review') {
+                showStep('nonEssential');
+            }
+        }
+
+        function showStep(stepName) {
+            // Hide all steps
+            document.querySelectorAll('.step-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Show target step
+            document.getElementById('step' + stepName.charAt(0).toUpperCase() + stepName.slice(1)).classList.add('active');
+            currentStep = stepName;
+
+            // Update navigation buttons
+            updateStepNavigation();
+        }
+
+        function updateStepNavigation() {
+            const income = parseFloat(document.getElementById('monthlyIncome').value) || 0;
+            const incomeNextBtn = document.getElementById('incomeNextBtn');
+            const fixedNextBtn = document.getElementById('fixedNextBtn');
+            const nonEssentialNextBtn = document.getElementById('nonEssentialNextBtn');
+
+            // Income step validation
+            incomeNextBtn.disabled = !income || income <= 0;
+
+            // Other steps can always proceed (user can go back if needed)
+            if (fixedNextBtn) fixedNextBtn.disabled = false;
+            if (nonEssentialNextBtn) nonEssentialNextBtn.disabled = false;
+        }
 
         // Add a new expense item to a specific category
         function addExpenseToCategory(category, description = '', amount = '') {
             expenseCounter++;
             const expenseId = 'expense_' + expenseCounter;
 
-            const containerId = category === 'Necessary' ? 'necessaryExpensesContainer' : 'nonNecessaryExpensesContainer';
+            const containerId = category === 'Necessary' ? 'fixedExpensesContainer' : 'nonEssentialExpensesContainer';
             const container = document.getElementById(containerId);
 
             const expenseItem = document.createElement('div');
@@ -837,6 +1310,8 @@
                     if (descInput) descInput.focus();
                 }, 100);
             }
+
+            updateCalculations();
         }
 
         // Remove an expense item
@@ -846,6 +1321,98 @@
                 item.remove();
                 updateCalculations();
             }
+        }
+
+        // Toggle hints visibility
+        function toggleHints(category) {
+            const hintsElement = document.getElementById(category + 'Hints');
+            const isVisible = hintsElement.style.display !== 'none';
+            hintsElement.style.display = isVisible ? 'none' : 'block';
+        }
+
+        // Update calculations and display
+        function updateCalculations() {
+            const data = collectData();
+            const report = computeReport(data);
+
+            // Update step-specific displays
+            if (currentStep === 'fixed' || currentStep === 'nonEssential') {
+                document.getElementById('necessaryTotal').textContent = report.totalNecessary.toFixed(2);
+                document.getElementById('nonNecessaryTotal').textContent = report.totalNonNecessary.toFixed(2);
+            }
+
+            // Update review summary if on review step
+            if (currentStep === 'review') {
+                updateReviewSummary();
+            }
+
+            // Save data automatically
+            financialData = data;
+            saveData();
+
+            // Update navigation
+            updateStepNavigation();
+        }
+
+        // Update the review step summary
+        function updateReviewSummary() {
+            const data = collectData();
+            const report = computeReport(data);
+
+            document.getElementById('reviewIncome').textContent = '$' + report.income.toFixed(2);
+            document.getElementById('reviewFixed').textContent = '$' + report.totalNecessary.toFixed(2);
+            document.getElementById('reviewNonEssential').textContent = '$' + report.totalNonNecessary.toFixed(2);
+            document.getElementById('reviewTotalExpenses').textContent = '$' + report.totalExpenses.toFixed(2);
+
+            const bottomLineElement = document.getElementById('reviewBottomLine');
+            const explanationElement = document.getElementById('bottomLineExplanation');
+
+            bottomLineElement.textContent = (report.savingsOrDeficit >= 0 ? '$' : '-$') + Math.abs(report.savingsOrDeficit).toFixed(2);
+            bottomLineElement.className = 'summary-review-value ' +
+                (report.savingsOrDeficit >= 0 ? 'bottom-line-positive' : 'bottom-line-negative');
+
+            if (report.savingsOrDeficit >= 0) {
+                explanationElement.textContent = `You have $${report.savingsOrDeficit.toFixed(2)} left over each month`;
+                explanationElement.className = 'bottom-line-explanation bottom-line-positive';
+            } else {
+                explanationElement.textContent = `You're spending $${Math.abs(report.savingsOrDeficit).toFixed(2)} more than you earn`;
+                explanationElement.className = 'bottom-line-explanation bottom-line-negative';
+            }
+
+            // Check if expenses are within 0.5% of income for honesty validation
+            const income = report.income;
+            const expenses = report.totalExpenses;
+            const difference = Math.abs(income - expenses);
+            const percentDifference = income > 0 ? (difference / income) * 100 : 0;
+
+            const beHonestBtn = document.getElementById('beHonestBtn');
+            const acceptRealityBtn = document.getElementById('acceptRealityBtn');
+            const finalReportBtn = document.getElementById('finalReportBtn');
+
+            if (percentDifference <= 0.5) {
+                // Within acceptable range
+                beHonestBtn.style.display = 'none';
+                acceptRealityBtn.disabled = false;
+                finalReportBtn.disabled = false;
+                document.getElementById('realityCheck').style.display = 'none';
+            } else {
+                // Not within range - user needs to be more honest
+                beHonestBtn.style.display = 'inline-block';
+                acceptRealityBtn.disabled = true;
+                finalReportBtn.disabled = true;
+                document.getElementById('realityCheck').style.display = 'block';
+            }
+        }
+
+        // User acknowledges they need to add more expenses
+        function beHonest() {
+            alert("Good choice. Go back and really think through your spending. Every penny counts. Break your month into weeks, your weeks into days. That daily coffee stop? That vending machine snack? They add up fast.");
+            showStep('nonEssential');
+        }
+
+        // User accepts their financial reality
+        function acceptReality() {
+            alert("Good. Now you know where you stand. Awareness is the first step to change.");
         }
 
         // Validate form inputs
@@ -1014,11 +1581,6 @@
 
         // Generate and display the detailed financial report
         function generateReport() {
-            if (!validateForm()) {
-                alert('Please correct the errors in the form before generating the report.');
-                return;
-            }
-
             financialData = collectData();
             const report = computeReport(financialData);
 
@@ -1030,8 +1592,6 @@
 
             // Scroll to report
             document.getElementById('reportSection').scrollIntoView({ behavior: 'smooth' });
-
-            // Data is already saved via updateCalculations
         }
 
         // Save data to localStorage
@@ -1082,8 +1642,8 @@
                     document.getElementById('monthlyIncome').value = financialData.monthlyIncome || '';
 
                     // Clear existing expense containers
-                    document.getElementById('necessaryExpensesContainer').innerHTML = '';
-                    document.getElementById('nonNecessaryExpensesContainer').innerHTML = '';
+                    document.getElementById('fixedExpensesContainer').innerHTML = '';
+                    document.getElementById('nonEssentialExpensesContainer').innerHTML = '';
 
                     // Add saved expense items to appropriate categories
                     if (financialData.expenses && financialData.expenses.length > 0) {
@@ -1091,16 +1651,8 @@
                             addExpenseToCategory(expense.category, expense.description, expense.amount);
                         });
                     }
-
-                    // Ensure at least one empty item in each category if no data
-                    if (document.querySelectorAll('#necessaryExpensesContainer .expense-item').length === 0) {
-                        addExpenseToCategory('Necessary');
-                    }
-                    if (document.querySelectorAll('#nonNecessaryExpensesContainer .expense-item').length === 0) {
-                        addExpenseToCategory('Non-Necessary');
-                    }
                 } else {
-                    // No saved data - add empty items to start
+                    // No saved data - add empty items for new users
                     addExpenseToCategory('Necessary');
                     addExpenseToCategory('Non-Necessary');
                 }
@@ -1112,13 +1664,13 @@
             }
         }
 
-        // Placeholder functions for prototype navigation
+        // Educational functions
         function showLearnMenu() {
-            alert('Learn menu would be implemented here');
+            alert('This guided assessment is designed to help you understand your spending habits. Answer honestly - awareness is the first step to financial freedom.');
         }
 
         function toggleExamplesMode() {
-            alert('Examples mode would be implemented here');
+            alert('Examples mode would show sample financial scenarios. For now, focus on your own spending patterns.');
         }
 
         // Export functionality (placeholder)
