@@ -4004,39 +4004,63 @@
             const data = collectData();
             const report = computeReport(data);
 
-            // Calculate total savings from all reductions
+            // Calculate total savings and new expenses from all reductions
             let totalMonthlySavings = 0;
+            let newExpenses = 0;
             const reductionItems = document.querySelectorAll('.expense-reduction-item[id^="full-reduction-item-"]');
 
             reductionItems.forEach((item, index) => {
                 const expense = JSON.parse(item.dataset.expenseData);
                 let itemSavings = 0;
 
-                if (expense.frequency === 'daily') {
-                    const targetDaysPerWeek = parseInt(document.getElementById(`full-days-${index}`).value);
+            if (expense.frequency === 'daily') {
+                const targetDaysPerWeek = parseInt(document.getElementById(`full-days-${index}`).value);
+                if (targetDaysPerWeek < 7) {
+                    // There is a reduction
                     const currentWeeklySpending = expense.originalAmount * 7;
                     const targetWeeklySpending = expense.originalAmount * targetDaysPerWeek;
                     const currentMonthly = (currentWeeklySpending * 52) / 12;
                     const targetMonthly = (targetWeeklySpending * 52) / 12;
                     itemSavings = currentMonthly - targetMonthly;
-                } else if (expense.frequency === 'weekly') {
+                    newExpenses += targetMonthly;
+                } else {
+                    // No reduction (7 days/week selected)
+                    newExpenses += expense.amount;
+                }
+            } else if (expense.frequency === 'weekly') {
                     const weeksSelect = document.getElementById(`full-weeks-${index}`);
                     const percentSelect = document.getElementById(`full-week-percent-${index}`);
 
-                    if (weeksSelect && weeksSelect.value !== undefined) {
+                    if (weeksSelect && weeksSelect.value !== undefined && percentSelect.value === '0') {
                         const targetWeeksPerMonth = parseInt(weeksSelect.value);
-                        const currentMonthly = expense.originalAmount * (52/12);
-                        const targetMonthly = expense.originalAmount * targetWeeksPerMonth;
-                        itemSavings = currentMonthly - targetMonthly;
-                    }
-
-                    if (percentSelect && percentSelect.value !== '0') {
+                        if (targetWeeksPerMonth < 4) {
+                            // There is a reduction
+                            const currentMonthly = expense.originalAmount * (52/12);
+                            const targetMonthly = expense.originalAmount * targetWeeksPerMonth;
+                            itemSavings = currentMonthly - targetMonthly;
+                            newExpenses += targetMonthly;
+                        } else {
+                            // No reduction (4 weeks/month selected)
+                            newExpenses += expense.amount;
+                        }
+                    } else if (percentSelect && percentSelect.value !== '0') {
                         const percentReduction = parseInt(percentSelect.value) / 100;
                         itemSavings = expense.amount * percentReduction;
+                        newExpenses += expense.amount * (1 - percentReduction);
+                    } else {
+                        // No reduction selected
+                        newExpenses += expense.amount;
                     }
                 } else {
                     const reductionPercent = parseInt(document.getElementById(`full-percent-${index}`).value) / 100;
-                    itemSavings = expense.amount * reductionPercent;
+                    if (reductionPercent > 0) {
+                        // There is a reduction
+                        itemSavings = expense.amount * reductionPercent;
+                        newExpenses += expense.amount * (1 - reductionPercent);
+                    } else {
+                        // No reduction (0% selected)
+                        newExpenses += expense.amount;
+                    }
                 }
 
                 totalMonthlySavings += Math.max(0, itemSavings); // Only count positive savings
