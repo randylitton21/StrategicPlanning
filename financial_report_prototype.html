@@ -984,7 +984,7 @@
                     </div>
                     <div class="form-group">
                         <label for="monthlyIncome">Monthly Net Income (after taxes)</label>
-                        <input type="number" id="monthlyIncome" class="form-input" placeholder="Your take-home pay each month" min="0" step="0.01" onchange="updateCalculations()" oninput="updateCalculations()">
+                        <input type="number" id="monthlyIncome" class="form-input" placeholder="Your take-home pay each month" min="0" step="0.01" onchange="updateCalculations(); updateStepNavigation();" oninput="updateCalculations(); updateStepNavigation();">
                         <div class="error-message" id="incomeError">Please enter your actual net income</div>
                     </div>
                     <div class="step-navigation">
@@ -1224,14 +1224,20 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadSavedData();
             showStep('income');
+            updateStepNavigation(); // Initialize button states
         });
 
         // Step navigation
         function nextStep(fromStep) {
             if (fromStep === 'income') {
-                const income = parseFloat(document.getElementById('monthlyIncome').value);
+                const incomeInput = document.getElementById('monthlyIncome');
+                const incomeValue = incomeInput ? incomeInput.value.trim() : '';
+                const income = parseFloat(incomeValue) || 0;
+
+                console.log('Next step - Income value:', incomeValue, 'Parsed income:', income);
+
                 if (!income || income <= 0) {
-                    alert('Please enter your monthly income to continue.');
+                    alert('Please enter a valid monthly income amount greater than $0 to continue.');
                     return;
                 }
                 showStep('fixed');
@@ -1268,13 +1274,22 @@
         }
 
         function updateStepNavigation() {
-            const income = parseFloat(document.getElementById('monthlyIncome').value) || 0;
+            const incomeInput = document.getElementById('monthlyIncome');
+            const incomeValue = incomeInput ? incomeInput.value.trim() : '';
+            const income = parseFloat(incomeValue) || 0;
+
             const incomeNextBtn = document.getElementById('incomeNextBtn');
             const fixedNextBtn = document.getElementById('fixedNextBtn');
             const nonEssentialNextBtn = document.getElementById('nonEssentialNextBtn');
 
-            // Income step validation
-            incomeNextBtn.disabled = !income || income <= 0;
+            // Debug logging
+            console.log('Income value:', incomeValue, 'Parsed income:', income, 'Button disabled:', !income || income <= 0);
+
+            // Income step validation - income must be a positive number
+            if (incomeNextBtn) {
+                incomeNextBtn.disabled = !income || income <= 0;
+                console.log('Income button disabled state:', incomeNextBtn.disabled);
+            }
 
             // Other steps can always proceed (user can go back if needed)
             if (fixedNextBtn) fixedNextBtn.disabled = false;
@@ -1603,33 +1618,6 @@
             }
         }
 
-        // Update calculations and summary in real-time
-        function updateCalculations() {
-            const data = collectData();
-            const report = computeReport(data);
-
-            // Update column subtotals
-            document.getElementById('necessaryTotal').textContent = report.totalNecessary.toFixed(2);
-            document.getElementById('nonNecessaryTotal').textContent = report.totalNonNecessary.toFixed(2);
-
-            // Update summary section
-            document.getElementById('summaryIncome').textContent = '$' + report.income.toFixed(2);
-            document.getElementById('summaryTotalExpenses').textContent = '$' + report.totalExpenses.toFixed(2);
-
-            const savingsElement = document.getElementById('summarySavings');
-            savingsElement.textContent = (report.savingsOrDeficit >= 0 ? '$' : '-$') + Math.abs(report.savingsOrDeficit).toFixed(2);
-            savingsElement.className = 'summary-value ' +
-                (report.savingsOrDeficit >= 0 ? 'summary-positive' : 'summary-negative');
-
-            const percentageElement = document.getElementById('summarySavingsPercentage');
-            percentageElement.textContent = Math.abs(report.savingsPercentage).toFixed(1) + '%';
-            percentageElement.className = 'summary-value ' +
-                (report.savingsPercentage >= 0 ? 'summary-positive' : 'summary-negative');
-
-            // Save data automatically
-            financialData = data;
-            saveData();
-        }
 
         // Load saved data from localStorage
         function loadSavedData() {
