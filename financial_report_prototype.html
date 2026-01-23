@@ -3897,7 +3897,7 @@
                 reductionList.appendChild(item);
 
                 // Trigger initial calculation with default values
-                setTimeout(() => updateExpenseReduction(index), 100);
+                setTimeout(() => updateFullExpenseReduction(index), 100);
             });
 
             // Show summary section
@@ -3956,9 +3956,17 @@
                 }
             } else {
                 // Monthly expense - percentage reduction
-                const reductionPercent = parseInt(document.getElementById(`full-percent-${index}`).value) / 100;
-                monthlySavings = expense.amount * reductionPercent;
-                reductionPercentage = reductionPercent * 100;
+                const percentElement = document.getElementById(`full-percent-${index}`);
+                if (percentElement) {
+                    const reductionPercent = parseInt(percentElement.value) / 100;
+                    monthlySavings = expense.amount * reductionPercent;
+                    reductionPercentage = reductionPercent * 100;
+                    console.log(`Monthly expense: index=${index}, amount=$${expense.amount}, selected=${percentElement.value}%, reductionPercent=${reductionPercent}, savings=$${monthlySavings}, percentage=${reductionPercentage}%`);
+                } else {
+                    console.log(`Could not find element full-percent-${index} for index ${index}`);
+                    monthlySavings = 0;
+                    reductionPercentage = 0;
+                }
             }
 
             savingsElement.textContent = formatCurrency(monthlySavings);
