@@ -1391,16 +1391,22 @@
             const report = computeReport(data);
 
             // Update summary section
-            document.getElementById('summaryIncome').textContent = '$' + report.income.toFixed(2);
-            document.getElementById('summaryTotalExpenses').textContent = '$' + report.totalExpenses.toFixed(2);
-            document.getElementById('summarySavings').textContent = (report.savingsOrDeficit >= 0 ? '$' : '-$') + Math.abs(report.savingsOrDeficit).toFixed(2);
-            document.getElementById('summarySavingsPercentage').textContent = Math.abs(report.savingsPercentage).toFixed(1) + '%';
+            const summaryIncome = document.getElementById('summaryIncome');
+            const summaryTotalExpenses = document.getElementById('summaryTotalExpenses');
+            const summarySavings = document.getElementById('summarySavings');
+            const summarySavingsPercentage = document.getElementById('summarySavingsPercentage');
 
-            // Update step-specific displays
-            if (currentStep === 'fixed' || currentStep === 'nonEssential') {
-                document.getElementById('necessaryTotal').textContent = report.totalNecessary.toFixed(2);
-                document.getElementById('nonNecessaryTotal').textContent = report.totalNonNecessary.toFixed(2);
-            }
+            if (summaryIncome) summaryIncome.textContent = '$' + report.income.toFixed(2);
+            if (summaryTotalExpenses) summaryTotalExpenses.textContent = '$' + report.totalExpenses.toFixed(2);
+            if (summarySavings) summarySavings.textContent = (report.savingsOrDeficit >= 0 ? '$' : '-$') + Math.abs(report.savingsOrDeficit).toFixed(2);
+            if (summarySavingsPercentage) summarySavingsPercentage.textContent = Math.abs(report.savingsPercentage).toFixed(1) + '%';
+
+            // Always update the step-specific totals if they exist
+            const necessaryTotal = document.getElementById('necessaryTotal');
+            const nonNecessaryTotal = document.getElementById('nonNecessaryTotal');
+
+            if (necessaryTotal) necessaryTotal.textContent = report.totalNecessary.toFixed(2);
+            if (nonNecessaryTotal) nonNecessaryTotal.textContent = report.totalNonNecessary.toFixed(2);
 
             // Update review summary if on review step
             if (currentStep === 'review') {
