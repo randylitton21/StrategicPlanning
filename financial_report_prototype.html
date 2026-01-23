@@ -796,6 +796,162 @@
             font-weight: 400;
         }
 
+        /* Expense Reduction Planner */
+        .expense-reduction-section {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(46, 125, 50, 0.05));
+            border-radius: var(--radius-lg);
+            border: 2px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .expense-reduction-section h4 {
+            color: #2e7d32;
+            font-size: 1.3em;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .expense-reduction-explanation {
+            color: #000000;
+            font-size: 0.95em;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .expense-reduction-intro {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: var(--radius-md);
+            margin-bottom: 25px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .reduction-tip h5 {
+            color: #2e7d32;
+            margin: 0 0 8px 0;
+            font-size: 1em;
+        }
+
+        .reduction-tip p {
+            color: #000000;
+            margin: 0;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .expense-reduction-item {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--radius-md);
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .expense-reduction-item.expense-reduced {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.05);
+        }
+
+        .expense-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .expense-name {
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 2px;
+        }
+
+        .expense-amount {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .reduction-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 200px;
+        }
+
+        .reduction-select {
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            border-radius: var(--radius-sm);
+            font-size: 0.85em;
+            background: white;
+            min-width: 60px;
+        }
+
+        .reduction-label {
+            font-size: 0.85em;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .reduction-savings {
+            font-weight: 600;
+            color: #2e7d32;
+            font-size: 0.9em;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .expense-reduction-summary {
+            background: rgba(46, 125, 50, 0.1);
+            padding: 20px;
+            border-radius: var(--radius-md);
+            margin-top: 20px;
+            border: 2px solid #4caf50;
+        }
+
+        .expense-reduction-summary h5 {
+            color: #2e7d32;
+            margin: 0 0 15px 0;
+            font-size: 1.1em;
+        }
+
+        .reduction-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .reduction-metric {
+            text-align: center;
+        }
+
+        .reduction-metric .metric-label {
+            display: block;
+            color: #666;
+            font-size: 0.85em;
+            margin-bottom: 2px;
+        }
+
+        .reduction-metric .metric-value {
+            display: block;
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #2e7d32;
+        }
+
+        .reduction-insight {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-style: italic;
+            color: #000000;
+            border-left: 3px solid #4caf50;
+        }
+
         /* What-If Scenarios */
         .scenarios-section {
             margin-top: 30px;
@@ -1916,9 +2072,45 @@
                         </div>
                     </div>
 
+                    <!-- Expense Reduction Planner -->
+                    <div class="expense-reduction-section">
+                        <h4>🎯 Smart Expense Reduction Planner</h4>
+                        <p class="expense-reduction-explanation">Cut expenses gradually and realistically. Instead of eliminating habits completely, reduce their frequency to save money while maintaining your lifestyle.</p>
+
+                        <div class="expense-reduction-intro">
+                            <div class="reduction-tip">
+                                <h5>💡 Why Gradual Cuts Work Better</h5>
+                                <p>Research shows that people are more likely to stick with gradual changes. Cutting coffee from 7 days/week to 5 days/week saves $240/month but feels achievable. Completely eliminating it might lead to burnout and relapse.</p>
+                            </div>
+                        </div>
+
+                        <div class="expense-reduction-list" id="expenseReductionList">
+                            <!-- Expense reduction items will be populated here -->
+                        </div>
+
+                        <div class="expense-reduction-summary" id="expenseReductionSummary" style="display: none;">
+                            <h5>💰 Your Reduction Plan Impact:</h5>
+                            <div class="reduction-metrics">
+                                <div class="reduction-metric">
+                                    <span class="metric-label">Monthly Savings:</span>
+                                    <span class="metric-value" id="totalMonthlySavings">$0.00</span>
+                                </div>
+                                <div class="reduction-metric">
+                                    <span class="metric-label">Annual Savings:</span>
+                                    <span class="metric-value" id="totalAnnualSavings">$0.00</span>
+                                </div>
+                                <div class="reduction-metric">
+                                    <span class="metric-label">New Bottom Line:</span>
+                                    <span class="metric-value" id="newBottomLine">$0.00</span>
+                                </div>
+                            </div>
+                            <div class="reduction-insight" id="reductionInsight"></div>
+                        </div>
+                    </div>
+
                     <!-- What-If Scenarios -->
                     <div class="scenarios-section">
-                        <h4>🔮 What-If Scenarios</h4>
+                        <h4>🔮 Advanced What-If Scenarios</h4>
                         <p class="scenarios-explanation">Explore how changes to your income or expenses would impact your financial situation:</p>
 
                         <div class="scenario-controls">
@@ -3074,6 +3266,9 @@
 
             document.getElementById('reviewIncome').textContent = '$' + report.income.toFixed(2);
             document.getElementById('reviewFixed').textContent = '$' + report.totalNecessary.toFixed(2);
+
+            // Initialize expense reduction planner
+            initializeExpenseReductionPlanner();
             document.getElementById('reviewNonEssential').textContent = '$' + report.totalNonNecessary.toFixed(2);
             document.getElementById('reviewTotalExpenses').textContent = '$' + report.totalExpenses.toFixed(2);
 
@@ -3407,6 +3602,192 @@
                 .replace(/\s+/g, ' ')            // Normalize whitespace
                 .trim();
         };
+
+        // Initialize expense reduction planner
+        function initializeExpenseReductionPlanner() {
+            const data = collectData();
+            const nonEssentials = data.expenses.filter(exp =>
+                !['Housing', 'Transportation', 'Food', 'Utilities', 'Insurance', 'Healthcare', 'Debt Payments'].includes(exp.category)
+            );
+
+            const reductionList = document.getElementById('expenseReductionList');
+            reductionList.innerHTML = '';
+
+            if (nonEssentials.length === 0) {
+                reductionList.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">No non-essential expenses to optimize. Great job keeping your spending focused!</p>';
+                return;
+            }
+
+            nonEssentials.forEach((expense, index) => {
+                const item = document.createElement('div');
+                item.className = 'expense-reduction-item';
+                item.id = `reduction-item-${index}`;
+
+                let controlsHTML = '';
+
+                let defaultValue = '';
+                if (expense.frequency === 'daily') {
+                    defaultValue = '5'; // Default to reducing from 7 to 5 days
+                    controlsHTML = `
+                        <div class="reduction-controls">
+                            <span class="reduction-label">Keep:</span>
+                            <select class="reduction-select" id="days-${index}" onchange="updateExpenseReduction(${index})">
+                                <option value="7">7 days/week</option>
+                                <option value="6">6 days/week</option>
+                                <option value="5" selected>5 days/week</option>
+                                <option value="4">4 days/week</option>
+                                <option value="3">3 days/week</option>
+                                <option value="2">2 days/week</option>
+                                <option value="1">1 day/week</option>
+                                <option value="0">0 days/week</option>
+                            </select>
+                            <span class="reduction-savings" id="savings-${index}">$0.00</span>
+                        </div>
+                    `;
+                } else if (expense.frequency === 'weekly') {
+                    defaultValue = '3'; // Default to reducing from 4 to 3 weeks
+                    controlsHTML = `
+                        <div class="reduction-controls">
+                            <span class="reduction-label">Keep:</span>
+                            <select class="reduction-select" id="weeks-${index}" onchange="updateExpenseReduction(${index})">
+                                <option value="4">4 weeks/month</option>
+                                <option value="3" selected>3 weeks/month</option>
+                                <option value="2">2 weeks/month</option>
+                                <option value="1">1 week/month</option>
+                                <option value="0">0 weeks/month</option>
+                            </select>
+                            <span class="reduction-savings" id="savings-${index}">$0.00</span>
+                        </div>
+                    `;
+                } else {
+                    // Monthly expense - percentage reduction
+                    defaultValue = '20'; // Default to 20% reduction
+                    controlsHTML = `
+                        <div class="reduction-controls">
+                            <span class="reduction-label">Reduce by:</span>
+                            <select class="reduction-select" id="percent-${index}" onchange="updateExpenseReduction(${index})">
+                                <option value="0">0%</option>
+                                <option value="10">10%</option>
+                                <option value="20" selected>20%</option>
+                                <option value="30">30%</option>
+                                <option value="40">40%</option>
+                                <option value="50">50%</option>
+                                <option value="60">60%</option>
+                                <option value="70">70%</option>
+                                <option value="80">80%</option>
+                                <option value="90">90%</option>
+                                <option value="100">100%</option>
+                            </select>
+                            <span class="reduction-savings" id="savings-${index}">$0.00</span>
+                        </div>
+                    `;
+                }
+
+                item.innerHTML = `
+                    <div class="expense-info">
+                        <div class="expense-name">${expense.subCategory || expense.category}: ${expense.description || 'Expense'}</div>
+                        <div class="expense-amount">Currently: ${formatCurrency(expense.amount)}/month</div>
+                    </div>
+                    ${controlsHTML}
+                `;
+
+                // Store expense data for calculations
+                item.dataset.expenseData = JSON.stringify(expense);
+                reductionList.appendChild(item);
+
+                // Trigger initial calculation with default values
+                setTimeout(() => updateExpenseReduction(index), 100);
+            });
+
+            // Show summary section
+            document.getElementById('expenseReductionSummary').style.display = 'block';
+        }
+
+        // Update expense reduction calculation
+        function updateExpenseReduction(index) {
+            const item = document.getElementById(`reduction-item-${index}`);
+            const expense = JSON.parse(item.dataset.expenseData);
+            const savingsElement = document.getElementById(`savings-${index}`);
+
+            let currentFrequency;
+            let reductionAmount = 0;
+
+            if (expense.frequency === 'daily') {
+                currentFrequency = parseInt(document.getElementById(`days-${index}`).value);
+                const targetMonthly = (expense.originalAmount * currentFrequency * 52) / 12; // Convert to monthly
+                reductionAmount = expense.amount - targetMonthly;
+            } else if (expense.frequency === 'weekly') {
+                currentFrequency = parseInt(document.getElementById(`weeks-${index}`).value);
+                const targetMonthly = expense.originalAmount * currentFrequency;
+                reductionAmount = expense.amount - targetMonthly;
+            } else {
+                // Monthly - percentage reduction
+                const reductionPercent = parseInt(document.getElementById(`percent-${index}`).value) / 100;
+                reductionAmount = expense.amount * reductionPercent;
+            }
+
+            savingsElement.textContent = formatCurrency(reductionAmount);
+
+            if (reductionAmount > 0) {
+                item.classList.add('expense-reduced');
+                savingsElement.style.color = '#2e7d32';
+            } else {
+                item.classList.remove('expense-reduced');
+                savingsElement.style.color = '#666';
+            }
+
+            updateReductionSummary();
+        }
+
+        // Update overall reduction summary
+        function updateReductionSummary() {
+            const data = collectData();
+            const report = computeReport(data);
+
+            // Calculate total savings from all reductions
+            let totalMonthlySavings = 0;
+            const reductionItems = document.querySelectorAll('.expense-reduction-item');
+
+            reductionItems.forEach((item, index) => {
+                const expense = JSON.parse(item.dataset.expenseData);
+                let itemSavings = 0;
+
+                if (expense.frequency === 'daily') {
+                    const currentDays = parseInt(document.getElementById(`days-${index}`).value);
+                    const targetMonthly = (expense.originalAmount * currentDays * 52) / 12;
+                    itemSavings = expense.amount - targetMonthly;
+                } else if (expense.frequency === 'weekly') {
+                    const currentWeeks = parseInt(document.getElementById(`weeks-${index}`).value);
+                    const targetMonthly = expense.originalAmount * currentWeeks;
+                    itemSavings = expense.amount - targetMonthly;
+                } else {
+                    const reductionPercent = parseInt(document.getElementById(`percent-${index}`).value) / 100;
+                    itemSavings = expense.amount * reductionPercent;
+                }
+
+                totalMonthlySavings += Math.max(0, itemSavings); // Only count positive savings
+            });
+
+            const totalAnnualSavings = totalMonthlySavings * 12;
+            const newExpenses = report.totalExpenses - totalMonthlySavings;
+            const newBottomLine = data.monthlyIncome - newExpenses;
+
+            document.getElementById('totalMonthlySavings').textContent = formatCurrency(totalMonthlySavings);
+            document.getElementById('totalAnnualSavings').textContent = formatCurrency(totalAnnualSavings);
+            document.getElementById('newBottomLine').textContent = formatCurrency(newBottomLine);
+
+            // Update insight
+            const insightElement = document.getElementById('reductionInsight');
+            if (totalMonthlySavings === 0) {
+                insightElement.textContent = "No reductions selected yet. Try reducing some non-essential expenses to see potential savings!";
+            } else if (totalMonthlySavings < 50) {
+                insightElement.textContent = `Small changes add up! Your $${totalMonthlySavings.toFixed(0)}/month reduction could fund an emergency fund or pay off debt faster.`;
+            } else if (totalMonthlySavings < 200) {
+                insightElement.textContent = `Great progress! $${totalMonthlySavings.toFixed(0)}/month in savings could help you reach financial goals 2x faster. Consider automating these savings.`;
+            } else {
+                insightElement.textContent = `Excellent work! $${totalMonthlySavings.toFixed(0)}/month in savings represents a significant lifestyle optimization. You're building wealth through smart spending choices!`;
+            }
+        }
 
         // Export basic report as PDF
         async function exportBasicReport() {
