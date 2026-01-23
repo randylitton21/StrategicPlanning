@@ -1523,8 +1523,8 @@
             const income = parseFloat(document.getElementById('monthlyIncome').value) || 0;
             const expenses = [];
 
-            // Collect confirmed necessary expenses
-            const necessaryItems = document.querySelectorAll('#necessaryExpensesContainer .expense-item[data-confirmed="true"]');
+            // Collect confirmed necessary expenses (Fixed Expenses)
+            const necessaryItems = document.querySelectorAll('#fixedExpensesContainer .expense-item[data-confirmed="true"]');
             necessaryItems.forEach(item => {
                 const description = item.querySelector('.expense-description').value.trim();
                 const amount = parseFloat(item.querySelector('.expense-amount').value) || 0;
@@ -1538,8 +1538,8 @@
                 }
             });
 
-            // Collect confirmed non-necessary expenses
-            const nonNecessaryItems = document.querySelectorAll('#nonNecessaryExpensesContainer .expense-item[data-confirmed="true"]');
+            // Collect confirmed non-necessary expenses (Non-Essential)
+            const nonNecessaryItems = document.querySelectorAll('#nonEssentialExpensesContainer .expense-item[data-confirmed="true"]');
             nonNecessaryItems.forEach(item => {
                 const description = item.querySelector('.expense-description').value.trim();
                 const amount = parseFloat(item.querySelector('.expense-amount').value) || 0;
