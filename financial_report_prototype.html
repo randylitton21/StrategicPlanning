@@ -384,27 +384,6 @@
             background: #d32f2f;
         }
 
-        .expense-item-actions {
-            display: flex;
-            gap: 4px;
-            align-items: center;
-        }
-
-        .add-expense-confirm {
-            background: var(--success);
-            color: white;
-            border: none;
-            padding: 6px 10px;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            font-size: 0.8em;
-            transition: background var(--transition-fast);
-            font-weight: bold;
-        }
-
-        .add-expense-confirm:hover {
-            background: #388e3c;
-        }
 
         .add-expense-btn {
             background: var(--success);
@@ -931,9 +910,6 @@
                 width: 100%;
             }
 
-            .expense-item-actions {
-                justify-content: center;
-            }
 
             .summary-grid {
                 grid-template-columns: 1fr;
@@ -1254,15 +1230,6 @@
             updateTotals(); // Initialize totals display
         });
 
-        // Add expense to total when check mark is clicked
-        function addExpenseToTotal(expenseId) {
-            const expenseItem = document.getElementById(expenseId);
-            if (expenseItem) {
-                expenseItem.setAttribute('data-confirmed', 'true');
-                expenseItem.style.opacity = '0.7'; // Visual feedback that it's confirmed
-                updateTotals();
-            }
-        }
 
         // Step navigation
         function nextStep(fromStep) {
@@ -1347,13 +1314,10 @@
 
             expenseItem.innerHTML = `
                 <div class="expense-item-input-group">
-                    <input type="text" placeholder="Expense description" value="${description}" class="expense-description">
-                    <input type="number" placeholder="Amount" value="${amount}" min="0" step="0.01" class="expense-amount">
+                    <input type="text" placeholder="Expense description" value="${description}" class="expense-description" onchange="updateTotals()" oninput="updateTotals()">
+                    <input type="number" placeholder="Amount" value="${amount}" min="0" step="0.01" class="expense-amount" onchange="updateTotals()" oninput="updateTotals()">
                 </div>
-                <div class="expense-item-actions">
-                    <button type="button" class="add-expense-confirm" onclick="addExpenseToTotal('${expenseId}')">✓</button>
-                    <button type="button" class="remove-expense" onclick="removeExpense('${expenseId}')">×</button>
-                </div>
+                <button type="button" class="remove-expense" onclick="removeExpense('${expenseId}')">×</button>
             `;
 
             container.appendChild(expenseItem);
@@ -1523,8 +1487,8 @@
             const income = parseFloat(document.getElementById('monthlyIncome').value) || 0;
             const expenses = [];
 
-            // Collect confirmed necessary expenses (Fixed Expenses)
-            const necessaryItems = document.querySelectorAll('#fixedExpensesContainer .expense-item[data-confirmed="true"]');
+            // Collect necessary expenses (Fixed Expenses)
+            const necessaryItems = document.querySelectorAll('#fixedExpensesContainer .expense-item');
             necessaryItems.forEach(item => {
                 const description = item.querySelector('.expense-description').value.trim();
                 const amount = parseFloat(item.querySelector('.expense-amount').value) || 0;
@@ -1538,8 +1502,8 @@
                 }
             });
 
-            // Collect confirmed non-necessary expenses (Non-Essential)
-            const nonNecessaryItems = document.querySelectorAll('#nonEssentialExpensesContainer .expense-item[data-confirmed="true"]');
+            // Collect non-necessary expenses (Non-Essential)
+            const nonNecessaryItems = document.querySelectorAll('#nonEssentialExpensesContainer .expense-item');
             nonNecessaryItems.forEach(item => {
                 const description = item.querySelector('.expense-description').value.trim();
                 const amount = parseFloat(item.querySelector('.expense-amount').value) || 0;
@@ -1685,22 +1649,10 @@
                     document.getElementById('fixedExpensesContainer').innerHTML = '';
                     document.getElementById('nonEssentialExpensesContainer').innerHTML = '';
 
-                    // Add saved expense items to appropriate categories and mark as confirmed
+                    // Add saved expense items to appropriate categories
                     if (financialData.expenses && financialData.expenses.length > 0) {
                         financialData.expenses.forEach(expense => {
                             addExpenseToCategory(expense.category, expense.description, expense.amount);
-                            // Mark the last added expense as confirmed
-                            setTimeout(() => {
-                                const containers = document.querySelectorAll('.expense-items-container');
-                                containers.forEach(container => {
-                                    const items = container.querySelectorAll('.expense-item');
-                                    const lastItem = items[items.length - 1];
-                                    if (lastItem) {
-                                        lastItem.setAttribute('data-confirmed', 'true');
-                                        lastItem.style.opacity = '0.7';
-                                    }
-                                });
-                            }, 100);
                         });
                     }
                 } else {
