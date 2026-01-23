@@ -397,6 +397,22 @@
             background: #d32f2f;
         }
 
+        .expense-frequency {
+            width: 100px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.9em;
+            background: white;
+            color: var(--text-primary);
+            margin-right: 8px;
+        }
+
+        .expense-frequency:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
 
         .add-expense-btn {
             background: var(--success);
@@ -1518,6 +1534,35 @@
             }
         }
 
+        /* Frequency Feature Styling */
+        .frequency-feature {
+            background: linear-gradient(135deg, rgba(74, 124, 74, 0.1), rgba(106, 158, 106, 0.05));
+            border: 1px solid rgba(74, 124, 74, 0.3);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .frequency-header h4 {
+            color: #2e5932;
+            margin: 0 0 15px 0;
+            font-size: 1.1em;
+            font-weight: 700;
+        }
+
+        .frequency-explanation {
+            color: #000000;
+            line-height: 1.6;
+        }
+
+        .frequency-explanation p {
+            margin: 0 0 12px 0;
+        }
+
+        .frequency-explanation p:last-child {
+            margin-bottom: 0;
+        }
+
     </style>
 </head>
 <body>
@@ -1580,6 +1625,17 @@
                             <p><strong>These are the expenses you HAVE to pay to keep a roof over your head and survive.</strong></p>
                             <p>Think house payment, car payment, food, insurance, utilities - the things that if you don't pay, you could lose your home, car, or go hungry. These are your foundation expenses.</p>
                             <p>Don't include anything you could cut if you really had to. Be thorough but honest.</p>
+                        </div>
+
+                        <div class="frequency-feature">
+                            <div class="frequency-header">
+                                <h4>💡 Think Weekly or Daily? We've Got You Covered!</h4>
+                            </div>
+                            <div class="frequency-explanation">
+                                <p><strong>Most people think about their expenses weekly or daily, not monthly.</strong> That's why we made it easy to enter your expenses in whatever time frame makes sense to you.</p>
+                                <p><strong>How it works:</strong> Enter your amounts as you normally think about them (daily coffee = $5, weekly groceries = $100), and we'll automatically convert them to monthly totals. This helps you be more accurate and honest about your spending patterns.</p>
+                                <p><strong>Pro tip:</strong> Weekly thinking often reveals hidden costs you might miss when thinking monthly. Give it a try - it might surprise you how much those "small" daily habits add up!</p>
+                            </div>
                         </div>
                         <div class="hints-section">
                             <button type="button" class="hint-toggle" onclick="toggleHints('fixed')">💡 Need Examples? Click Here</button>
@@ -1648,6 +1704,17 @@
                                     <li>🚗 Extra car washes/detailing</li>
                                 </ul>
                                 <p><em>Think daily habits: That $5 energy drink every morning = $150/month. Small things add up.</em></p>
+                            </div>
+                        </div>
+
+                        <div class="frequency-feature">
+                            <div class="frequency-header">
+                                <h4>💡 Think Weekly or Daily? We've Got You Covered!</h4>
+                            </div>
+                            <div class="frequency-explanation">
+                                <p><strong>Most people think about their expenses weekly or daily, not monthly.</strong> That's why we made it easy to enter your expenses in whatever time frame makes sense to you.</p>
+                                <p><strong>How it works:</strong> Enter your amounts as you normally think about them (daily coffee = $5, weekly groceries = $100), and we'll automatically convert them to monthly totals. This helps you be more accurate and honest about your spending patterns.</p>
+                                <p><strong>Pro tip:</strong> Weekly thinking often reveals hidden costs you might miss when thinking monthly. Give it a try - it might surprise you how much those "small" daily habits add up!</p>
                             </div>
                         </div>
                     </div>
@@ -2159,7 +2226,12 @@
                         <option value="">Select Category</option>
                         ${getCategoryOptions(fullCategory)}
                     </select>
-                    <input type="text" placeholder="Expense description" value="${description}" class="expense-description" onchange="updateTotals()" oninput="updateTotals()">
+                    <input type="text" placeholder="Expense description (optional)" value="${description}" class="expense-description" onchange="updateTotals()" oninput="updateTotals()">
+                    <select class="expense-frequency" onchange="updateTotals()">
+                        <option value="monthly">Monthly</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="daily">Daily</option>
+                    </select>
                     <input type="number" placeholder="Amount" value="${amount}" min="0" step="0.01" class="expense-amount" onchange="updateTotals()" oninput="updateTotals()">
                 </div>
                 <button type="button" class="remove-expense" onclick="removeExpense('${expenseId}')">×</button>
@@ -3103,16 +3175,34 @@
                     const categoryValue = item.querySelector('.expense-category').value;
                     const description = item.querySelector('.expense-description').value.trim();
                     const amount = parseFloat(item.querySelector('.expense-amount').value) || 0;
+                    const frequency = item.querySelector('.expense-frequency').value || 'monthly';
 
-                    console.log(`Item: desc="${description}", amount=${amount}, category="${categoryValue}", container="${containerType}"`);
+                    console.log(`Item: desc="${description}", amount=${amount}, frequency=${frequency}, category="${categoryValue}", container="${containerType}"`);
 
-                    if (description && !isNaN(amount) && amount > 0) {
-                        // If no category selected, default to "Other"
+                    // Description is now optional, but we need an amount and category
+                    if (!isNaN(amount) && amount > 0 && categoryValue) {
+                        // Apply frequency multiplier
+                        let monthlyAmount = amount;
+                        switch(frequency) {
+                            case 'daily':
+                                monthlyAmount = amount * 28; // 28 days per month
+                                break;
+                            case 'weekly':
+                                monthlyAmount = amount * 4; // 4 weeks per month
+                                break;
+                            case 'monthly':
+                            default:
+                                monthlyAmount = amount;
+                                break;
+                        }
+
                         const finalCategoryValue = categoryValue || 'Other:Miscellaneous';
                         const [mainCategory, subCategory] = finalCategoryValue.split(':');
                         const expense = {
                             description: description,
-                            amount: amount,
+                            amount: monthlyAmount,
+                            originalAmount: amount,
+                            frequency: frequency,
                             category: mainCategory || 'Other',
                             subCategory: subCategory || 'Miscellaneous',
                             fullCategory: finalCategoryValue,
@@ -3341,7 +3431,9 @@
                 yPosition += 10;
             } else {
                 essentials.forEach(expense => {
-                    doc.text(`${expense.description}: ${formatCurrency(expense.amount)}`, 25, yPosition);
+                    const freqText = expense.frequency !== 'monthly' ? ` (${expense.frequency}: ${formatCurrency(expense.originalAmount)})` : '';
+                    const descText = expense.description ? `${expense.description}: ` : '';
+                    doc.text(`${descText}${formatCurrency(expense.amount)}${freqText}`, 25, yPosition);
                     yPosition += 8;
                 });
             }
@@ -3366,7 +3458,9 @@
                 nonEssentialsY += 10;
             } else {
                 nonEssentials.forEach(expense => {
-                    doc.text(`${expense.description}: ${formatCurrency(expense.amount)}`, 115, nonEssentialsY);
+                    const freqText = expense.frequency !== 'monthly' ? ` (${expense.frequency}: ${formatCurrency(expense.originalAmount)})` : '';
+                    const descText = expense.description ? `${expense.description}: ` : '';
+                    doc.text(`${descText}${formatCurrency(expense.amount)}${freqText}`, 115, nonEssentialsY);
                     nonEssentialsY += 8;
                 });
             }
