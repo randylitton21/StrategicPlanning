@@ -2033,6 +2033,9 @@
             'Other': ['❓ Miscellaneous', '🎁 Gifts', '📧 Subscriptions', '🔧 Household Items']
         };
 
+        // Categories that are considered "necessary" (fixed expenses)
+        const necessaryCategories = ['Housing', 'Transportation', 'Food', 'Utilities', 'Healthcare', 'Insurance'];
+
         // Get category options for dropdown
         function getCategoryOptions(selectedCategory = '') {
             let options = '';
@@ -3100,11 +3103,11 @@
         // Compute financial report metrics
         function computeReport(data) {
             const totalNecessary = data.expenses
-                .filter(exp => exp.category === 'Necessary')
+                .filter(exp => necessaryCategories.includes(exp.category))
                 .reduce((sum, exp) => sum + exp.amount, 0);
 
             const totalNonNecessary = data.expenses
-                .filter(exp => exp.category === 'Non-Necessary')
+                .filter(exp => !necessaryCategories.includes(exp.category))
                 .reduce((sum, exp) => sum + exp.amount, 0);
 
             const totalExpenses = totalNecessary + totalNonNecessary;
@@ -3114,8 +3117,8 @@
 
             return {
                 income: data.monthlyIncome,
-                necessaryExpenses: data.expenses.filter(exp => exp.category === 'Necessary'),
-                nonNecessaryExpenses: data.expenses.filter(exp => exp.category === 'Non-Necessary'),
+                necessaryExpenses: data.expenses.filter(exp => necessaryCategories.includes(exp.category)),
+                nonNecessaryExpenses: data.expenses.filter(exp => !necessaryCategories.includes(exp.category)),
                 totalNecessary: totalNecessary,
                 totalNonNecessary: totalNonNecessary,
                 totalExpenses: totalExpenses,
