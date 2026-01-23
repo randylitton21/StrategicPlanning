@@ -895,6 +895,14 @@
             font-size: 0.85em;
             background: white;
             min-width: 60px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .reduction-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            z-index: 20;
         }
 
         .percent-select {
@@ -3636,7 +3644,20 @@
                             // Determine which container based on category
                             const isNecessary = ['Housing', 'Transportation', 'Food', 'Utilities', 'Healthcare', 'Insurance'].includes(expense.category);
                             const containerCategory = isNecessary ? 'Necessary' : 'Non-Necessary';
-                            addExpenseToCategory(containerCategory, expense.description, expense.amount, expense.fullCategory || expense.category);
+
+                            // Add the expense item
+                            const expenseId = addExpenseToCategory(containerCategory, expense.description, expense.originalAmount || expense.amount, expense.fullCategory || expense.category);
+
+                            // Set the frequency if it exists
+                            if (expense.frequency && expenseId) {
+                                const item = document.getElementById(expenseId);
+                                if (item) {
+                                    const freqSelect = item.querySelector('.expense-frequency');
+                                    if (freqSelect) {
+                                        freqSelect.value = expense.frequency;
+                                    }
+                                }
+                            }
                         });
                     }
                 } else {
@@ -3714,11 +3735,12 @@
                                     <option value="4">4 days/week</option>
                                     <option value="5">5 days/week</option>
                                     <option value="6">6 days/week</option>
+                                    <option value="7">7 days/week</option>
                                 </select>
                             </div>
                             <div class="savings-display">
                                 <span class="reduction-savings" id="full-savings-${index}">$0.00</span>
-                                <span class="reduction-percentage" id="full-percent-${index}">(0%)</span>
+                                <span class="reduction-percentage" id="full-percent-display-${index}">(0%)</span>
                             </div>
                         </div>
                     `;
@@ -3745,7 +3767,7 @@
                             </div>
                             <div class="savings-display">
                                 <span class="reduction-savings" id="full-savings-${index}">$0.00</span>
-                                <span class="reduction-percentage" id="full-percent-${index}">(0%)</span>
+                                <span class="reduction-percentage" id="full-percent-display-${index}">(0%)</span>
                             </div>
                         </div>
                     `;
@@ -3772,7 +3794,7 @@
                             </div>
                             <div class="savings-display">
                                 <span class="reduction-savings" id="full-savings-${index}">$0.00</span>
-                                <span class="reduction-percentage" id="full-percent-${index}">(0%)</span>
+                                <span class="reduction-percentage" id="full-percent-display-${index}">(0%)</span>
                             </div>
                         </div>
                     `;
@@ -3909,7 +3931,7 @@
 
             const expense = JSON.parse(item.dataset.expenseData);
             const savingsElement = document.getElementById(`full-savings-${index}`);
-            const percentElement = document.getElementById(`full-percent-${index}`);
+            const percentElement = document.getElementById(`full-percent-display-${index}`);
 
             let monthlySavings = 0;
             let reductionPercentage = 0;
@@ -4015,8 +4037,13 @@
                         itemSavings = expense.amount * percentReduction;
                     }
                 } else {
-                    const reductionPercent = parseInt(document.getElementById(`full-percent-${index}`).value) / 100;
-                    itemSavings = expense.amount * reductionPercent;
+                    const percentElement = document.getElementById(`full-percent-${index}`);
+                    if (percentElement) {
+                        const reductionPercent = parseInt(percentElement.value) / 100;
+                        itemSavings = expense.amount * reductionPercent;
+                    } else {
+                        itemSavings = 0;
+                    }
                 }
 
                 totalMonthlySavings += Math.max(0, itemSavings); // Only count positive savings
