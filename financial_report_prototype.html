@@ -1517,6 +1517,234 @@
                 padding: 10px;
             }
         }
+
+        /* Basic Summary Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .basic-summary-modal {
+            background: linear-gradient(135deg, #1a4d1a, #0d2d0d);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            max-width: 900px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 2px solid #4a7c4a;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #4a7c4a;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header h2 {
+            color: #000000;
+            margin: 0;
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+
+        .close-modal-btn {
+            background: none;
+            border: none;
+            color: #000000;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background var(--transition-fast);
+        }
+
+        .close-modal-btn:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .basic-summary-content {
+            padding: 25px;
+        }
+
+        .basic-summary-income {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: var(--radius-md);
+            border: 1px solid #4a7c4a;
+        }
+
+        .income-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .income-label {
+            color: #000000;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .income-amount {
+            color: #000000;
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+
+        .basic-summary-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .basic-summary-column {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            border: 1px solid #4a7c4a;
+        }
+
+        .basic-summary-column h3 {
+            color: #000000;
+            margin: 0 0 15px 0;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+
+        .expense-list {
+            margin-bottom: 15px;
+            min-height: 100px;
+        }
+
+        .expense-list:empty::before {
+            content: "No expenses added yet";
+            color: #000000;
+            opacity: 0.6;
+            font-style: italic;
+            text-align: center;
+            display: block;
+            padding: 20px;
+        }
+
+        .expense-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(74, 124, 74, 0.3);
+        }
+
+        .expense-list-item span:first-child {
+            color: #000000;
+            font-weight: 500;
+        }
+
+        .expense-list-item .expense-amount {
+            color: #000000;
+            font-weight: 600;
+        }
+
+        .column-subtotal {
+            text-align: center;
+            padding: 10px;
+            background: rgba(74, 124, 74, 0.2);
+            border-radius: var(--radius-sm);
+            border: 1px solid #4a7c4a;
+            color: #000000;
+            font-size: 1.1em;
+        }
+
+        .basic-summary-bottom {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: var(--radius-md);
+            border: 1px solid #4a7c4a;
+        }
+
+        .bottom-summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .bottom-summary-row:last-child {
+            margin-bottom: 0;
+            padding-top: 10px;
+            border-top: 1px solid #4a7c4a;
+        }
+
+        .bottom-label {
+            color: #000000;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .bottom-amount {
+            color: #000000;
+            font-size: 1.3em;
+            font-weight: 700;
+        }
+
+        .basic-summary-btn {
+            background: linear-gradient(135deg, #4a7c4a, #2e5932);
+            color: #000000;
+            border: 2px solid #6b9e6b;
+            padding: 10px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-left: 15px;
+            transition: all var(--transition-fast);
+        }
+
+        .basic-summary-btn:hover {
+            background: linear-gradient(135deg, #6b9e6b, #4a7c4a);
+            border-color: #8bbf8b;
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            .basic-summary-columns {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .income-display {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .income-amount {
+                font-size: 1.5em;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1891,6 +2119,7 @@
                     <div class="step-navigation">
                         <button type="button" class="prev-step-btn" onclick="prevStep('summary')">← Back to Non-Essential</button>
                         <button type="button" class="next-step-btn" onclick="nextStep('summary')">Review Your Finances →</button>
+                        <button type="button" class="basic-summary-btn" onclick="showBasicSummary()">📊 Basic Summary</button>
                     </div>
                 </div>
 
@@ -1950,6 +2179,63 @@
                     <div class="step-navigation">
                         <button type="button" class="prev-step-btn" onclick="prevStep('review')">← Back to Non-Essential</button>
                         <button type="button" class="generate-report-btn" onclick="generateReport()" id="finalReportBtn" disabled>📊 Generate My Financial Report</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Basic Summary Modal -->
+            <div class="modal-overlay" id="basicSummaryModal" style="display: none;">
+                <div class="modal-content basic-summary-modal">
+                    <div class="modal-header">
+                        <h2>📊 Basic Financial Summary</h2>
+                        <button type="button" class="close-modal-btn" onclick="closeBasicSummary()">×</button>
+                    </div>
+
+                    <div class="basic-summary-content">
+                        <!-- Total Income -->
+                        <div class="basic-summary-income">
+                            <div class="income-display">
+                                <span class="income-label">Total Monthly Income:</span>
+                                <span class="income-amount" id="basicIncome">$0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Two Column Layout -->
+                        <div class="basic-summary-columns">
+                            <!-- Essentials Column -->
+                            <div class="basic-summary-column essentials-column">
+                                <h3>🔒 Essentials</h3>
+                                <div class="expense-list" id="basicEssentialsList">
+                                    <!-- Expenses will be populated here -->
+                                </div>
+                                <div class="column-subtotal">
+                                    <strong>Subtotal: <span id="basicEssentialsSubtotal">$0.00</span></strong>
+                                </div>
+                            </div>
+
+                            <!-- Non-Essentials Column -->
+                            <div class="basic-summary-column non-essentials-column">
+                                <h3>🎯 Non-Essentials</h3>
+                                <div class="expense-list" id="basicNonEssentialsList">
+                                    <!-- Expenses will be populated here -->
+                                </div>
+                                <div class="column-subtotal">
+                                    <strong>Subtotal: <span id="basicNonEssentialsSubtotal">$0.00</span></strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Summary -->
+                        <div class="basic-summary-bottom">
+                            <div class="bottom-summary-row">
+                                <span class="bottom-label">Total Expenses:</span>
+                                <span class="bottom-amount" id="basicTotalExpenses">$0.00</span>
+                            </div>
+                            <div class="bottom-summary-row">
+                                <span class="bottom-label">Monthly Bottom Line:</span>
+                                <span class="bottom-amount" id="basicBottomLine">$0.00</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3289,6 +3575,81 @@
 
         function toggleExamplesMode() {
             alert('Examples mode would show sample financial scenarios. For now, focus on your own spending patterns.');
+        }
+
+        // Show basic summary modal
+        function showBasicSummary() {
+            const data = collectData();
+            const report = computeReport(data);
+
+            // Populate income
+            document.getElementById('basicIncome').textContent = formatCurrency(report.income);
+
+            // Clear previous lists
+            document.getElementById('basicEssentialsList').innerHTML = '';
+            document.getElementById('basicNonEssentialsList').innerHTML = '';
+
+            // Separate expenses by category
+            const essentials = data.expenses.filter(exp =>
+                ['Housing', 'Transportation', 'Food', 'Utilities', 'Insurance', 'Healthcare', 'Debt Payments'].includes(exp.fullCategory.split(':')[0])
+            );
+            const nonEssentials = data.expenses.filter(exp =>
+                !['Housing', 'Transportation', 'Food', 'Utilities', 'Insurance', 'Healthcare', 'Debt Payments'].includes(exp.fullCategory.split(':')[0])
+            );
+
+            // Populate essentials list
+            const essentialsList = document.getElementById('basicEssentialsList');
+            if (essentials.length === 0) {
+                essentialsList.innerHTML = '<div style="text-align: center; color: #000000; opacity: 0.6; padding: 20px;">No essential expenses added yet</div>';
+            } else {
+                essentials.forEach(expense => {
+                    const item = document.createElement('div');
+                    item.className = 'expense-list-item';
+                    item.innerHTML = `
+                        <span>${expense.description}</span>
+                        <span class="expense-amount">${formatCurrency(expense.amount)}</span>
+                    `;
+                    essentialsList.appendChild(item);
+                });
+            }
+
+            // Populate non-essentials list
+            const nonEssentialsList = document.getElementById('basicNonEssentialsList');
+            if (nonEssentials.length === 0) {
+                nonEssentialsList.innerHTML = '<div style="text-align: center; color: #000000; opacity: 0.6; padding: 20px;">No non-essential expenses added yet</div>';
+            } else {
+                nonEssentials.forEach(expense => {
+                    const item = document.createElement('div');
+                    item.className = 'expense-list-item';
+                    item.innerHTML = `
+                        <span>${expense.description}</span>
+                        <span class="expense-amount">${formatCurrency(expense.amount)}</span>
+                    `;
+                    nonEssentialsList.appendChild(item);
+                });
+            }
+
+            // Update subtotals
+            const essentialsTotal = essentials.reduce((sum, exp) => sum + exp.amount, 0);
+            const nonEssentialsTotal = nonEssentials.reduce((sum, exp) => sum + exp.amount, 0);
+
+            document.getElementById('basicEssentialsSubtotal').textContent = formatCurrency(essentialsTotal);
+            document.getElementById('basicNonEssentialsSubtotal').textContent = formatCurrency(nonEssentialsTotal);
+
+            // Update bottom summary
+            document.getElementById('basicTotalExpenses').textContent = formatCurrency(report.totalExpenses);
+
+            const bottomLineElement = document.getElementById('basicBottomLine');
+            bottomLineElement.textContent = formatCurrency(report.savingsOrDeficit);
+            bottomLineElement.style.color = report.savingsOrDeficit >= 0 ? '#4caf50' : '#f44336';
+
+            // Show modal
+            document.getElementById('basicSummaryModal').style.display = 'flex';
+        }
+
+        // Close basic summary modal
+        function closeBasicSummary() {
+            document.getElementById('basicSummaryModal').style.display = 'none';
         }
 
         // Export functionality (placeholder)
