@@ -418,14 +418,18 @@
 
         /* Summary Section */
         .summary-section {
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-            color: white;
+            background: linear-gradient(135deg, #0d1a0d, #051005);
+            color: #ffffff;
             margin-top: 30px;
+            border: 2px solid #1a3d1a;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
         }
 
         .summary-section h3 {
-            color: white;
+            color: #ffffff;
             text-align: center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+            font-weight: 700;
         }
 
         .summary-grid {
@@ -438,23 +442,25 @@
         .summary-item {
             text-align: center;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.06);
             border-radius: var(--radius-lg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(10px);
         }
 
         .summary-label {
             font-size: 0.9em;
-            opacity: 0.9;
+            color: rgba(255, 255, 255, 0.95);
             margin-bottom: 8px;
-            font-weight: 500;
+            font-weight: 600;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
         }
 
         .summary-value {
             font-size: 1.8em;
             font-weight: 800;
-            color: white;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            color: #ffffff;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
         }
 
         .summary-positive {
@@ -488,16 +494,19 @@
         .emergency-fund-section {
             margin-top: 30px;
             padding: 25px;
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
             border-radius: var(--radius-lg);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
         }
 
         .emergency-fund-section h4 {
-            color: white;
+            color: #ffffff;
             font-size: 1.2em;
             margin-bottom: 8px;
             text-align: center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+            font-weight: 700;
         }
 
         .emergency-explanation {
@@ -617,16 +626,19 @@
         .insights-section {
             margin-top: 30px;
             padding: 25px;
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
             border-radius: var(--radius-lg);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
         }
 
         .insights-section h4 {
-            color: white;
+            color: #ffffff;
             font-size: 1.2em;
             margin-bottom: 8px;
             text-align: center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+            font-weight: 700;
         }
 
         .insights-explanation {
@@ -680,14 +692,16 @@
 
         .insight-title {
             font-weight: 600;
-            color: white;
+            color: #ffffff;
             margin-bottom: 5px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
         }
 
         .insight-description {
             font-size: 0.9em;
             color: rgba(255, 255, 255, 0.95);
             line-height: 1.4;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
             font-weight: 400;
         }
 
@@ -933,24 +947,29 @@
         .budget-progress-section {
             margin-top: 30px;
             padding: 25px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.06);
             border-radius: var(--radius-lg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(10px);
         }
 
         .budget-progress-section h4 {
-            color: white;
+            color: #ffffff;
             font-size: 1.3em;
             margin-bottom: 10px;
             text-align: center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+            font-weight: 700;
         }
 
         .budget-explanation {
-            color: rgba(255, 255, 255, 0.9);
+            color: rgba(255, 255, 255, 0.95);
             font-size: 0.95em;
             margin-bottom: 25px;
             text-align: center;
             line-height: 1.5;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
         }
 
         .budget-bars {
@@ -975,15 +994,15 @@
 
         .budget-bar-label {
             font-weight: 600;
-            color: white;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         .budget-bar-percentage {
             font-weight: 700;
-            color: white;
+            color: #ffffff;
             font-size: 1.1em;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         .budget-bar-container {
@@ -1015,7 +1034,8 @@
         .budget-bar-amount {
             text-align: right;
             font-weight: 600;
-            color: white;
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
             font-size: 0.95em;
         }
 
@@ -2376,8 +2396,17 @@
             const necessaryTotal = document.getElementById('necessaryTotal');
             const nonNecessaryTotal = document.getElementById('nonNecessaryTotal');
 
-            if (necessaryTotal) necessaryTotal.textContent = report.totalNecessary.toFixed(2);
-            if (nonNecessaryTotal) nonNecessaryTotal.textContent = report.totalNonNecessary.toFixed(2);
+            console.log('Updating totals - necessaryTotal element:', necessaryTotal, 'nonNecessaryTotal element:', nonNecessaryTotal);
+            console.log('Report totals - necessary:', report.totalNecessary, 'nonNecessary:', report.totalNonNecessary);
+
+            if (necessaryTotal) {
+                necessaryTotal.textContent = report.totalNecessary.toFixed(2);
+                console.log('Updated necessaryTotal to:', report.totalNecessary.toFixed(2));
+            }
+            if (nonNecessaryTotal) {
+                nonNecessaryTotal.textContent = report.totalNonNecessary.toFixed(2);
+                console.log('Updated nonNecessaryTotal to:', report.totalNonNecessary.toFixed(2));
+            }
 
             // Calculate budget allocations (50/30/20 rule)
             const budgetData = calculateBudgetAllocations(data);
