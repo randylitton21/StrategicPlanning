@@ -261,45 +261,105 @@
             display: none;
         }
 
-        /* Expense Rows */
-        .expense-row {
+        /* Expenses Grid - Two Columns */
+        .expenses-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr auto;
-            gap: 12px;
-            align-items: end;
-            margin-bottom: 15px;
-            padding: 15px;
-            background: var(--bg-card);
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border);
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
         }
 
-        .expense-row input,
-        .expense-row select {
-            padding: 10px 12px;
+        .expense-column {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .expense-column-header {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .expense-column-header h4 {
+            color: var(--primary-color);
+            font-size: 1.2em;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .expense-description {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .expense-items-container {
+            padding: 0;
+            min-height: 200px;
+        }
+
+        .column-subtotal {
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        /* Expense Items */
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            transition: background var(--transition-fast);
+        }
+
+        .expense-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .expense-item:last-child {
+            border-bottom: none;
+        }
+
+        .expense-item-input-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex: 1;
+        }
+
+        .expense-item input {
+            flex: 1;
+            padding: 8px 12px;
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
             font-size: 0.95em;
         }
 
-        .expense-row input:focus,
-        .expense-row select:focus {
+        .expense-item input:focus {
             outline: none;
             border-color: var(--primary-color);
         }
 
-        .remove-expense {
+        .expense-item .remove-expense {
             background: var(--error);
             color: white;
             border: none;
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: var(--radius-md);
             cursor: pointer;
-            font-size: 0.9em;
+            font-size: 0.8em;
             transition: background var(--transition-fast);
+            flex-shrink: 0;
         }
 
-        .remove-expense:hover {
+        .expense-item .remove-expense:hover {
             background: #d32f2f;
         }
 
@@ -307,17 +367,66 @@
             background: var(--success);
             color: white;
             border: none;
-            padding: 12px 20px;
+            padding: 10px 16px;
             border-radius: var(--radius-md);
             cursor: pointer;
-            font-size: 1em;
+            font-size: 0.9em;
             font-weight: 600;
-            margin-top: 15px;
+            margin-top: 10px;
+            width: 100%;
             transition: background var(--transition-fast);
         }
 
         .add-expense-btn:hover {
             background: #388e3c;
+        }
+
+        /* Summary Section */
+        .summary-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            margin-top: 30px;
+        }
+
+        .summary-section h3 {
+            color: white;
+            text-align: center;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(10px);
+        }
+
+        .summary-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .summary-value {
+            font-size: 1.8em;
+            font-weight: 800;
+            color: white;
+        }
+
+        .summary-positive {
+            color: var(--success);
+        }
+
+        .summary-negative {
+            color: var(--error);
         }
 
         .generate-report-btn {
@@ -460,9 +569,23 @@
 
         /* Responsive Design */
         @media (max-width: 768px) {
-            .expense-row {
+            .expenses-grid {
                 grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .expense-item-input-group {
+                flex-direction: column;
                 gap: 8px;
+            }
+
+            .expense-item input {
+                width: 100%;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
             }
 
             .report-grid {
@@ -518,22 +641,72 @@
                     <h3>📈 Monthly Income</h3>
                     <div class="form-group">
                         <label for="monthlyIncome">Net Monthly Income (after taxes)</label>
-                        <input type="number" id="monthlyIncome" class="form-input" placeholder="Enter your monthly net income" min="0" step="0.01">
+                        <input type="number" id="monthlyIncome" class="form-input" placeholder="Enter your monthly net income" min="0" step="0.01" onchange="updateCalculations()" oninput="updateCalculations()">
                         <div class="error-message" id="incomeError">Please enter a valid income amount</div>
                     </div>
                 </div>
 
-                <!-- Expenses Section -->
+                <!-- Expenses Section - Two Columns -->
                 <div class="form-section">
                     <h3>💰 Monthly Expenses</h3>
-                    <div id="expensesContainer">
-                        <!-- Expense rows will be added here -->
+                    <div class="expenses-grid">
+                        <!-- Necessary Expenses Column -->
+                        <div class="expense-column">
+                            <div class="expense-column-header">
+                                <h4>🔒 Necessary Expenses</h4>
+                                <p class="expense-description">Fixed or essential costs that are difficult to reduce</p>
+                                <button type="button" class="add-expense-btn" onclick="addExpenseToCategory('Necessary')">➕ Add Expense</button>
+                            </div>
+                            <div id="necessaryExpensesContainer" class="expense-items-container">
+                                <!-- Necessary expense items will be added here -->
+                            </div>
+                            <div class="column-subtotal">
+                                <strong>Necessary Total: $<span id="necessaryTotal">0.00</span></strong>
+                            </div>
+                        </div>
+
+                        <!-- Non-Necessary Expenses Column -->
+                        <div class="expense-column">
+                            <div class="expense-column-header">
+                                <h4>🎯 Non-Necessary Expenses</h4>
+                                <p class="expense-description">Discretionary spending that can be adjusted or eliminated</p>
+                                <button type="button" class="add-expense-btn" onclick="addExpenseToCategory('Non-Necessary')">➕ Add Expense</button>
+                            </div>
+                            <div id="nonNecessaryExpensesContainer" class="expense-items-container">
+                                <!-- Non-necessary expense items will be added here -->
+                            </div>
+                            <div class="column-subtotal">
+                                <strong>Non-Necessary Total: $<span id="nonNecessaryTotal">0.00</span></strong>
+                            </div>
+                        </div>
                     </div>
-                    <button type="button" class="add-expense-btn" onclick="addExpenseRow()">➕ Add Expense</button>
+                </div>
+
+                <!-- Financial Summary -->
+                <div class="form-section summary-section">
+                    <h3>📊 Financial Summary</h3>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-label">Monthly Income</div>
+                            <div class="summary-value" id="summaryIncome">$0.00</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Total Expenses</div>
+                            <div class="summary-value" id="summaryTotalExpenses">$0.00</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Savings/Deficit</div>
+                            <div class="summary-value" id="summarySavings">$0.00</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Savings Rate</div>
+                            <div class="summary-value" id="summarySavingsPercentage">0.0%</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Generate Report Button -->
-                <button type="button" class="generate-report-btn" onclick="generateReport()">📊 Generate Financial Report</button>
+                <button type="button" class="generate-report-btn" onclick="generateReport()">📊 Generate Detailed Report</button>
             </div>
 
             <!-- Report Output Section -->
@@ -607,36 +780,46 @@
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             loadSavedData();
-            addExpenseRow(); // Start with one empty expense row
+            updateCalculations(); // Initialize summary
         });
 
-        // Add a new expense row to the form
-        function addExpenseRow(description = '', amount = '', category = 'Necessary') {
+        // Add a new expense item to a specific category
+        function addExpenseToCategory(category, description = '', amount = '') {
             expenseCounter++;
             const expenseId = 'expense_' + expenseCounter;
 
-            const expenseRow = document.createElement('div');
-            expenseRow.className = 'expense-row';
-            expenseRow.id = expenseId;
+            const containerId = category === 'Necessary' ? 'necessaryExpensesContainer' : 'nonNecessaryExpensesContainer';
+            const container = document.getElementById(containerId);
 
-            expenseRow.innerHTML = `
-                <input type="text" placeholder="Expense description" value="${description}" class="expense-description">
-                <input type="number" placeholder="Amount" value="${amount}" min="0" step="0.01" class="expense-amount">
-                <select class="expense-category">
-                    <option value="Necessary" ${category === 'Necessary' ? 'selected' : ''}>Necessary</option>
-                    <option value="Non-Necessary" ${category === 'Non-Necessary' ? 'selected' : ''}>Non-Necessary</option>
-                </select>
-                <button type="button" class="remove-expense" onclick="removeExpenseRow('${expenseId}')">Remove</button>
+            const expenseItem = document.createElement('div');
+            expenseItem.className = 'expense-item';
+            expenseItem.id = expenseId;
+
+            expenseItem.innerHTML = `
+                <div class="expense-item-input-group">
+                    <input type="text" placeholder="Expense description" value="${description}" class="expense-description" onchange="updateCalculations()" oninput="updateCalculations()">
+                    <input type="number" placeholder="Amount" value="${amount}" min="0" step="0.01" class="expense-amount" onchange="updateCalculations()" oninput="updateCalculations()">
+                </div>
+                <button type="button" class="remove-expense" onclick="removeExpense('${expenseId}')">×</button>
             `;
 
-            document.getElementById('expensesContainer').appendChild(expenseRow);
+            container.appendChild(expenseItem);
+
+            // Focus on the description input for new items
+            if (!description) {
+                setTimeout(() => {
+                    const descInput = expenseItem.querySelector('.expense-description');
+                    if (descInput) descInput.focus();
+                }, 100);
+            }
         }
 
-        // Remove an expense row
-        function removeExpenseRow(expenseId) {
-            const row = document.getElementById(expenseId);
-            if (row) {
-                row.remove();
+        // Remove an expense item
+        function removeExpense(expenseId) {
+            const item = document.getElementById(expenseId);
+            if (item) {
+                item.remove();
+                updateCalculations();
             }
         }
 
@@ -659,13 +842,13 @@
             }
 
             // Validate expenses
-            const expenseRows = document.querySelectorAll('.expense-row');
-            expenseRows.forEach(row => {
-                const description = row.querySelector('.expense-description').value.trim();
-                const amount = parseFloat(row.querySelector('.expense-amount').value);
-                const amountInput = row.querySelector('.expense-amount');
+            const expenseItems = document.querySelectorAll('.expense-item');
+            expenseItems.forEach(item => {
+                const description = item.querySelector('.expense-description').value.trim();
+                const amount = parseFloat(item.querySelector('.expense-amount').value);
+                const amountInput = item.querySelector('.expense-amount');
 
-                if (!description || isNaN(amount) || amount < 0) {
+                if (description && (isNaN(amount) || amount < 0)) {
                     amountInput.classList.add('error');
                     isValid = false;
                 } else {
@@ -681,17 +864,32 @@
             const income = parseFloat(document.getElementById('monthlyIncome').value) || 0;
             const expenses = [];
 
-            const expenseRows = document.querySelectorAll('.expense-row');
-            expenseRows.forEach(row => {
-                const description = row.querySelector('.expense-description').value.trim();
-                const amount = parseFloat(row.querySelector('.expense-amount').value) || 0;
-                const category = row.querySelector('.expense-category').value;
+            // Collect necessary expenses
+            const necessaryItems = document.querySelectorAll('#necessaryExpensesContainer .expense-item');
+            necessaryItems.forEach(item => {
+                const description = item.querySelector('.expense-description').value.trim();
+                const amount = parseFloat(item.querySelector('.expense-amount').value) || 0;
 
-                if (description && !isNaN(amount) && amount >= 0) {
+                if (description && !isNaN(amount) && amount > 0) {
                     expenses.push({
                         description: description,
                         amount: amount,
-                        category: category
+                        category: 'Necessary'
+                    });
+                }
+            });
+
+            // Collect non-necessary expenses
+            const nonNecessaryItems = document.querySelectorAll('#nonNecessaryExpensesContainer .expense-item');
+            nonNecessaryItems.forEach(item => {
+                const description = item.querySelector('.expense-description').value.trim();
+                const amount = parseFloat(item.querySelector('.expense-amount').value) || 0;
+
+                if (description && !isNaN(amount) && amount > 0) {
+                    expenses.push({
+                        description: description,
+                        amount: amount,
+                        category: 'Non-Necessary'
                     });
                 }
             });
@@ -789,7 +987,7 @@
                 (report.savingsPercentage >= 0 ? 'metric-positive' : 'metric-negative');
         }
 
-        // Generate and display the financial report
+        // Generate and display the detailed financial report
         function generateReport() {
             if (!validateForm()) {
                 alert('Please correct the errors in the form before generating the report.');
@@ -808,8 +1006,7 @@
             // Scroll to report
             document.getElementById('reportSection').scrollIntoView({ behavior: 'smooth' });
 
-            // Save data locally
-            saveData();
+            // Data is already saved via updateCalculations
         }
 
         // Save data to localStorage
@@ -819,6 +1016,34 @@
             } catch (e) {
                 console.log('Could not save financial report data');
             }
+        }
+
+        // Update calculations and summary in real-time
+        function updateCalculations() {
+            const data = collectData();
+            const report = computeReport(data);
+
+            // Update column subtotals
+            document.getElementById('necessaryTotal').textContent = report.totalNecessary.toFixed(2);
+            document.getElementById('nonNecessaryTotal').textContent = report.totalNonNecessary.toFixed(2);
+
+            // Update summary section
+            document.getElementById('summaryIncome').textContent = '$' + report.income.toFixed(2);
+            document.getElementById('summaryTotalExpenses').textContent = '$' + report.totalExpenses.toFixed(2);
+
+            const savingsElement = document.getElementById('summarySavings');
+            savingsElement.textContent = (report.savingsOrDeficit >= 0 ? '$' : '-$') + Math.abs(report.savingsOrDeficit).toFixed(2);
+            savingsElement.className = 'summary-value ' +
+                (report.savingsOrDeficit >= 0 ? 'summary-positive' : 'summary-negative');
+
+            const percentageElement = document.getElementById('summarySavingsPercentage');
+            percentageElement.textContent = Math.abs(report.savingsPercentage).toFixed(1) + '%';
+            percentageElement.className = 'summary-value ' +
+                (report.savingsPercentage >= 0 ? 'summary-positive' : 'summary-negative');
+
+            // Save data automatically
+            financialData = data;
+            saveData();
         }
 
         // Load saved data from localStorage
@@ -831,20 +1056,34 @@
                     // Populate form with saved data
                     document.getElementById('monthlyIncome').value = financialData.monthlyIncome || '';
 
-                    // Clear existing expense rows
-                    document.getElementById('expensesContainer').innerHTML = '';
+                    // Clear existing expense containers
+                    document.getElementById('necessaryExpensesContainer').innerHTML = '';
+                    document.getElementById('nonNecessaryExpensesContainer').innerHTML = '';
 
-                    // Add saved expense rows
+                    // Add saved expense items to appropriate categories
                     if (financialData.expenses && financialData.expenses.length > 0) {
                         financialData.expenses.forEach(expense => {
-                            addExpenseRow(expense.description, expense.amount, expense.category);
+                            addExpenseToCategory(expense.category, expense.description, expense.amount);
                         });
-                    } else {
-                        addExpenseRow(); // Add at least one empty row
                     }
+
+                    // Ensure at least one empty item in each category if no data
+                    if (document.querySelectorAll('#necessaryExpensesContainer .expense-item').length === 0) {
+                        addExpenseToCategory('Necessary');
+                    }
+                    if (document.querySelectorAll('#nonNecessaryExpensesContainer .expense-item').length === 0) {
+                        addExpenseToCategory('Non-Necessary');
+                    }
+                } else {
+                    // No saved data - add empty items to start
+                    addExpenseToCategory('Necessary');
+                    addExpenseToCategory('Non-Necessary');
                 }
             } catch (e) {
                 console.log('Could not load saved financial report data');
+                // Add empty items as fallback
+                addExpenseToCategory('Necessary');
+                addExpenseToCategory('Non-Necessary');
             }
         }
 
