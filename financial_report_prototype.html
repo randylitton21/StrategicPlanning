@@ -2925,62 +2925,62 @@
             // Title
             doc.setFontSize(20);
             doc.setTextColor(...primaryColor);
-            doc.text('Personal Financial Report', 20, 30);
+            doc.text(sanitizeForPDF('Personal Financial Report'), 20, 30);
 
             doc.setFontSize(12);
             doc.setTextColor(...textColor);
-            doc.text(`Generated on ${new Date().toLocaleDateString()}`, 20, 45);
+            doc.text(sanitizeForPDF(`Generated on ${new Date().toLocaleDateString()}`), 20, 45);
 
             let yPos = 65;
 
             // Financial Summary
             doc.setFontSize(16);
             doc.setTextColor(...primaryColor);
-            doc.text('Financial Summary', 20, yPos);
+            doc.text(sanitizeForPDF('Financial Summary'), 20, yPos);
             yPos += 15;
 
             doc.setFontSize(11);
             doc.setTextColor(...textColor);
-            doc.text(`Monthly Income: $${data.monthlyIncome.toFixed(2)}`, 20, yPos);
+            doc.text(sanitizeForPDF(`Monthly Income: $${data.monthlyIncome.toFixed(2)}`), 20, yPos);
             yPos += 10;
-            doc.text(`Total Expenses: $${report.totalExpenses.toFixed(2)}`, 20, yPos);
+            doc.text(sanitizeForPDF(`Total Expenses: $${report.totalExpenses.toFixed(2)}`), 20, yPos);
             yPos += 10;
-            doc.text(`Savings/Deficit: ${report.savingsOrDeficit >= 0 ? '$' : '-$'}${Math.abs(report.savingsOrDeficit).toFixed(2)}`, 20, yPos);
+            doc.text(sanitizeForPDF(`Savings/Deficit: ${report.savingsOrDeficit >= 0 ? '$' : '-$'}${Math.abs(report.savingsOrDeficit).toFixed(2)}`), 20, yPos);
             yPos += 10;
-            doc.text(`Savings Rate: ${report.savingsPercentage.toFixed(1)}%`, 20, yPos);
+            doc.text(sanitizeForPDF(`Savings Rate: ${report.savingsPercentage.toFixed(1)}%`), 20, yPos);
             yPos += 20;
 
             // Budget Analysis
             doc.setFontSize(14);
             doc.setTextColor(...primaryColor);
-            doc.text('Budget Analysis (50/30/20 Rule)', 20, yPos);
+            doc.text(sanitizeForPDF('Budget Analysis (50/30/20 Rule)'), 20, yPos);
             yPos += 15;
 
             doc.setFontSize(11);
             doc.setTextColor(...textColor);
-            doc.text(`Needs (≤50%): ${budgetData.needsPercentage.toFixed(1)}% - $${budgetData.needsTotal.toFixed(2)}`, 20, yPos);
+            doc.text(sanitizeForPDF(`Needs (<=50%): ${budgetData.needsPercentage.toFixed(1)}% - $${budgetData.needsTotal.toFixed(2)}`), 20, yPos);
             yPos += 10;
-            doc.text(`Wants (≤30%): ${budgetData.wantsPercentage.toFixed(1)}% - $${budgetData.wantsTotal.toFixed(2)}`, 20, yPos);
+            doc.text(sanitizeForPDF(`Wants (<=30%): ${budgetData.wantsPercentage.toFixed(1)}% - $${budgetData.wantsTotal.toFixed(2)}`), 20, yPos);
             yPos += 10;
-            doc.text(`Savings (≥20%): ${budgetData.savingsPercentage.toFixed(1)}% - $${budgetData.savingsTotal.toFixed(2)}`, 20, yPos);
+            doc.text(sanitizeForPDF(`Savings (>=20%): ${budgetData.savingsPercentage.toFixed(1)}% - $${budgetData.savingsTotal.toFixed(2)}`), 20, yPos);
             yPos += 20;
 
             // Financial Health
             doc.setFontSize(14);
             doc.setTextColor(...primaryColor);
-            doc.text('Financial Health Assessment', 20, yPos);
+            doc.text(sanitizeForPDF('Financial Health Assessment'), 20, yPos);
             yPos += 15;
 
             doc.setFontSize(11);
             doc.setTextColor(...textColor);
-            doc.text(`Health Score: ${healthData.score}/100 - ${healthData.level}`, 20, yPos);
+            doc.text(sanitizeForPDF(`Health Score: ${healthData.score}/100 - ${healthData.level}`), 20, yPos);
             yPos += 15;
 
             // Expense Breakdown
             if (data.expenses.length > 0) {
                 doc.setFontSize(14);
                 doc.setTextColor(...primaryColor);
-                doc.text('Expense Breakdown by Category', 20, yPos);
+                doc.text(sanitizeForPDF('Expense Breakdown by Category'), 20, yPos);
                 yPos += 15;
 
                 const categoryTotals = {};
@@ -2995,7 +2995,7 @@
                         doc.addPage();
                         yPos = 30;
                     }
-                    doc.text(`${category}: $${amount.toFixed(2)}`, 20, yPos);
+                    doc.text(sanitizeForPDF(`${category}: $${amount.toFixed(2)}`), 20, yPos);
                     yPos += 8;
                 }
             }
@@ -3009,7 +3009,7 @@
 
             doc.setFontSize(14);
             doc.setTextColor(...primaryColor);
-            doc.text('Key Insights', 20, yPos);
+            doc.text(sanitizeForPDF('Key Insights'), 20, yPos);
             yPos += 15;
 
             doc.setFontSize(10);
@@ -3017,7 +3017,9 @@
 
             const insights = generateSpendingInsights(data, budgetData, report);
             insights.slice(0, 5).forEach(insight => {
-                const lines = doc.splitTextToSize(insight.title + ': ' + insight.description, 170);
+                const sanitizedTitle = sanitizeForPDF(insight.title);
+                const sanitizedDescription = sanitizeForPDF(insight.description);
+                const lines = doc.splitTextToSize(sanitizedTitle + ': ' + sanitizedDescription, 170);
                 lines.forEach(line => {
                     if (yPos > 270) {
                         doc.addPage();
@@ -3035,8 +3037,8 @@
                 doc.setPage(i);
                 doc.setFontSize(8);
                 doc.setTextColor(128, 128, 128);
-                doc.text('Generated by Strategic Planning Suite - Personal Financial Report', 20, 285);
-                doc.text(`Page ${i} of ${pageCount}`, 170, 285);
+                doc.text(sanitizeForPDF('Generated by Strategic Planning Suite - Personal Financial Report'), 20, 285);
+                doc.text(sanitizeForPDF(`Page ${i} of ${pageCount}`), 170, 285);
             }
 
             // Save the PDF
