@@ -1241,11 +1241,11 @@
                 <button class="toggle-btn" aria-label="Toggle section">−</button>
             </div>
             <div class="help-content">
-                <p>This Strategic Action Plan helps you organize your strategy into concrete, actionable steps:</p>
+                <p>This Strategic Action Plan turns your high-level strategy into actual tasks that get done:</p>
                 <ul>
-                    <li><strong>Goal:</strong> Define your main objective at the top</li>
-                    <li><strong>Action Steps:</strong> Break your goal into actionable steps (you can add/remove steps)</li>
-                    <li><strong>For each step, specify:</strong> Who's responsible, what resources are needed, progress benchmarks, completion dates, and evidence of improvement</li>
+                    <li><strong>Goal:</strong> Put your main objective at the top</li>
+                    <li><strong>Action Steps:</strong> Break your goal into specific steps you can actually do (add or remove steps as needed)</li>
+                    <li><strong>For each step, include:</strong> Who's responsible, what resources you need, progress milestones, completion dates, and how you'll measure improvement</li>
                 </ul>
                 <div class="video-link-section collapsible collapsed">
                     <div class="video-link-header" onclick="toggleVideoSection(this)">
@@ -3569,7 +3569,7 @@
                         html += '<h3>Action Steps</h3>\n';
                         html += '<table>\n';
                         html += '<tr><th>Step</th><th>Title</th><th>Responsible</th><th>Resources</th><th>Progress</th><th>Completion</th><th>Evidence</th></tr>\n';
-
+                        
                         goal.actionSteps.forEach((step, stepIndex) => {
                             const hasData = step.responsible || step.resources || step.progress || step.completion || step.evidence || step.title;
                             if (hasData) {
@@ -3649,7 +3649,7 @@
             
             actionPlanData.goals.forEach((goal, goalIndex) => {
                 html += '<tr><td colspan="7" class="section-header">Goal ' + (goalIndex + 1) + ': ' + escapeHtml(goal.name || 'Untitled Goal') + '</td></tr>\n';
-
+                
                 if (goal.goal && goal.goal.trim()) {
                     html += '<tr><td colspan="7" style="font-weight: bold; background-color: #f0f0f0;">Goal Description:</td></tr>\n';
                     html += '<tr><td colspan="7" class="data-cell">' + formatTextForExcel(goal.goal.trim()) + '</td></tr>\n';
@@ -3659,7 +3659,7 @@
                     const hasAnyData = goal.actionSteps.some(step => step.responsible || step.resources || step.progress || step.completion || step.evidence || step.title);
                     if (hasAnyData) {
                         html += '<tr><th>Step</th><th>Title</th><th>Responsible</th><th>Resources</th><th>Progress</th><th>Completion</th><th>Evidence</th></tr>\n';
-
+                        
                         goal.actionSteps.forEach((step, stepIndex) => {
                             const hasData = step.responsible || step.resources || step.progress || step.completion || step.evidence || step.title;
                             if (hasData) {

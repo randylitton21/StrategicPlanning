@@ -651,7 +651,7 @@
 
         <div class="help-box">
             <h3>About the Product Canvas</h3>
-            <p>The Product Canvas helps you organize your product strategy by breaking it down into key components. Start by identifying your target markets, then define your channels, pricing, competitive position, company strengths, market trends, and risks. This visual framework helps you see the big picture and identify opportunities for improvement.</p>
+            <p>The Product Canvas helps you organize your product strategy by breaking it down into key parts. Start by identifying your target markets, then define your channels, pricing, competitive position, company strengths, market trends, and risks. This visual framework helps you see the big picture and spot opportunities for improvement.</p>
         </div>
 
         <!-- Control Buttons -->
@@ -858,9 +858,9 @@
                     var sessionData = JSON.parse(session);
                     return (sessionData && sessionData.user && sessionData.user.username) || sessionData.username || null;
                 }
-            } catch (e) {
+                } catch (e) {
                 console.log('Product Canvas: Could not get username from session');
-            }
+                }
             return null;
         }
 
@@ -891,20 +891,20 @@
                 risks: document.getElementById('risks').value,
                 _lastSavedISO: new Date().toISOString()
             };
-
+            
             try {
                 const storageKey = 'productCanvasData_' + username;
                 localStorage.setItem(storageKey, JSON.stringify(canvasData));
-
-                // Show save indicator
-                const indicator = document.getElementById('saveIndicator');
+            
+            // Show save indicator
+            const indicator = document.getElementById('saveIndicator');
                 if (indicator) {
                     indicator.textContent = 'Data Saved!';
-                    indicator.classList.add('show');
-                    setTimeout(() => {
-                        indicator.classList.remove('show');
-                    }, 2000);
-                }
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
 
                 console.log('Product Canvas saved for user:', username);
             } catch (e) {
@@ -925,7 +925,7 @@
             try {
                 const userKey = 'productCanvasData_' + username;
                 const saved = localStorage.getItem(userKey);
-
+            
                 if (saved) {
                     const canvasData = JSON.parse(saved);
                     document.getElementById('targetMarkets').value = canvasData.targetMarkets || '';
@@ -944,7 +944,7 @@
                     document.getElementById('risks').value = canvasData.risks || '';
                     console.log('Product Canvas loaded for user:', username);
                 }
-            } catch (e) {
+                } catch (e) {
                 console.error('Failed to load Product Canvas data:', e);
             }
         }
