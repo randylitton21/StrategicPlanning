@@ -3705,7 +3705,7 @@
                     controlsHTML = `
                         <div class="reduction-controls">
                             <div class="control-group">
-                                <span class="reduction-label">Cut to:</span>
+                                <span class="reduction-label">Cut:</span>
                                 <select class="reduction-select" id="full-days-${index}" onchange="updateFullExpenseReduction(${index})">
                                     <option value="7">7 days/week</option>
                                     <option value="6">6 days/week</option>
@@ -3727,7 +3727,7 @@
                     controlsHTML = `
                         <div class="reduction-controls">
                             <div class="control-group">
-                                <span class="reduction-label">Cut to:</span>
+                                <span class="reduction-label">Cut:</span>
                                 <select class="reduction-select" id="full-weeks-${index}" onchange="updateFullExpenseReduction(${index})">
                                     <option value="4">4 weeks/month</option>
                                     <option value="3" selected>3 weeks/month</option>
@@ -3756,7 +3756,7 @@
                     controlsHTML = `
                         <div class="reduction-controls">
                             <div class="control-group">
-                                <span class="reduction-label">Cut by:</span>
+                                <span class="reduction-label">Cut:</span>
                                 <select class="reduction-select" id="full-percent-${index}" onchange="updateFullExpenseReduction(${index})">
                                     <option value="0">0%</option>
                                     <option value="10">10%</option>
@@ -3925,27 +3925,35 @@
                 const currentMonthly = (currentWeeklySpending * 52) / 12; // Convert to monthly
                 const targetMonthly = (targetWeeklySpending * 52) / 12; // Convert to monthly
                 monthlySavings = currentMonthly - targetMonthly;
-                reductionPercentage = currentMonthly > 0 ? (monthlySavings / currentMonthly) * 100 : 0;
+                // Show frequency reduction percentage: (7 - targetDays) / 7 * 100
+                reductionPercentage = (7 - targetDaysPerWeek) / 7 * 100;
             } else if (expense.frequency === 'weekly') {
                 // Check which control was used last
                 const weeksSelect = document.getElementById(`full-weeks-${index}`);
                 const percentSelect = document.getElementById(`full-week-percent-${index}`);
 
-                if (weeksSelect && weeksSelect.value !== undefined) {
+                let currentMonthly = expense.amount; // Default to stored monthly amount
+
+                if (weeksSelect && weeksSelect.value !== undefined && percentSelect.value === '0') {
+                    // Using frequency control only
                     const targetWeeksPerMonth = parseInt(weeksSelect.value);
-                    // Current spending: originalAmount per week × 4.33 weeks/month
-                    // Target spending: originalAmount per week × targetWeeksPerMonth
-                    const currentMonthly = expense.originalAmount * (52/12); // Convert weekly to monthly
+                    // Current spending: assuming they currently spend every week (4.33 weeks/month)
+                    currentMonthly = expense.originalAmount * (52/12); // Convert weekly to monthly
                     const targetMonthly = expense.originalAmount * targetWeeksPerMonth;
                     monthlySavings = currentMonthly - targetMonthly;
-                }
-
-                if (percentSelect && percentSelect.value !== '0') {
+                    // Show frequency reduction percentage: (4.33 - targetWeeks) / 4.33 * 100
+                    const currentWeeksPerMonth = 52/12; // Approximately 4.33
+                    reductionPercentage = (currentWeeksPerMonth - targetWeeksPerMonth) / currentWeeksPerMonth * 100;
+                } else if (percentSelect && percentSelect.value !== '0') {
+                    // Using percentage control
                     const percentReduction = parseInt(percentSelect.value) / 100;
                     monthlySavings = expense.amount * percentReduction;
+                    reductionPercentage = percentReduction * 100;
+                } else {
+                    // No reduction selected
+                    monthlySavings = 0;
+                    reductionPercentage = 0;
                 }
-
-                reductionPercentage = expense.amount > 0 ? (monthlySavings / expense.amount) * 100 : 0;
             } else {
                 // Monthly expense - percentage reduction
                 const reductionPercent = parseInt(document.getElementById(`full-percent-${index}`).value) / 100;
