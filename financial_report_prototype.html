@@ -2492,7 +2492,7 @@
         }
 
         // Add a new expense item to a specific category
-        function addExpenseToCategory(category, description = '', amount = '', fullCategory = '') {
+        function addExpenseToCategory(category, description = '', amount = '', fullCategory = '', frequency = 'monthly') {
             expenseCounter++;
             const expenseId = 'expense_' + expenseCounter;
 
@@ -2511,9 +2511,9 @@
                     </select>
                     <input type="text" placeholder="Expense description (optional)" value="${description}" class="expense-description" onchange="updateTotals()" oninput="updateTotals()">
                     <select class="expense-frequency" onchange="updateTotals()">
-                        <option value="monthly">Monthly</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="daily">Daily</option>
+                        <option value="monthly" ${frequency === 'monthly' ? 'selected' : ''}>Monthly</option>
+                        <option value="weekly" ${frequency === 'weekly' ? 'selected' : ''}>Weekly</option>
+                        <option value="daily" ${frequency === 'daily' ? 'selected' : ''}>Daily</option>
                     </select>
                     <input type="number" placeholder="Amount" value="${amount}" min="0" step="0.01" class="expense-amount" onchange="updateTotals()" oninput="updateTotals()">
                 </div>
@@ -3462,7 +3462,7 @@
                     const amount = parseFloat(item.querySelector('.expense-amount').value) || 0;
                     const frequency = item.querySelector('.expense-frequency').value || 'monthly';
 
-                    console.log(`Item: desc="${description}", amount=${amount}, frequency=${frequency}, category="${categoryValue}", container="${containerType}"`);
+                    console.log(`Saving item: desc="${description}", amount=${amount}, frequency=${frequency}, category="${categoryValue}", container="${containerType}"`);
 
                     // Description is now optional, but we need an amount and category
                     if (!isNaN(amount) && amount > 0 && categoryValue) {
@@ -3630,6 +3630,7 @@
                 const saved = localStorage.getItem('financialReportData');
                 if (saved) {
                     financialData = JSON.parse(saved);
+                    console.log('Loaded saved data:', financialData);
 
                     // Populate form with saved data
                     document.getElementById('monthlyIncome').value = financialData.monthlyIncome || '';
@@ -3645,19 +3646,10 @@
                             const isNecessary = ['Housing', 'Transportation', 'Food', 'Utilities', 'Healthcare', 'Insurance'].includes(expense.category);
                             const containerCategory = isNecessary ? 'Necessary' : 'Non-Necessary';
 
-                            // Add the expense item
-                            const expenseId = addExpenseToCategory(containerCategory, expense.description, expense.originalAmount || expense.amount, expense.fullCategory || expense.category);
+                            // Add the expense item with frequency
+                            const expenseId = addExpenseToCategory(containerCategory, expense.description, expense.originalAmount || expense.amount, expense.fullCategory || expense.category, expense.frequency || 'monthly');
 
-                            // Set the frequency if it exists
-                            if (expense.frequency && expenseId) {
-                                const item = document.getElementById(expenseId);
-                                if (item) {
-                                    const freqSelect = item.querySelector('.expense-frequency');
-                                    if (freqSelect) {
-                                        freqSelect.value = expense.frequency;
-                                    }
-                                }
-                            }
+                            console.log(`Loaded expense: ${expense.description}, frequency: ${expense.frequency || 'monthly'}`);
                         });
                     }
                 } else {
