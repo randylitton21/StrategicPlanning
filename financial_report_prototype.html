@@ -3071,8 +3071,12 @@
             const expenses = [];
 
             // Collect all expenses from both containers
-            const allContainers = ['#fixedExpensesContainer', '#nonEssentialExpensesContainer'];
-            allContainers.forEach(containerId => {
+            const containerMappings = {
+                '#fixedExpensesContainer': 'necessary',
+                '#nonEssentialExpensesContainer': 'non-necessary'
+            };
+
+            Object.entries(containerMappings).forEach(([containerId, containerType]) => {
                 const items = document.querySelectorAll(`${containerId} .expense-item`);
                 items.forEach(item => {
                     const categoryValue = item.querySelector('.expense-category').value;
@@ -3088,7 +3092,8 @@
                             amount: amount,
                             category: mainCategory || 'Other',
                             subCategory: subCategory || 'Miscellaneous',
-                            fullCategory: finalCategoryValue
+                            fullCategory: finalCategoryValue,
+                            container: containerType
                         });
                     }
                 });
@@ -3100,15 +3105,14 @@
             };
         }
 
-        // Compute financial report metrics
+        // Compute financial report metrics (based on which section expenses are in)
         function computeReport(data) {
-            const totalNecessary = data.expenses
-                .filter(exp => necessaryCategories.includes(exp.category))
-                .reduce((sum, exp) => sum + exp.amount, 0);
+            // Group expenses by which container they came from
+            const necessaryExpenses = data.expenses.filter(exp => exp.container === 'necessary');
+            const nonNecessaryExpenses = data.expenses.filter(exp => exp.container === 'non-necessary');
 
-            const totalNonNecessary = data.expenses
-                .filter(exp => !necessaryCategories.includes(exp.category))
-                .reduce((sum, exp) => sum + exp.amount, 0);
+            const totalNecessary = necessaryExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const totalNonNecessary = nonNecessaryExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
             const totalExpenses = totalNecessary + totalNonNecessary;
             const savingsOrDeficit = data.monthlyIncome - totalExpenses;
@@ -3117,8 +3121,8 @@
 
             return {
                 income: data.monthlyIncome,
-                necessaryExpenses: data.expenses.filter(exp => necessaryCategories.includes(exp.category)),
-                nonNecessaryExpenses: data.expenses.filter(exp => !necessaryCategories.includes(exp.category)),
+                necessaryExpenses: necessaryExpenses,
+                nonNecessaryExpenses: nonNecessaryExpenses,
                 totalNecessary: totalNecessary,
                 totalNonNecessary: totalNonNecessary,
                 totalExpenses: totalExpenses,
