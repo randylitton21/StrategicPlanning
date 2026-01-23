@@ -3916,14 +3916,16 @@
             let monthlySavings = 0;
             let reductionPercentage = 0;
 
+            let targetMonthly = expense.amount; // Default
+
             if (expense.frequency === 'daily') {
                 const targetDaysPerWeek = parseInt(document.getElementById(`full-days-${index}`).value);
                 // Current spending: originalAmount per day × 7 days/week × 4.33 weeks/month
                 // Target spending: originalAmount per day × targetDaysPerWeek days/week × 4.33 weeks/month
-                const currentWeeklySpending = expense.originalAmount * 7; // $5/day × 7 days = $35/week
-                const targetWeeklySpending = expense.originalAmount * targetDaysPerWeek; // $5/day × target days
+                const currentWeeklySpending = expense.originalAmount * 7; // $10/day × 7 days = $70/week
+                const targetWeeklySpending = expense.originalAmount * targetDaysPerWeek; // $10/day × 6 days = $60/week
                 const currentMonthly = (currentWeeklySpending * 52) / 12; // Convert to monthly
-                const targetMonthly = (targetWeeklySpending * 52) / 12; // Convert to monthly
+                targetMonthly = (targetWeeklySpending * 52) / 12; // Convert to monthly
                 monthlySavings = currentMonthly - targetMonthly;
                 // Show frequency reduction percentage: (7 - targetDays) / 7 * 100
                 reductionPercentage = (7 - targetDaysPerWeek) / 7 * 100;
@@ -3939,7 +3941,7 @@
                     const targetWeeksPerMonth = parseInt(weeksSelect.value);
                     // Current spending: assuming they currently spend every week (4.33 weeks/month)
                     currentMonthly = expense.originalAmount * (52/12); // Convert weekly to monthly
-                    const targetMonthly = expense.originalAmount * targetWeeksPerMonth;
+                    targetMonthly = expense.originalAmount * targetWeeksPerMonth;
                     monthlySavings = currentMonthly - targetMonthly;
                     // Show frequency reduction percentage: (4.33 - targetWeeks) / 4.33 * 100
                     const currentWeeksPerMonth = 52/12; // Approximately 4.33
@@ -3948,11 +3950,13 @@
                     // Using percentage control
                     const percentReduction = parseInt(percentSelect.value) / 100;
                     monthlySavings = expense.amount * percentReduction;
+                    targetMonthly = expense.amount * (1 - percentReduction);
                     reductionPercentage = percentReduction * 100;
                 } else {
                     // No reduction selected
                     monthlySavings = 0;
                     reductionPercentage = 0;
+                    targetMonthly = expense.amount;
                 }
             } else {
                 // Monthly expense - percentage reduction
@@ -3960,17 +3964,27 @@
                 if (percentElement) {
                     const reductionPercent = parseInt(percentElement.value) / 100;
                     monthlySavings = expense.amount * reductionPercent;
+                    targetMonthly = expense.amount * (1 - reductionPercent);
                     reductionPercentage = reductionPercent * 100;
-                    console.log(`Monthly expense: index=${index}, amount=$${expense.amount}, selected=${percentElement.value}%, reductionPercent=${reductionPercent}, savings=$${monthlySavings}, percentage=${reductionPercentage}%`);
+                    console.log(`Monthly expense: index=${index}, amount=$${expense.amount}, selected=${percentElement.value}%, reductionPercent=${reductionPercent}, target=$${targetMonthly}, savings=$${monthlySavings}, percentage=${reductionPercentage}%`);
                 } else {
                     console.log(`Could not find element full-percent-${index} for index ${index}`);
                     monthlySavings = 0;
                     reductionPercentage = 0;
+                    targetMonthly = expense.amount;
                 }
             }
 
+            const targetMonthly = expense.frequency === 'daily' ?
+                (expense.originalAmount * parseInt(document.getElementById(`full-days-${index}`).value) * 52) / 12 :
+                expense.frequency === 'weekly' ?
+                    document.getElementById(`full-weeks-${index}`) && document.getElementById(`full-weeks-${index}`).value !== '0' ?
+                        expense.originalAmount * parseInt(document.getElementById(`full-weeks-${index}`).value) :
+                        expense.amount * (1 - parseInt(document.getElementById(`full-week-percent-${index}`).value || '0') / 100) :
+                    expense.amount * (1 - parseInt(document.getElementById(`full-percent-${index}`).value) / 100);
+
             savingsElement.textContent = formatCurrency(monthlySavings);
-            percentElement.textContent = `(${reductionPercentage.toFixed(0)}%)`;
+            percentElement.textContent = `→ ${formatCurrency(targetMonthly)} (${reductionPercentage.toFixed(0)}% cut)`;
 
             if (monthlySavings > 0) {
                 item.classList.add('expense-reduced');
