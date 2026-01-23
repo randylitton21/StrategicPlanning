@@ -273,6 +273,9 @@
             background: var(--bg-card);
             border-radius: var(--radius-lg);
             border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: 500px; /* Fixed height to prevent overflow */
             overflow: hidden;
         }
 
@@ -280,6 +283,7 @@
             background: var(--bg-secondary);
             padding: 20px;
             border-bottom: 1px solid var(--border);
+            flex-shrink: 0; /* Don't shrink header */
         }
 
         .expense-column-header h4 {
@@ -297,17 +301,26 @@
         }
 
         .expense-items-container {
+            flex: 1; /* Take remaining space */
+            overflow-y: auto; /* Scroll when content exceeds height */
             padding: 0;
-            min-height: 200px;
+            min-height: 0; /* Allow flex shrinking */
+        }
+
+        .add-expense-btn {
+            flex-shrink: 0; /* Don't shrink button */
+            margin: 15px 20px;
         }
 
         .column-subtotal {
+            flex-shrink: 0; /* Don't shrink subtotal */
             background: var(--primary-color);
             color: white;
             padding: 15px 20px;
             text-align: center;
             font-size: 1.1em;
         }
+
 
         /* Expense Items */
         .expense-item {
@@ -574,6 +587,15 @@
                 gap: 20px;
             }
 
+            .expense-column {
+                height: auto; /* Allow natural height on mobile */
+                max-height: 500px; /* But cap at reasonable max */
+            }
+
+            .expense-items-container {
+                max-height: 300px; /* Scrollable on mobile too */
+            }
+
             .expense-item-input-group {
                 flex-direction: column;
                 gap: 8px;
@@ -655,11 +677,11 @@
                             <div class="expense-column-header">
                                 <h4>🔒 Necessary Expenses</h4>
                                 <p class="expense-description">Fixed or essential costs that are difficult to reduce</p>
-                                <button type="button" class="add-expense-btn" onclick="addExpenseToCategory('Necessary')">➕ Add Expense</button>
                             </div>
                             <div id="necessaryExpensesContainer" class="expense-items-container">
                                 <!-- Necessary expense items will be added here -->
                             </div>
+                            <button type="button" class="add-expense-btn" onclick="addExpenseToCategory('Necessary')">➕ Add Expense</button>
                             <div class="column-subtotal">
                                 <strong>Necessary Total: $<span id="necessaryTotal">0.00</span></strong>
                             </div>
@@ -670,11 +692,11 @@
                             <div class="expense-column-header">
                                 <h4>🎯 Non-Necessary Expenses</h4>
                                 <p class="expense-description">Discretionary spending that can be adjusted or eliminated</p>
-                                <button type="button" class="add-expense-btn" onclick="addExpenseToCategory('Non-Necessary')">➕ Add Expense</button>
                             </div>
                             <div id="nonNecessaryExpensesContainer" class="expense-items-container">
                                 <!-- Non-necessary expense items will be added here -->
                             </div>
+                            <button type="button" class="add-expense-btn" onclick="addExpenseToCategory('Non-Necessary')">➕ Add Expense</button>
                             <div class="column-subtotal">
                                 <strong>Non-Necessary Total: $<span id="nonNecessaryTotal">0.00</span></strong>
                             </div>
