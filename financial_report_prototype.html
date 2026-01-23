@@ -3442,11 +3442,16 @@
                 essentials.forEach(expense => {
                     let expenseText = '';
 
-                    // Add category/subcategory title
+                    // Add category/subcategory title (sanitize special characters)
+                    let categoryTitle = '';
                     if (expense.subCategory && expense.subCategory !== 'Miscellaneous') {
-                        expenseText += expense.subCategory + ': ';
+                        categoryTitle = expense.subCategory.replace(/[\/\\:*?"<>|]/g, '-'); // Replace special chars
                     } else if (expense.category) {
-                        expenseText += expense.category + ': ';
+                        categoryTitle = expense.category.replace(/[\/\\:*?"<>|]/g, '-'); // Replace special chars
+                    }
+
+                    if (categoryTitle) {
+                        expenseText += categoryTitle + ': ';
                     }
 
                     // Add frequency prefix if not monthly
@@ -3454,9 +3459,10 @@
                         expenseText += expense.frequency.charAt(0).toUpperCase() + expense.frequency.slice(1) + ' ';
                     }
 
-                    // Add description if available
+                    // Add description if available (sanitize special characters)
                     if (expense.description && expense.description.trim()) {
-                        expenseText += expense.description + ': ';
+                        const cleanDescription = expense.description.replace(/[\/\\:*?"<>|]/g, '-');
+                        expenseText += cleanDescription + ': ';
                     } else {
                         expenseText += 'Expense: ';
                     }
@@ -3495,11 +3501,16 @@
                 nonEssentials.forEach(expense => {
                     let expenseText = '';
 
-                    // Add category/subcategory title
+                    // Add category/subcategory title (sanitize special characters)
+                    let categoryTitle = '';
                     if (expense.subCategory && expense.subCategory !== 'Miscellaneous') {
-                        expenseText += expense.subCategory + ': ';
+                        categoryTitle = expense.subCategory.replace(/[\/\\:*?"<>|]/g, '-'); // Replace special chars
                     } else if (expense.category) {
-                        expenseText += expense.category + ': ';
+                        categoryTitle = expense.category.replace(/[\/\\:*?"<>|]/g, '-'); // Replace special chars
+                    }
+
+                    if (categoryTitle) {
+                        expenseText += categoryTitle + ': ';
                     }
 
                     // Add frequency prefix if not monthly
@@ -3507,9 +3518,10 @@
                         expenseText += expense.frequency.charAt(0).toUpperCase() + expense.frequency.slice(1) + ' ';
                     }
 
-                    // Add description if available
+                    // Add description if available (sanitize special characters)
                     if (expense.description && expense.description.trim()) {
-                        expenseText += expense.description + ': ';
+                        const cleanDescription = expense.description.replace(/[\/\\:*?"<>|]/g, '-');
+                        expenseText += cleanDescription + ': ';
                     } else {
                         expenseText += 'Expense: ';
                     }
